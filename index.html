@@ -3,51 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Freelancer Client Messenger</title>
-    <style>
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4);
-        padding-top: 60px;
-      }
-      .modal-content {
-        background-color: #fefefe;
-        margin: 5% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-      }
-      .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-      }
-      .close:hover,
-      .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-      }
-      #copyMessageBtn {
-        background-color: #4caf50;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        cursor: pointer;
-        border-radius: 5px;
-        margin-left: 10px;
-      }
-      #copyMessageBtn:hover {
-        background-color: #45a049;
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <h2>🔍 Get Client Info by Project ID</h2>
@@ -81,241 +37,33 @@
       </div>
     </div>
 
-    <script>
-      const token = "H7FfoHyqJxr9xKwECCgvseWyyCcMRu";
-      let currentClientName = "";
-      let currentProjectId = "";
-      let additionalDetails = {};
+    <hr />
 
-      function logResponse(data, source) {
-        console.log(`[DEBUG] Raw response from ${source}:`, data);
-      }
+    <h2>📊 Count Threads by Submission Time</h2>
+    <label>
+      Start Date:
+      <input type="date" id="startDateInput" />
+    </label>
+    <label>
+      End Date:
+      <input type="date" id="endDateInput" />
+    </label>
+    <br />
+    <label>
+      Time Range 1:
+      <input type="time" id="timeRange1Start" value="22:00" /> to
+      <input type="time" id="timeRange1End" value="07:00" />
+    </label>
+    <br />
+    <label>
+      Time Range 2:
+      <input type="time" id="timeRange2Start" value="12:00" /> to
+      <input type="time" id="timeRange2End" value="22:00" />
+    </label>
+    <br />
+    <button id="countThreadsBtn">Count Threads</button>
+    <p id="threadCountOutput"></p>
 
-      function extractAllDetails(obj, prefix = "") {
-        let flat = {};
-        for (const key in obj) {
-          if (obj.hasOwnProperty(key) && obj[key] !== null) {
-            const val = obj[key];
-            const newKey = prefix ? `${prefix}.${key}` : key;
-            if (typeof val === "object" && !Array.isArray(val)) {
-              Object.assign(flat, extractAllDetails(val, newKey));
-            } else {
-              flat[newKey] = val;
-            }
-          }
-        }
-        return flat;
-      }
-
-      function formatEpochToPakistanTime(epochSeconds) {
-        const date = new Date(epochSeconds * 1000);
-        return date.toLocaleString("en-PK", { timeZone: "Asia/Karachi" });
-      }
-
-      document
-        .getElementById("fetchClientBtn")
-        .addEventListener("click", async () => {
-          const projectId = document
-            .getElementById("projectIdInput")
-            .value.trim();
-          const output = document.getElementById("clientInfoOutput");
-
-          if (!projectId) return alert("Please enter a project ID.");
-
-          output.innerText = "⏳ Fetching client info...";
-
-          try {
-            const projectRes = await fetch(
-              `https://www.freelancer.com/api/projects/0.1/projects/?projects[]=${projectId}`,
-              {
-                headers: { "freelancer-oauth-v1": token },
-              }
-            );
-
-            const projectData = await projectRes.json();
-            logResponse(projectData, "Project API");
-            const project = projectData?.result?.projects?.[0];
-            if (!project) throw new Error("Project not found.");
-            currentProjectId = projectId;
-
-            const projectDetails = extractAllDetails(project, "project");
-            Object.assign(additionalDetails, projectDetails);
-
-            let readableTime = "";
-            if (project.submitdate) {
-              readableTime = formatEpochToPakistanTime(project.submitdate);
-              additionalDetails["project.submission_time_pk"] = readableTime;
-            }
-
-            const ownerId = project.owner_id;
-            const userRes = await fetch(
-              `https://www.freelancer.com/api/users/0.1/users/${ownerId}/`,
-              {
-                headers: { "freelancer-oauth-v1": token },
-              }
-            );
-
-            const userData = await userRes.json();
-            logResponse(userData, "User API");
-            const user = userData?.result;
-            if (!user) throw new Error("Client not found.");
-
-            const publicName = user.public_name || user.username;
-            currentClientName = publicName;
-            document.getElementById("clientIdInput").value = ownerId;
-            const city = user?.location?.city || "your city";
-            document.getElementById(
-              "messageInput"
-            ).value = `Hi ${publicName}, How is the weather in ${city}?`;
-
-            output.innerHTML = `👤 Client Name: <a href="https://www.freelancer.com/u/${user.username}" target="_blank">${publicName}</a><br>🕒 Project Submitted: ${readableTime}`;
-
-            const userDetails = extractAllDetails(user, "client");
-            Object.assign(additionalDetails, userDetails);
-
-            const threadRes = await fetch(
-              `https://www.freelancer.com/api/messages/0.1/threads/?context_type=project&context=${projectId}`,
-              { headers: { "freelancer-oauth-v1": token } }
-            );
-            const threadData = await threadRes.json();
-            logResponse(threadData, "Thread API");
-            const thread = threadData?.result?.threads?.[0];
-            if (thread) {
-              const threadDetails = extractAllDetails(thread, "thread");
-              Object.assign(additionalDetails, threadDetails);
-            }
-
-            if (Object.keys(additionalDetails).length > 0) {
-              document.getElementById("showDetailsBtn").style.display = "block";
-            }
-          } catch (err) {
-            console.error(err);
-            output.innerText = `❌ ${err.message}`;
-          }
-        });
-
-      document
-        .getElementById("showDetailsBtn")
-        .addEventListener("click", () => {
-          const additionalDetailsDiv =
-            document.getElementById("additionalDetails");
-          additionalDetailsDiv.innerHTML = "";
-          Object.entries(additionalDetails).forEach(([key, value]) => {
-            const detail = document.createElement("p");
-            detail.innerHTML = `<strong>${key}:</strong> ${value}`;
-            additionalDetailsDiv.appendChild(detail);
-          });
-          document.getElementById("myModal").style.display = "block";
-        });
-
-      document.querySelector(".close").addEventListener("click", () => {
-        document.getElementById("myModal").style.display = "none";
-      });
-
-      window.addEventListener("click", (event) => {
-        if (event.target === document.getElementById("myModal")) {
-          document.getElementById("myModal").style.display = "none";
-        }
-      });
-
-      document
-        .getElementById("sendMessageBtn")
-        .addEventListener("click", async () => {
-          const clientId = document
-            .getElementById("clientIdInput")
-            .value.trim();
-          const message = document.getElementById("messageInput").value.trim();
-          const statusOutput = document.getElementById("messageStatus");
-
-          if (!clientId || !currentProjectId || !message) {
-            return alert("Make sure all fields are filled.");
-          }
-
-          statusOutput.innerText = "⏳ Sending message...";
-
-          try {
-            const existingThreadsRes = await fetch(
-              `https://www.freelancer.com/api/messages/0.1/threads/?context_type=project&context=${currentProjectId}`,
-              { headers: { "freelancer-oauth-v1": token } }
-            );
-
-            const existingThreadsData = await existingThreadsRes.json();
-            logResponse(existingThreadsData, "Threads API");
-
-            let threadId;
-            if (existingThreadsData?.result?.threads?.length > 0) {
-              threadId = existingThreadsData.result.threads[0].id;
-            } else {
-              const threadRes = await fetch(
-                `https://www.freelancer.com/api/messages/0.1/threads/`,
-                {
-                  method: "POST",
-                  headers: {
-                    "freelancer-oauth-v1": token,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                  },
-                  body: new URLSearchParams({
-                    "members[]": clientId,
-                    context_type: "project",
-                    context: currentProjectId,
-                  }),
-                }
-              );
-
-              const threadData = await threadRes.json();
-              if (!threadRes.ok)
-                throw new Error(
-                  `Unable to create thread: ${
-                    threadData?.message || threadRes.statusText
-                  }`
-                );
-              threadId = threadData?.result?.thread?.id;
-              if (!threadId) throw new Error("Unable to create thread.");
-            }
-
-            const messageRes = await fetch(
-              `https://www.freelancer.com/api/messages/0.1/threads/${threadId}/messages/`,
-              {
-                method: "POST",
-                headers: {
-                  "freelancer-oauth-v1": token,
-                  "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: new URLSearchParams({ message }),
-              }
-            );
-
-            const msgData = await messageRes.json();
-            if (messageRes.ok && msgData.status === "success") {
-              const threadLink = `https://www.freelancer.com/messages/thread/${threadId}?filter=active`;
-              statusOutput.innerText = `✅ Message sent successfully! You can view the thread here: ${threadLink}`;
-            } else {
-              throw new Error("Message failed to send.");
-            }
-          } catch (err) {
-            console.error("Error:", err);
-            statusOutput.innerText = `❌ ${err.message}`;
-          }
-        });
-
-      document
-        .getElementById("copyMessageBtn")
-        .addEventListener("click", function () {
-          const button = this;
-          const copyText = `Hi ${currentClientName},\n\nI hold the highest ranking on Freelancer with a strong track record of delivering exceptional results and client satisfaction. But rather than focusing on me, I am more interested in learning about your project and how I can help.\n\nMy goal is always to understand your challenge, collaborate with you, and bring your idea to life through technology.\n\nIf you have a moment, feel free to check out my portfolio projects:\nhttps://www.chamberofcommerce.com\nhttps://www.boostifai.com.\n\nLooking forward to discussing your project further!\n\nWhy Choose Me?\n\nCommunication: Strong English skills in both speaking and writing.\nAttitude: Goal-oriented with a \"get things done\" mindset.\nPassion: Always eager to learn, take on challenges, and work with 100% ownership.`;
-
-          navigator.clipboard
-            .writeText(copyText)
-            .then(() => {
-              button.textContent = "✅ Copied!";
-              setTimeout(() => {
-                button.textContent = "📋 Copy Custom Intro Message";
-              }, 2000);
-            })
-            .catch((err) => {
-              console.error("Copy failed", err);
-            });
-        });
-    </script>
+    <script src="script.js"></script>
   </body>
 </html>
