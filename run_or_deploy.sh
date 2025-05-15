@@ -5,7 +5,8 @@ set -e
 echo "Choose an option:"
 echo "1) Start dev server (npm run dev)"
 echo "2) Deploy to GitHub Pages (build & push to gh-pages branch)"
-read -p "Enter your choice [1-2]: " choice
+echo "3) Run lint and depcheck"
+read -p "Enter your choice [1-3]: " choice
 
 if [ "$choice" = "2" ]; then
   echo "Building project for production..."
@@ -26,6 +27,11 @@ if [ "$choice" = "2" ]; then
 
   git worktree remove "$TMP_WORKTREE"
   echo "Deployed to GitHub Pages!"
+elif [ "$choice" = "3" ]; then
+  echo "Running ESLint..."
+  npm run lint
+  echo "Running depcheck..."
+  npx depcheck
 else
   echo "Starting dev server..."
   npm run dev

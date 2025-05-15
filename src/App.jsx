@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState } from "react";
 import { Container, Button } from "@mui/material";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import ClientInfoForm from "./components/ClientInfoForm";
@@ -6,7 +6,6 @@ import MessageForm from "./components/MessageForm";
 import DetailsModal from "./components/DetailsModal";
 import Navbar from "./components/Navbar";
 import flatten from "./utils/flatten";
-import { getMuiTheme } from "./theme/muiTheme";
 import useThemeMode from "./hooks/useThemeMode";
 
 export default function App() {
