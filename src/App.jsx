@@ -1,16 +1,10 @@
-import React, { useState } from "react";
-import {
-  Container,
-  Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
+import React, { useState, useMemo } from "react";
+import { Container, Button } from "@mui/material";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import ClientInfoForm from "./components/ClientInfoForm";
 import MessageForm from "./components/MessageForm";
 import DetailsModal from "./components/DetailsModal";
+import Navbar from "./components/Navbar";
 
 function flatten(obj, prefix = "") {
   let flat = {};
@@ -29,6 +23,15 @@ function flatten(obj, prefix = "") {
 }
 
 export default function App() {
+  const [mode, setMode] = useState("dark");
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: { mode },
+      }),
+    [mode]
+  );
+
   const [clientInfo, setClientInfo] = useState(null);
   const [projectId, setProjectId] = useState("39325440");
   const [clientId, setClientId] = useState("");
@@ -45,7 +48,6 @@ export default function App() {
         info?.client?.public_name || info?.client?.username
       }, How is the weather in ${city} today?`
     );
-    // Flatten all details for modal, including thread
     let details = {
       ...flatten(info.project, "project"),
       ...flatten(info.client, "client"),
@@ -54,38 +56,45 @@ export default function App() {
     setAdditionalDetails(details);
   };
 
+  const toggleMode = () =>
+    setMode((prev) => (prev === "dark" ? "light" : "dark"));
+
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <ClientInfoForm
-        projectId={projectId}
-        setProjectId={setProjectId}
-        onFetched={handleClientInfoFetched}
-      />
-      <hr style={{ margin: "2em 0" }} />
-      <MessageForm
-        clientId={clientId}
-        setClientId={setClientId}
-        message={message}
-        setMessage={setMessage}
-        projectId={projectId}
-        clientName={
-          clientInfo?.client?.public_name || clientInfo?.client?.username
-        }
-        city={clientInfo?.client?.location?.city}
-      />
-      <Button
-        variant="outlined"
-        sx={{ mt: 2 }}
-        onClick={() => setModalOpen(true)}
-        disabled={!clientInfo}
-      >
-        Show Additional Details
-      </Button>
-      <DetailsModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        details={additionalDetails}
-      />
-    </Container>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Navbar mode={mode} toggleMode={toggleMode} />
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <ClientInfoForm
+          projectId={projectId}
+          setProjectId={setProjectId}
+          onFetched={handleClientInfoFetched}
+        />
+        <hr style={{ margin: "2em 0" }} />
+        <MessageForm
+          clientId={clientId}
+          setClientId={setClientId}
+          message={message}
+          setMessage={setMessage}
+          projectId={projectId}
+          clientName={
+            clientInfo?.client?.public_name || clientInfo?.client?.username
+          }
+          city={clientInfo?.client?.location?.city}
+        />
+        <Button
+          variant="outlined"
+          sx={{ mt: 2 }}
+          onClick={() => setModalOpen(true)}
+          disabled={!clientInfo}
+        >
+          Show Additional Details
+        </Button>
+        <DetailsModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          details={additionalDetails}
+        />
+      </Container>
+    </ThemeProvider>
   );
 }
