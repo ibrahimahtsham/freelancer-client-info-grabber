@@ -1,36 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { Container, Button } from "@mui/material";
-import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import { ThemeProvider, CssBaseline } from "@mui/material";
 import ClientInfoForm from "./components/ClientInfoForm";
 import MessageForm from "./components/MessageForm";
 import DetailsModal from "./components/DetailsModal";
 import Navbar from "./components/Navbar";
-
-function flatten(obj, prefix = "") {
-  let flat = {};
-  for (const key in obj) {
-    if (
-      obj[key] !== null &&
-      typeof obj[key] === "object" &&
-      !Array.isArray(obj[key])
-    ) {
-      Object.assign(flat, flatten(obj[key], prefix ? `${prefix}.${key}` : key));
-    } else {
-      flat[prefix ? `${prefix}.${key}` : key] = obj[key];
-    }
-  }
-  return flat;
-}
+import flatten from "./utils/flatten";
+import { getMuiTheme } from "./theme/muiTheme";
+import useThemeMode from "./hooks/useThemeMode";
 
 export default function App() {
-  const [mode, setMode] = useState("dark");
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: { mode },
-      }),
-    [mode]
-  );
+  const { mode, theme, toggleMode } = useThemeMode("dark");
 
   const [clientInfo, setClientInfo] = useState(null);
   const [projectId, setProjectId] = useState("39325440");
@@ -55,9 +35,6 @@ export default function App() {
     };
     setAdditionalDetails(details);
   };
-
-  const toggleMode = () =>
-    setMode((prev) => (prev === "dark" ? "light" : "dark"));
 
   return (
     <ThemeProvider theme={theme}>

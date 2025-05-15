@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Typography, Link, Box } from "@mui/material";
 import { fetchClientInfo } from "../utils/api";
-
-function formatEpochToPakistanTime(epochSeconds) {
-  if (!epochSeconds) return "";
-  const date = new Date(epochSeconds * 1000);
-  return date.toLocaleString("en-PK", { timeZone: "Asia/Karachi" });
-}
+import { formatEpochToPakistanTime } from "../utils/dateUtils";
 
 const ClientInfoForm = ({ projectId, setProjectId, onFetched }) => {
   const [clientInfo, setClientInfo] = useState(null);
