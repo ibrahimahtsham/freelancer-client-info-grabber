@@ -1,5 +1,3 @@
-import { fetch } from "cross-fetch";
-
 const token = "H7FfoHyqJxr9xKwECCgvseWyyCcMRu";
 
 export const fetchClientInfo = async (projectId) => {
