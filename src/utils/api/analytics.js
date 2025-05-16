@@ -177,6 +177,8 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
 
           myBid = await fetchMyBidForProject(projectId, myUserId);
 
+          console.log(`Project ${projectId}: myBid=`, myBid);
+
           const milestoneResult = await fetchPaidMilestonesForProject(
             projectId,
             myUserId
