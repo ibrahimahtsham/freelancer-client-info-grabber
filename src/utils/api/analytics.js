@@ -80,95 +80,87 @@ export async function fetchPaidMilestonesForProject(projectId, myUserId) {
 
 export async function fetchThreadsWithProjectAndOwnerInfo() {
   const threads = await fetchActiveThreads();
-  const thread = threads[0];
-  if (!thread) return [];
+  if (!threads.length) return [];
 
-  const projectId = thread.thread?.context?.id;
-  let projectInfo = null;
-  let ownerInfo = null;
-  let myBid = null;
-  let error = null;
-  let projectUploadDate = null;
-  let firstMessageDate = null;
-  let bidPrice = null;
-  let projectLink = null;
-  let clientProfileLink = null;
-  let totalPaid = 0; // <-- define with default value
-  let milestones = []; // <-- define with default value
+  const myUserId = await fetchMyUserId();
 
-  if (projectId) {
-    try {
-      const info = await fetchClientInfo(projectId);
-      projectInfo = info.project;
-      ownerInfo = info.client;
+  // Process all threads in parallel for speed
+  const results = await Promise.all(
+    threads.map(async (thread) => {
+      const projectId = thread.thread?.context?.id;
+      let projectInfo = null;
+      let ownerInfo = null;
+      let myBid = null;
+      let error = null;
+      let projectUploadDate = null;
+      let firstMessageDate = null;
+      let bidPrice = null;
+      let projectLink = null;
+      let clientProfileLink = null;
+      let totalPaid = 0;
+      let milestones = [];
 
-      // Get your user ID
-      const myUserId = await fetchMyUserId();
-      // Get your bid for this project
-      myBid = await fetchMyBidForProject(projectId, myUserId);
+      if (projectId) {
+        try {
+          const info = await fetchClientInfo(projectId);
+          projectInfo = info.project;
+          ownerInfo = info.client;
 
-      // Fetch paid milestones for this project and user
-      const milestoneResult = await fetchPaidMilestonesForProject(
-        projectId,
-        myUserId
-      );
-      milestones = milestoneResult.milestones;
-      totalPaid = milestoneResult.totalPaid;
+          myBid = await fetchMyBidForProject(projectId, myUserId);
 
-      // Project upload date
-      projectUploadDate = projectInfo?.submitdate
-        ? new Date(projectInfo.submitdate * 1000).toLocaleString()
-        : null;
+          const milestoneResult = await fetchPaidMilestonesForProject(
+            projectId,
+            myUserId
+          );
+          milestones = milestoneResult.milestones;
+          totalPaid = milestoneResult.totalPaid;
 
-      // Project bid price
-      if (projectInfo?.budget?.minimum && projectInfo?.budget?.maximum) {
-        bidPrice = `$${projectInfo.budget.minimum} - $${projectInfo.budget.maximum}`;
-      } else if (projectInfo?.budget?.amount) {
-        bidPrice = `$${projectInfo.budget.amount}`;
+          projectUploadDate = projectInfo?.submitdate
+            ? new Date(projectInfo.submitdate * 1000).toLocaleString()
+            : null;
+
+          if (projectInfo?.budget?.minimum && projectInfo?.budget?.maximum) {
+            bidPrice = `$${projectInfo.budget.minimum} - $${projectInfo.budget.maximum}`;
+          } else if (projectInfo?.budget?.amount) {
+            bidPrice = `$${projectInfo.budget.amount}`;
+          }
+
+          projectLink = projectInfo?.id
+            ? `https://www.freelancer.com/projects/${projectInfo.id}`
+            : null;
+
+          clientProfileLink = ownerInfo?.username
+            ? `https://www.freelancer.com/u/${ownerInfo.username}`
+            : null;
+
+          firstMessageDate = thread.id
+            ? await fetchFirstMessageDate(thread.id)
+            : null;
+          if (firstMessageDate)
+            firstMessageDate = new Date(
+              firstMessageDate * 1000
+            ).toLocaleString();
+        } catch (err) {
+          error = err.message;
+        }
       }
 
-      // Project link
-      projectLink = projectInfo?.id
-        ? `https://www.freelancer.com/projects/${projectInfo.id}`
-        : null;
+      return {
+        ...thread,
+        projectInfo,
+        ownerInfo,
+        myBid,
+        error,
+        projectUploadDate,
+        firstMessageDate,
+        bidPrice,
+        projectLink,
+        clientProfileLink,
+        totalPaid,
+        milestones,
+      };
+    })
+  );
 
-      // Client profile link
-      clientProfileLink = ownerInfo?.username
-        ? `https://www.freelancer.com/u/${ownerInfo.username}`
-        : null;
-
-      // First message date (extra API call)
-      firstMessageDate = thread.id
-        ? await fetchFirstMessageDate(thread.id)
-        : null;
-      if (firstMessageDate)
-        firstMessageDate = new Date(firstMessageDate * 1000).toLocaleString();
-
-      // Debug log: show all info returned by fetchClientInfo
-      console.log("fetchClientInfo result:", info);
-    } catch (err) {
-      error = err.message;
-      console.log("fetchClientInfo error:", err);
-    }
-  }
-
-  // Debug log: show the raw thread object
-  console.log("Raw thread object:", thread);
-
-  return [
-    {
-      ...thread,
-      projectInfo,
-      ownerInfo,
-      myBid,
-      error,
-      projectUploadDate,
-      firstMessageDate,
-      bidPrice,
-      projectLink,
-      clientProfileLink,
-      totalPaid,
-      milestones,
-    },
-  ];
+  return results;
 }
