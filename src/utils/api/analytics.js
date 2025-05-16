@@ -1,5 +1,6 @@
 import { token } from "./config";
 import { fetchClientInfo } from "./client";
+import { apiRequest } from "./request";
 
 export async function fetchActiveThreads(onProgress, maxThreads = Infinity) {
   if (maxThreads === 0) {
@@ -27,19 +28,17 @@ export async function fetchActiveThreads(onProgress, maxThreads = Infinity) {
         `Fetching threads batch ${batch + 1} (offset ${offset})...`
       );
     }
-    const res = await fetch(
-      `https://www.freelancer.com/api/messages/0.1/threads/?folder=active&limit=${limit}&offset=${offset}`,
-      {
-        headers: { "freelancer-oauth-v1": token },
-      }
+    const data = await apiRequest(
+      `https://www.freelancer.com/api/messages/0.1/threads/?folder=active&limit=${limit}&offset=${offset}`
     );
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to fetch threads.");
-    const threads = data.result?.threads || [];
+    // Filter out support_chat threads
+    const threads = (data.result?.threads || []).filter(
+      (t) => t.thread?.context?.type !== "support_chat"
+    );
     console.log(
       `[fetchActiveThreads] Batch ${batch + 1}: API returned ${
         threads.length
-      } threads`
+      } threads (after filtering support_chat)`
     );
     allThreads.push(...threads);
     console.log(
