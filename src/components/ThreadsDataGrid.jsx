@@ -45,36 +45,43 @@ const columns = [
   },
   { field: "bidAmount", headerName: "Your Bid Amount", width: 140 },
   { field: "totalPaid", headerName: "Total Paid (Milestones)", width: 180 },
-  { field: "awardStatus", headerName: "Award Status", width: 140 },
+  { field: "isAwarded", headerName: "Awarded", width: 100 },
+  { field: "otherStatus", headerName: "Other Status", width: 140 },
 ];
 
 function mapThreadsToRows(threads) {
-  return threads.map((thread) => ({
-    id: thread.id,
-    ownerId: thread.thread?.owner,
-    projectId: thread.thread?.context?.id,
-    contextType: thread.thread?.context?.type,
-    projectTitle: thread.projectInfo?.title || "N/A",
-    projectDescription: thread.projectInfo?.description || "N/A",
-    projectUploadDate: thread.projectUploadDate || "N/A",
-    firstMessageDate: thread.firstMessageDate || "N/A",
-    projectBidPrice: thread.bidPrice || "N/A",
-    projectLink: thread.projectLink || "",
-    ownerName:
-      thread.ownerInfo?.public_name || thread.ownerInfo?.username || "N/A",
-    ownerLocation:
-      (thread.ownerInfo?.location?.city || "N/A") +
-      ", " +
-      (thread.ownerInfo?.location?.country?.name || ""),
-    clientProfileLink: thread.clientProfileLink || "",
-    bidAmount: thread.myBid ? `$${thread.myBid.amount}` : "N/A",
-    totalPaid: thread.totalPaid !== undefined ? `$${thread.totalPaid}` : "N/A",
-    awardStatus: thread.myBid?.award_status || "N/A",
-  }));
+  return threads.map((thread) => {
+    const awardStatus = thread.myBid?.award_status || "N/A";
+    const isAwarded = ["awarded", "accepted"].includes(awardStatus);
+    return {
+      id: thread.id,
+      ownerId: thread.thread?.owner,
+      projectId: thread.thread?.context?.id,
+      contextType: thread.thread?.context?.type,
+      projectTitle: thread.projectInfo?.title || "N/A",
+      projectDescription: thread.projectInfo?.description || "N/A",
+      projectUploadDate: thread.projectUploadDate || "N/A",
+      firstMessageDate: thread.firstMessageDate || "N/A",
+      projectBidPrice: thread.bidPrice || "N/A",
+      projectLink: thread.projectLink || "",
+      ownerName:
+        thread.ownerInfo?.public_name || thread.ownerInfo?.username || "N/A",
+      ownerLocation:
+        (thread.ownerInfo?.location?.city || "N/A") +
+        ", " +
+        (thread.ownerInfo?.location?.country?.name || ""),
+      clientProfileLink: thread.clientProfileLink || "",
+      bidAmount: thread.myBid ? `$${thread.myBid.amount}` : "N/A",
+      totalPaid:
+        thread.totalPaid !== undefined ? `$${thread.totalPaid}` : "N/A",
+      isAwarded: isAwarded ? "Yes" : "No",
+      otherStatus: isAwarded ? "" : awardStatus,
+    };
+  });
 }
 
 const ThreadsDataGrid = ({ threads, loading }) => (
-  <div style={{ height: 600, width: "100%" }}>
+  <div style={{ height: 500, width: "100%" }}>
     <DataGrid
       rows={mapThreadsToRows(threads)}
       columns={columns}
