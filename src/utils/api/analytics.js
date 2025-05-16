@@ -78,15 +78,26 @@ export async function fetchPaidMilestonesForProject(projectId, myUserId) {
   return { milestones: paidMilestones, totalPaid };
 }
 
-export async function fetchThreadsWithProjectAndOwnerInfo() {
+export async function fetchThreadsWithProjectAndOwnerInfo(onProgress) {
+  if (onProgress) onProgress(0, "Fetching active threads...");
   const threads = await fetchActiveThreads();
   if (!threads.length) return [];
 
+  if (onProgress) onProgress(5, "Fetching user ID...");
   const myUserId = await fetchMyUserId();
 
-  // Process all threads in parallel for speed
+  const total = threads.length;
+  let completed = 0;
+
   const results = await Promise.all(
-    threads.map(async (thread) => {
+    threads.map(async (thread, idx) => {
+      if (onProgress) {
+        onProgress(
+          5 + Math.floor((idx / total) * 90),
+          `Processing thread ${idx + 1} of ${total}...`
+        );
+      }
+
       const projectId = thread.thread?.context?.id;
       let projectInfo = null;
       let ownerInfo = null;
@@ -145,6 +156,12 @@ export async function fetchThreadsWithProjectAndOwnerInfo() {
         }
       }
 
+      completed++;
+      if (onProgress) {
+        const pct = 5 + Math.floor((completed / total) * 90);
+        onProgress(pct, `Processed thread ${completed} of ${total}...`);
+      }
+
       return {
         ...thread,
         projectInfo,
@@ -162,5 +179,6 @@ export async function fetchThreadsWithProjectAndOwnerInfo() {
     })
   );
 
+  if (onProgress) onProgress(100, "Done!");
   return results;
 }

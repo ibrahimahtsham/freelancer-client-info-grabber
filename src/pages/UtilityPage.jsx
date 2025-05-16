@@ -7,6 +7,7 @@ import {
   Alert,
   TextField,
   useTheme,
+  LinearProgress,
 } from "@mui/material";
 import useActiveThreads from "../hooks/useActiveThreads";
 import TimingControls from "../components/TimingControls";
@@ -19,7 +20,8 @@ import {
 } from "../utils/dateUtils";
 
 const UtilityPage = () => {
-  const { threads, loading, error, getThreads } = useActiveThreads();
+  const { threads, loading, error, getThreads, progress, progressText } =
+    useActiveThreads();
   const theme = useTheme();
 
   // Date range state (default: 2025-04-01 to 2025-05-01)
@@ -48,14 +50,6 @@ const UtilityPage = () => {
   const from = fromDate ? new Date(fromDate) : null;
   const to = toDate ? new Date(toDate) : null;
 
-  function filterThreadsByRange(threads, startHour, endHour) {
-    return threads.filter(
-      (t) =>
-        isInDateRange(t.projectUploadDate, from, to) &&
-        isInTimeRange(t.projectUploadDate, startHour, endHour)
-    );
-  }
-
   // Helper to normalize award status
   function isAwarded(t) {
     return t.myBid && ["awarded", "accepted"].includes(t.myBid.award_status);
@@ -65,25 +59,57 @@ const UtilityPage = () => {
   const allAwarded = threads.filter(isAwarded);
   const allNotAwarded = threads.filter((t) => !isAwarded(t));
 
-  // After filters: Hafsa
-  const hafsaAwarded = filterThreadsByRange(allAwarded, hafsaStart, hafsaEnd);
-  const hafsaNotAwarded = filterThreadsByRange(
-    allNotAwarded,
-    hafsaStart,
-    hafsaEnd
-  );
+  // Debug: log only the lengths before filtering
+  React.useEffect(() => {
+    if (threads.length) {
+      console.log("All threads (raw):", threads.length);
+      console.log("Awarded threads (before filtering):", allAwarded.length);
+      console.log(
+        "Not awarded threads (before filtering):",
+        allNotAwarded.length
+      );
+    }
+  }, [threads, allAwarded, allNotAwarded]);
 
-  // After filters: Ibrahim
-  const ibrahimAwarded = filterThreadsByRange(
-    allAwarded,
-    ibrahimStart,
-    ibrahimEnd
-  );
-  const ibrahimNotAwarded = filterThreadsByRange(
-    allNotAwarded,
-    ibrahimStart,
-    ibrahimEnd
-  );
+  // Filtering only after Apply Timing Filters is pressed
+  let hafsaAwarded = [];
+  let hafsaNotAwarded = [];
+  let ibrahimAwarded = [];
+  let ibrahimNotAwarded = [];
+
+  function filterThreadsByRange(threads, startHour, endHour) {
+    return threads.filter((t) => {
+      const inDate = isInDateRange(t.projectUploadDate, from, to);
+      const inTime = isInTimeRange(t.projectUploadDate, startHour, endHour);
+      if (!inDate || !inTime) {
+        // Debug: log why this thread is excluded
+        console.log(
+          `Excluded thread ${t.id}: inDate=${inDate}, inTime=${inTime}, projectUploadDate=${t.projectUploadDate}`
+        );
+      }
+      return inDate && inTime;
+    });
+  }
+
+  if (filtersApplied) {
+    hafsaAwarded = filterThreadsByRange(allAwarded, hafsaStart, hafsaEnd);
+    hafsaNotAwarded = filterThreadsByRange(allNotAwarded, hafsaStart, hafsaEnd);
+    ibrahimAwarded = filterThreadsByRange(allAwarded, ibrahimStart, ibrahimEnd);
+    ibrahimNotAwarded = filterThreadsByRange(
+      allNotAwarded,
+      ibrahimStart,
+      ibrahimEnd
+    );
+
+    // Debug: log only the lengths after filtering
+    console.log("Hafsa Awarded (after filtering):", hafsaAwarded.length);
+    console.log("Hafsa Not Awarded (after filtering):", hafsaNotAwarded.length);
+    console.log("Ibrahim Awarded (after filtering):", ibrahimAwarded.length);
+    console.log(
+      "Ibrahim Not Awarded (after filtering):",
+      ibrahimNotAwarded.length
+    );
+  }
 
   // Color backgrounds based on theme
   const hafsaBg = theme.palette.mode === "dark" ? "#ff69b440" : "#ffe4ef";
@@ -99,6 +125,12 @@ const UtilityPage = () => {
         Fetch Active Threads with Project & Owner Info
       </Button>
       {loading && <CircularProgress sx={{ ml: 2 }} size={24} />}
+      {loading && (
+        <Box sx={{ width: "100%", mt: 2 }}>
+          <LinearProgress variant="determinate" value={progress} />
+          <Typography sx={{ mt: 1 }}>{progressText}</Typography>
+        </Box>
+      )}
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {error}
@@ -106,19 +138,16 @@ const UtilityPage = () => {
       )}
       {threads.length > 0 && !filtersApplied && (
         <Box sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 4 }}>
-          {/* Show all awarded projects */}
           <FilteredThreadsSection
             title="All Awarded Projects"
             threads={allAwarded}
             loading={loading}
           />
-          {/* Show all not awarded projects */}
           <FilteredThreadsSection
             title="All Not Awarded Projects"
             threads={allNotAwarded}
             loading={loading}
           />
-          {/* Date and timing controls */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <TextField
               label="From Date"
