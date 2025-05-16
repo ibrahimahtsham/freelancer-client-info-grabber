@@ -8,22 +8,27 @@ const MessageForm = ({
   setMessage,
   clientName,
   city,
-  onSendMessage, // <-- new prop
+  onSendMessage,
 }) => {
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleSendMessage = async () => {
     setError("");
+    setSuccess("");
     if (clientId && projectId && message) {
       try {
-        await onSendMessage(clientId, projectId, message); // <-- use prop
+        await onSendMessage(clientId, projectId, message);
+        setSuccess("✅ Message sent successfully!");
         setMessage("");
       } catch (err) {
         setError(err.message);
+        setSuccess("");
         console.error(err);
       }
     } else {
       setError("Make sure all fields are filled.");
+      setSuccess("");
     }
   };
 
@@ -70,7 +75,7 @@ const MessageForm = ({
         fullWidth
         margin="normal"
         error={!!error}
-        helperText={error}
+        helperText={error || success}
       />
       <Button variant="contained" color="primary" onClick={handleSendMessage}>
         Send Message
