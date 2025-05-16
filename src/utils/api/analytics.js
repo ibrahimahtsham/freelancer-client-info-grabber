@@ -1,16 +1,69 @@
 import { token } from "./config";
 import { fetchClientInfo } from "./client";
 
-export async function fetchActiveThreads() {
-  const res = await fetch(
-    "https://www.freelancer.com/api/messages/0.1/threads/?folder=active",
-    {
-      headers: { "freelancer-oauth-v1": token },
+export async function fetchActiveThreads(onProgress, maxThreads = Infinity) {
+  if (maxThreads === 0) {
+    console.log("[fetchActiveThreads] maxThreads is 0, returning empty array.");
+    return [];
+  }
+  console.log(`[fetchActiveThreads] maxThreads: ${maxThreads}`);
+  const allThreads = [];
+  let offset = 0;
+  let hasMore = true;
+  let batch = 0;
+
+  while (hasMore && allThreads.length < maxThreads) {
+    const remaining = maxThreads - allThreads.length;
+    const limit = Math.min(100, remaining);
+    console.log(
+      `[fetchActiveThreads] Batch ${
+        batch + 1
+      }: offset=${offset}, limit=${limit}, remaining=${remaining}`
+    );
+
+    if (onProgress) {
+      onProgress(
+        Math.min(2 + batch, 5),
+        `Fetching threads batch ${batch + 1} (offset ${offset})...`
+      );
     }
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch threads.");
-  return data.result?.threads || [];
+    const res = await fetch(
+      `https://www.freelancer.com/api/messages/0.1/threads/?folder=active&limit=${limit}&offset=${offset}`,
+      {
+        headers: { "freelancer-oauth-v1": token },
+      }
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch threads.");
+    const threads = data.result?.threads || [];
+    console.log(
+      `[fetchActiveThreads] Batch ${batch + 1}: API returned ${
+        threads.length
+      } threads`
+    );
+    allThreads.push(...threads);
+    console.log(
+      `[fetchActiveThreads] Total threads accumulated: ${allThreads.length}`
+    );
+
+    if (threads.length < limit || allThreads.length >= maxThreads) {
+      hasMore = false;
+      console.log(
+        `[fetchActiveThreads] Stopping: threads.length < limit (${threads.length} < ${limit}) or allThreads.length >= maxThreads (${allThreads.length} >= ${maxThreads})`
+      );
+    } else {
+      offset += limit;
+      batch++;
+    }
+  }
+
+  // If we fetched more than maxThreads, trim the array
+  if (allThreads.length > maxThreads) {
+    console.log(
+      `[fetchActiveThreads] Trimming allThreads from ${allThreads.length} to ${maxThreads}`
+    );
+  }
+  return allThreads.slice(0, maxThreads);
 }
 
 // Helper to fetch the first message date for a thread
@@ -78,9 +131,14 @@ export async function fetchPaidMilestonesForProject(projectId, myUserId) {
   return { milestones: paidMilestones, totalPaid };
 }
 
-export async function fetchThreadsWithProjectAndOwnerInfo(onProgress) {
+export async function fetchThreadsWithProjectAndOwnerInfo(
+  onProgress,
+  maxThreads = Infinity
+) {
+  console.log("[fetchThreadsWithProjectAndOwnerInfo] maxThreads:", maxThreads);
+  if (maxThreads === 0) return [];
   if (onProgress) onProgress(0, "Fetching active threads...");
-  const threads = await fetchActiveThreads();
+  const threads = await fetchActiveThreads(onProgress, maxThreads);
   if (!threads.length) return [];
 
   if (onProgress) onProgress(5, "Fetching user ID...");

@@ -39,6 +39,8 @@ const UtilityPage = () => {
   const [ibrahimEndHour, setIbrahimEndHour] = useState(7);
   const [ibrahimEndAmpm, setIbrahimEndAmpm] = useState("AM");
 
+  const [maxThreads, setMaxThreads] = useState(10); // or any default
+
   // Convert to 24h for filtering
   const hafsaStart = to24Hour(hafsaStartHour, hafsaStartAmpm);
   const hafsaEnd = to24Hour(hafsaEndHour, hafsaEndAmpm);
@@ -121,7 +123,19 @@ const UtilityPage = () => {
         Utility Page
       </Typography>
       <Typography sx={{ mb: 2 }}>Test utilities and API calls here.</Typography>
-      <Button variant="contained" onClick={getThreads} disabled={loading}>
+      <TextField
+        label="Max Threads"
+        type="number"
+        value={maxThreads}
+        onChange={(e) => setMaxThreads(Number(e.target.value))}
+        inputProps={{ min: 1 }}
+        sx={{ mb: 2, maxWidth: 200 }}
+      />
+      <Button
+        variant="contained"
+        onClick={() => getThreads(maxThreads)}
+        disabled={loading}
+      >
         Fetch Active Threads with Project & Owner Info
       </Button>
       {loading && <CircularProgress sx={{ ml: 2 }} size={24} />}
@@ -136,6 +150,7 @@ const UtilityPage = () => {
           {error}
         </Alert>
       )}
+
       {threads.length > 0 && !filtersApplied && (
         <Box sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 4 }}>
           <FilteredThreadsSection
@@ -148,6 +163,15 @@ const UtilityPage = () => {
             threads={allNotAwarded}
             loading={loading}
           />
+
+          <Typography
+            variant="h5"
+            sx={{ mt: 4, mb: 2 }}
+            color={theme.palette.mode === "dark" ? "#fff" : "#000"}
+          >
+            Apply Filters
+          </Typography>
+
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <TextField
               label="From Date"
@@ -207,6 +231,7 @@ const UtilityPage = () => {
           </Button>
         </Box>
       )}
+
       {threads.length > 0 && filtersApplied && (
         <Box sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 4 }}>
           <FilteredThreadsSection
