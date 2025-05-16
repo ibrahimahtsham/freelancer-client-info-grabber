@@ -1,34 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { TextField, Button, Typography, Link, Box } from "@mui/material";
-import { fetchClientInfo } from "../utils/api/client";
 import { formatEpochToPakistanTime } from "../utils/dateUtils";
 
-const ClientInfoForm = ({ projectId, setProjectId, onFetched }) => {
-  const [clientInfo, setClientInfo] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleFetchClientInfo = async () => {
-    if (!projectId) {
-      alert("Please enter a project ID.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setClientInfo(null);
-
-    try {
-      const data = await fetchClientInfo(projectId);
-      setClientInfo(data);
-      if (onFetched) onFetched(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+const ClientInfoForm = ({
+  projectId,
+  setProjectId,
+  onFetched,
+  clientInfo,
+  loading,
+  error,
+}) => {
   const client = clientInfo?.client;
   const project = clientInfo?.project;
   const clientName = client?.public_name || client?.username;
@@ -55,7 +36,7 @@ const ClientInfoForm = ({ projectId, setProjectId, onFetched }) => {
       <Button
         variant="contained"
         color="primary"
-        onClick={handleFetchClientInfo}
+        onClick={() => onFetched(projectId)}
         disabled={loading}
         sx={{ mt: 1 }}
       >

@@ -5,36 +5,29 @@ import ClientInfoForm from "./components/ClientInfoForm";
 import MessageForm from "./components/MessageForm";
 import DetailsModal from "./components/DetailsModal";
 import Navbar from "./components/Navbar";
-import flatten from "./utils/flatten";
 import useThemeMode from "./hooks/useThemeMode";
+import useClientInfo from "./hooks/useClientInfo";
+import { sendMessageWithThread } from "./utils/api/message";
 
 export default function App() {
   const { mode, theme, toggleMode } = useThemeMode("dark");
 
-  const [clientInfo, setClientInfo] = useState(null);
   const [projectId, setProjectId] = useState("39325440");
-  const [clientId, setClientId] = useState("");
-  const [message, setMessage] = useState("");
-  const [additionalDetails, setAdditionalDetails] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
-  const [threadId, setThreadId] = useState("");
 
-  const handleClientInfoFetched = (info) => {
-    setClientInfo(info);
-    setClientId(info?.project?.owner_id || "");
-    setThreadId(info?.thread?.id || "");
-    const city = info?.client?.location?.city || "your city";
-    setMessage(
-      `Hi ${
-        info?.client?.public_name || info?.client?.username
-      }, How is the weather in ${city} today?`
-    );
-    let details = {
-      ...flatten(info.project, "project"),
-      ...flatten(info.client, "client"),
-      ...(info.thread ? flatten(info.thread, "thread") : {}),
-    };
-    setAdditionalDetails(details);
+  const {
+    clientInfo,
+    additionalDetails,
+    clientId,
+    message,
+    setMessage,
+    fetchAndSetClientInfo,
+    loading,
+    error,
+  } = useClientInfo();
+
+  const handleSendMessage = async (clientId, projectId, message) => {
+    return sendMessageWithThread(clientId, projectId, message);
   };
 
   return (
@@ -45,20 +38,22 @@ export default function App() {
         <ClientInfoForm
           projectId={projectId}
           setProjectId={setProjectId}
-          onFetched={handleClientInfoFetched}
+          onFetched={fetchAndSetClientInfo}
+          clientInfo={clientInfo}
+          loading={loading}
+          error={error}
         />
         <hr style={{ margin: "2em 0" }} />
         <MessageForm
           clientId={clientId}
-          setClientId={setClientId}
+          projectId={projectId}
           message={message}
           setMessage={setMessage}
-          projectId={projectId}
           clientName={
             clientInfo?.client?.public_name || clientInfo?.client?.username
           }
           city={clientInfo?.client?.location?.city}
-          threadId={threadId}
+          onSendMessage={handleSendMessage}
         />
         <Button
           variant="outlined"

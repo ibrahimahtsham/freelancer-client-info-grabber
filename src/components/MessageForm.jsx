@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button, TextField, Typography } from "@mui/material";
-import { sendMessageWithThread } from "../utils/api/message";
 
 const MessageForm = ({
   clientId,
@@ -9,6 +8,7 @@ const MessageForm = ({
   setMessage,
   clientName,
   city,
+  onSendMessage, // <-- new prop
 }) => {
   const [error, setError] = useState("");
 
@@ -16,12 +16,7 @@ const MessageForm = ({
     setError("");
     if (clientId && projectId && message) {
       try {
-        const { threadId } = await sendMessageWithThread(
-          clientId,
-          projectId,
-          message
-        );
-        alert(`Message sent! Thread ID: ${threadId}`);
+        await onSendMessage(clientId, projectId, message); // <-- use prop
         setMessage("");
       } catch (err) {
         setError(err.message);
