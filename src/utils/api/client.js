@@ -1,6 +1,6 @@
-const token = "H7FfoHyqJxr9xKwECCgvseWyyCcMRu";
+import { token } from "./config";
 
-export const fetchClientInfo = async (projectId) => {
+export async function fetchClientInfo(projectId) {
   try {
     const projectRes = await fetch(
       `https://www.freelancer.com/api/projects/0.1/projects/?projects[]=${projectId}`,
@@ -40,29 +40,4 @@ export const fetchClientInfo = async (projectId) => {
   } catch (error) {
     throw new Error(error.message);
   }
-};
-
-export const sendMessage = async (threadId, message) => {
-  try {
-    const messageRes = await fetch(
-      `https://www.freelancer.com/api/messages/0.1/threads/${threadId}/messages/`,
-      {
-        method: "POST",
-        headers: {
-          "freelancer-oauth-v1": token,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ message }),
-      }
-    );
-
-    const msgData = await messageRes.json();
-    if (!messageRes.ok || msgData.status !== "success") {
-      throw new Error("Message failed to send.");
-    }
-
-    return msgData;
-  } catch (error) {
-    throw new Error(error.message);
-  }
-};
+}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextField, Button, Typography, Link, Box } from "@mui/material";
-import { fetchClientInfo } from "../utils/api";
+import { fetchClientInfo } from "../utils/api/client";
 import { formatEpochToPakistanTime } from "../utils/dateUtils";
 
 const ClientInfoForm = ({ projectId, setProjectId, onFetched }) => {

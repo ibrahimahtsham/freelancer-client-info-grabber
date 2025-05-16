@@ -17,10 +17,12 @@ export default function App() {
   const [message, setMessage] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
+  const [threadId, setThreadId] = useState("");
 
   const handleClientInfoFetched = (info) => {
     setClientInfo(info);
     setClientId(info?.project?.owner_id || "");
+    setThreadId(info?.thread?.id || "");
     const city = info?.client?.location?.city || "your city";
     setMessage(
       `Hi ${
@@ -56,6 +58,7 @@ export default function App() {
             clientInfo?.client?.public_name || clientInfo?.client?.username
           }
           city={clientInfo?.client?.location?.city}
+          threadId={threadId}
         />
         <Button
           variant="outlined"

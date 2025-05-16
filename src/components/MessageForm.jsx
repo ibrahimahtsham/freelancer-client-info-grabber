@@ -1,20 +1,34 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, TextField, Typography } from "@mui/material";
+import { sendMessageWithThread } from "../utils/api/message";
 
 const MessageForm = ({
   clientId,
+  projectId,
   message,
   setMessage,
   clientName,
   city,
-  onSendMessage,
 }) => {
-  const handleSendMessage = () => {
-    if (clientId && message) {
-      onSendMessage(clientId, message);
-      setMessage("");
+  const [error, setError] = useState("");
+
+  const handleSendMessage = async () => {
+    setError("");
+    if (clientId && projectId && message) {
+      try {
+        const { threadId } = await sendMessageWithThread(
+          clientId,
+          projectId,
+          message
+        );
+        alert(`Message sent! Thread ID: ${threadId}`);
+        setMessage("");
+      } catch (err) {
+        setError(err.message);
+        console.error(err);
+      }
     } else {
-      alert("Make sure all fields are filled.");
+      setError("Make sure all fields are filled.");
     }
   };
 
@@ -46,6 +60,13 @@ const MessageForm = ({
         margin="normal"
       />
       <TextField
+        label="Project ID"
+        value={projectId}
+        InputProps={{ readOnly: true }}
+        fullWidth
+        margin="normal"
+      />
+      <TextField
         label="Message"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -53,6 +74,8 @@ const MessageForm = ({
         rows={4}
         fullWidth
         margin="normal"
+        error={!!error}
+        helperText={error}
       />
       <Button variant="contained" color="primary" onClick={handleSendMessage}>
         Send Message
