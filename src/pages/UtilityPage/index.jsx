@@ -4,6 +4,7 @@ import FetchDataPage from "./FetchDataPage";
 import TimeBreakdownsPage from "./TimeBreakdownsPage";
 import CalculationsPage from "./CalculationsPage";
 import { UtilityProvider } from "./UtilityContext";
+import StoredDataSelector from "./StoredDataSelector";
 
 const TabPanel = (props) => {
   const { children, value, index, ...other } = props;
@@ -31,6 +32,9 @@ const UtilityPage = () => {
   return (
     <UtilityProvider>
       <Box>
+        {/* Add the StoredDataSelector above the tabs */}
+        <StoredDataSelector />
+
         <Paper sx={{ mb: 2 }}>
           <Tabs
             value={tabValue}

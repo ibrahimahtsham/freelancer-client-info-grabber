@@ -9,7 +9,9 @@ import {
   LinearProgress,
   FormControlLabel,
   Switch,
+  ButtonGroup,
 } from "@mui/material";
+import SaveIcon from "@mui/icons-material/Save";
 import DataTable from "../../components/DataTable";
 import DateRangeControls from "../../components/DateRangeControls";
 import { useUtilityData } from "../../hooks/useUtilityData";
@@ -41,10 +43,9 @@ const FetchDataPage = () => {
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  // Get shared state from context - THIS IS THE KEY CHANGE:
-  // We need to use the rows from context for rendering
+  // Get all context values and functions, including saveCurrentDataset
   const {
-    rows, // ← Use this for rendering instead of utilityData.rows
+    rows,
     setRows,
     loading,
     setLoading,
@@ -56,6 +57,7 @@ const FetchDataPage = () => {
     setProgress,
     progressText,
     setProgressText,
+    saveCurrentDataset,
   } = useUtility();
 
   // Custom hook to handle data fetching
@@ -65,7 +67,6 @@ const FetchDataPage = () => {
     limitEnabled ? limit : null,
     shouldFetch,
     setShouldFetch,
-    // Update functions to use context state
     {
       onStart: () => {
         setLoading(true);
@@ -98,6 +99,24 @@ const FetchDataPage = () => {
 
   const handleFetchData = () => {
     setShouldFetch(true);
+  };
+
+  // Add this function to save the current data
+  const handleSaveData = () => {
+    const savedId = saveCurrentDataset(
+      fromDate,
+      toDate,
+      limitEnabled ? limit : null
+    );
+    if (savedId) {
+      alert(
+        `Dataset saved successfully! You can access it from the dropdown above.`
+      );
+    } else {
+      alert(
+        "Failed to save dataset. The data might be too large for browser storage."
+      );
+    }
   };
 
   return (
@@ -181,15 +200,25 @@ const FetchDataPage = () => {
         </Box>
       </Box>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleFetchData}
-        disabled={loading}
-        sx={{ mb: 3 }}
-      >
-        {loading ? "Fetching Data..." : "Fetch Data"}
-      </Button>
+      <ButtonGroup sx={{ mb: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleFetchData}
+          disabled={loading}
+        >
+          {loading ? "Fetching Data..." : "Fetch Data"}
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={handleSaveData}
+          disabled={loading || rows.length === 0}
+          startIcon={<SaveIcon />}
+        >
+          Save Data
+        </Button>
+      </ButtonGroup>
 
       {error && (
         <Typography color="error" sx={{ mt: 2, mb: 2 }}>
