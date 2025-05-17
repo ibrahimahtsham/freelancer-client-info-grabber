@@ -2,25 +2,28 @@ import { token } from "./config";
 import { fetchClientInfo } from "./client";
 import { apiRequest } from "./request";
 
-export async function fetchActiveThreads(onProgress, maxThreads = Infinity) {
-  if (maxThreads === 0) {
-    console.log("[fetchActiveThreads] maxThreads is 0, returning empty array.");
-    return [];
-  }
-  console.log(`[fetchActiveThreads] maxThreads: ${maxThreads}`);
+export async function fetchActiveThreads(
+  onProgress,
+  maxThreads = Infinity,
+  fromDate,
+  toDate // <-- add this
+) {
   const allThreads = [];
   let offset = 0;
   let hasMore = true;
   let batch = 0;
 
+  // Convert fromDate and toDate to epoch seconds if provided
+  const fromUpdatedTime = fromDate
+    ? Math.floor(new Date(fromDate).getTime() / 1000)
+    : undefined;
+  const toUpdatedTime = toDate
+    ? Math.floor(new Date(toDate).getTime() / 1000)
+    : undefined;
+
   while (hasMore && allThreads.length < maxThreads) {
     const remaining = maxThreads - allThreads.length;
     const limit = Math.min(100, remaining);
-    console.log(
-      `[fetchActiveThreads] Batch ${
-        batch + 1
-      }: offset=${offset}, limit=${limit}, remaining=${remaining}`
-    );
 
     if (onProgress) {
       onProgress(
@@ -28,55 +31,59 @@ export async function fetchActiveThreads(onProgress, maxThreads = Infinity) {
         `Fetching threads batch ${batch + 1} (offset ${offset})...`
       );
     }
-    const data = await apiRequest(
-      `https://www.freelancer.com/api/messages/0.1/threads/?folder=active&limit=${limit}&offset=${offset}`
-    );
+
+    let url = `https://www.freelancer.com/api/messages/0.1/threads/?folder=active&limit=${limit}&offset=${offset}`;
+    if (fromUpdatedTime) {
+      url += `&from_updated_time=${fromUpdatedTime}`;
+    }
+    if (toUpdatedTime) {
+      url += `&to_updated_time=${toUpdatedTime}`;
+    }
+
+    const data = await apiRequest(url);
     // Filter out support_chat threads
     const threads = (data.result?.threads || []).filter(
       (t) => t.thread?.context?.type !== "support_chat"
     );
-    console.log(
-      `[fetchActiveThreads] Batch ${batch + 1}: API returned ${
-        threads.length
-      } threads (after filtering support_chat)`
-    );
     allThreads.push(...threads);
-    console.log(
-      `[fetchActiveThreads] Total threads accumulated: ${allThreads.length}`
-    );
 
     if (threads.length < limit || allThreads.length >= maxThreads) {
       hasMore = false;
-      console.log(
-        `[fetchActiveThreads] Stopping: threads.length < limit (${threads.length} < ${limit}) or allThreads.length >= maxThreads (${allThreads.length} >= ${maxThreads})`
-      );
     } else {
       offset += limit;
       batch++;
     }
   }
 
-  // If we fetched more than maxThreads, trim the array
-  if (allThreads.length > maxThreads) {
-    console.log(
-      `[fetchActiveThreads] Trimming allThreads from ${allThreads.length} to ${maxThreads}`
-    );
-  }
   return allThreads.slice(0, maxThreads);
 }
 
 // Helper to fetch the first message date for a thread
 async function fetchFirstMessageDate(threadId) {
-  const res = await fetch(
-    `https://www.freelancer.com/api/messages/0.1/messages/?threads[]=${threadId}&limit=1&offset=0`,
-    {
-      headers: { "freelancer-oauth-v1": token },
+  let offset = 0;
+  const limit = 100;
+  let earliest = null;
+
+  while (true) {
+    const batchUrl = `https://www.freelancer.com/api/messages/0.1/messages/?threads[]=${threadId}&limit=${limit}&offset=${offset}`;
+    const data = await apiRequest(batchUrl);
+    const messages = data.result?.messages || [];
+    if (messages.length === 0) break;
+    for (const msg of messages) {
+      if (!earliest || msg.time_created < earliest) {
+        earliest = msg.time_created;
+      }
     }
-  );
-  const data = await res.json();
-  if (!res.ok) return null;
-  const firstMsg = data.result?.messages?.[0];
-  return firstMsg ? firstMsg.time_created : null;
+    if (messages.length < limit) break;
+    offset += limit;
+  }
+
+  if (!earliest) {
+    console.warn(
+      `[fetchFirstMessageDate] No messages found for thread ${threadId}.`
+    );
+  }
+  return earliest;
 }
 
 export async function fetchMyBidForProject(projectId, myUserId) {
@@ -132,12 +139,18 @@ export async function fetchPaidMilestonesForProject(projectId, myUserId) {
 
 export async function fetchThreadsWithProjectAndOwnerInfo(
   onProgress,
-  maxThreads = Infinity
+  maxThreads = Infinity,
+  fromDate,
+  toDate
 ) {
-  console.log("[fetchThreadsWithProjectAndOwnerInfo] maxThreads:", maxThreads);
   if (maxThreads === 0) return [];
   if (onProgress) onProgress(0, "Fetching active threads...");
-  const threads = await fetchActiveThreads(onProgress, maxThreads);
+  const threads = await fetchActiveThreads(
+    onProgress,
+    maxThreads,
+    fromDate,
+    toDate
+  );
   if (!threads.length) return [];
 
   if (onProgress) onProgress(5, "Fetching user ID...");
@@ -175,8 +188,6 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
           ownerInfo = info.client;
 
           myBid = await fetchMyBidForProject(projectId, myUserId);
-
-          console.log(`Project ${projectId}: myBid=`, myBid);
 
           const milestoneResult = await fetchPaidMilestonesForProject(
             projectId,

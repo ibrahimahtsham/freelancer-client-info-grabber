@@ -45,12 +45,6 @@ const columns = [
 ];
 
 function mapThreadsToRows(threads) {
-  threads.forEach((t, i) => {
-    console.log(
-      `Thread ${i}: id=${t.id}, award_status=${t.myBid?.award_status}`
-    );
-  });
-
   return threads.map((thread) => {
     const awardStatus = thread.myBid?.award_status || "N/A";
     const isAwarded = ["awarded", "accepted"].includes(awardStatus);

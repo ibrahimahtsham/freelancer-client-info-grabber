@@ -8,17 +8,22 @@ export default function useActiveThreads() {
   const [progress, setProgress] = useState(0);
   const [progressText, setProgressText] = useState("");
 
-  const getThreads = async (maxThreads) => {
+  // Accept both fromDate and toDate
+  const getThreads = async (maxThreads, fromDate, toDate) => {
     setLoading(true);
     setError("");
     setProgress(0);
     setProgressText("");
-    console.log("[getThreads] maxThreads:", maxThreads);
     try {
-      const data = await fetchThreadsWithProjectAndOwnerInfo((pct, text) => {
-        setProgress(pct);
-        setProgressText(text);
-      }, maxThreads);
+      const data = await fetchThreadsWithProjectAndOwnerInfo(
+        (pct, text) => {
+          setProgress(pct);
+          setProgressText(text);
+        },
+        maxThreads,
+        fromDate,
+        toDate // <-- pass toDate
+      );
       setThreads(data);
     } catch (err) {
       setError(err.message);

@@ -8,6 +8,9 @@ import {
   TextField,
   useTheme,
   LinearProgress,
+  Checkbox,
+  FormControlLabel,
+  Grid,
 } from "@mui/material";
 import useActiveThreads from "../hooks/useActiveThreads";
 import TimingControls from "../components/TimingControls";
@@ -36,7 +39,11 @@ const UtilityPage = () => {
   const [ibrahimEndHour, setIbrahimEndHour] = useState(7);
   const [ibrahimEndAmpm, setIbrahimEndAmpm] = useState("AM");
 
-  const [maxThreads, setMaxThreads] = useState(10); // or any default
+  const [maxThreads, setMaxThreads] = useState(10);
+
+  // Checkbox states (disabled by default)
+  const [enableMaxThreads, setEnableMaxThreads] = useState(false);
+  const [enableFromDate, setEnableFromDate] = useState(false);
 
   const [filtersApplied, setFiltersApplied] = useState(false);
 
@@ -71,17 +78,62 @@ const UtilityPage = () => {
         Utility Page
       </Typography>
       <Typography sx={{ mb: 2 }}>Test utilities and API calls here.</Typography>
-      <TextField
-        label="Max Threads"
-        type="number"
-        value={maxThreads}
-        onChange={(e) => setMaxThreads(Number(e.target.value))}
-        inputProps={{ min: 1 }}
-        sx={{ mb: 2, maxWidth: 200 }}
-      />
+
+      {/* Controls Section */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
+        {/* Row 1: Max Threads */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={enableMaxThreads}
+                onChange={(e) => setEnableMaxThreads(e.target.checked)}
+              />
+            }
+            label="Enable Max Threads"
+          />
+          <TextField
+            label="Max Threads"
+            type="number"
+            value={maxThreads}
+            onChange={(e) => setMaxThreads(Number(e.target.value))}
+            inputProps={{ min: 1 }}
+            sx={{ maxWidth: 140 }}
+            disabled={!enableMaxThreads}
+            size="small"
+          />
+        </Box>
+        {/* Row 2: From/To Date */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={enableFromDate}
+                onChange={(e) => setEnableFromDate(e.target.checked)}
+              />
+            }
+            label="Enable From Date"
+          />
+          <DateRangeControls
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
+            disabled={!enableFromDate}
+            sx={{ display: "inline-flex", gap: 2 }}
+          />
+        </Box>
+      </Box>
+
       <Button
         variant="contained"
-        onClick={() => getThreads(maxThreads)}
+        onClick={() =>
+          getThreads(
+            enableMaxThreads ? maxThreads : undefined,
+            enableFromDate ? fromDate : undefined,
+            enableFromDate ? toDate : undefined
+          )
+        }
         disabled={loading}
       >
         Fetch Active Threads with Project & Owner Info

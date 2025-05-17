@@ -56,7 +56,6 @@ export async function sendMessageWithThread(clientId, projectId, message) {
   );
 
   const msgData = await messageRes.json();
-  console.log("Send message response:", msgData);
 
   if (!messageRes.ok || msgData.status !== "success") {
     // Only throw the API's message field, or a generic fallback
