@@ -6,11 +6,12 @@ import {
   CircularProgress,
   Chip,
   TextField,
+  LinearProgress,
 } from "@mui/material";
 import DataTable from "../components/DataTable";
 import DateRangeControls from "../components/DateRangeControls";
 import { useUtilityData } from "../hooks/useUtilityData";
-import { DEFAULT_VALUES } from "../constants"; // Import constants
+import { DEFAULT_VALUES } from "../constants";
 
 const UtilityPage = () => {
   // Use realistic dates instead of future dates
@@ -22,16 +23,11 @@ const UtilityPage = () => {
 
   const [fromDate, setFromDate] = useState(formatDate(oneMonthAgo));
   const [toDate, setToDate] = useState(formatDate(new Date()));
-  const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT); // Use constant for default limit
+  const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  const { rows, loading, rateLimits, error } = useUtilityData(
-    fromDate,
-    toDate,
-    limit,
-    shouldFetch,
-    setShouldFetch
-  );
+  const { rows, loading, rateLimits, error, progress, progressText } =
+    useUtilityData(fromDate, toDate, limit, shouldFetch, setShouldFetch);
 
   const handleFetchData = () => {
     setShouldFetch(true);
@@ -50,7 +46,6 @@ const UtilityPage = () => {
           Utility Page
         </Typography>
 
-        {/* Rate limit display */}
         {rateLimits.remaining && (
           <Chip
             color={
@@ -115,6 +110,14 @@ const UtilityPage = () => {
         <Typography color="error" sx={{ mt: 2, mb: 2 }}>
           {error}
         </Typography>
+      )}
+
+      {/* Show progress bar while loading */}
+      {loading && (
+        <Box sx={{ my: 3 }}>
+          <LinearProgress variant="determinate" value={progress} />
+          <Typography sx={{ mt: 1 }}>{progressText}</Typography>
+        </Box>
       )}
 
       <Box mt={4}>

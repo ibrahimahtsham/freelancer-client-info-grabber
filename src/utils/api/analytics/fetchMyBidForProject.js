@@ -1,9 +1,23 @@
 import { apiRequest } from "../request";
+import { API_ENDPOINTS, DEFAULT_VALUES } from "../../../constants";
 
-export async function fetchMyBidForProject(projectId, userId) {
-  // Replace the URL with the correct endpoint for fetching bid info
-  const bidData = await apiRequest(
-    `https://www.freelancer.com/api/bids/0.1/projects/${projectId}/bids?user=${userId}`
-  );
-  return bidData?.result || {};
+export async function fetchMyBidForProject(
+  projectId,
+  myUserId = DEFAULT_VALUES.MY_USER_ID
+) {
+  try {
+    const response = await apiRequest(
+      `${API_ENDPOINTS.BIDS}?projects[]=${projectId}&bidders[]=${myUserId}`
+    );
+
+    if (response.error) {
+      return null;
+    }
+
+    const bids = response.data?.result?.bids || [];
+    // There should be at most one bid from this user on this project
+    return bids[0] || null;
+  } catch (error) {
+    return null;
+  }
 }
