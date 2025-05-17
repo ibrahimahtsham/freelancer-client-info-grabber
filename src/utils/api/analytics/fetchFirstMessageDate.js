@@ -1,4 +1,3 @@
-// filepath: src/utils/api/analytics/fetchFirstMessageDate.js
 import { apiRequest } from "../request";
 
 export async function fetchFirstMessageDate(threadId) {

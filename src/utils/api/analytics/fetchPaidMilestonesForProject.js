@@ -1,4 +1,3 @@
-// filepath: src/utils/api/analytics/fetchPaidMilestonesForProject.js
 import { apiRequest } from "../request";
 
 export async function fetchPaidMilestonesForProject(projectId, userId) {
