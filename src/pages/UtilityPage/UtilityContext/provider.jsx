@@ -1,4 +1,5 @@
-import React, { createContext, useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { UtilityContext } from "./context"; // Import from the new file
 import {
   loadAvailableDatasets,
   saveCurrentDataset,
@@ -6,9 +7,6 @@ import {
   forceLoadDataset,
   deleteDataset,
 } from "./datasetOperations";
-
-// Create the context
-export const UtilityContext = createContext();
 
 export function UtilityProvider({ children }) {
   const [rows, setRows] = useState([]);

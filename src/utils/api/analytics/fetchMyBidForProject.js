@@ -17,7 +17,7 @@ export async function fetchMyBidForProject(
     const bids = response.data?.result?.bids || [];
     // There should be at most one bid from this user on this project
     return bids[0] || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

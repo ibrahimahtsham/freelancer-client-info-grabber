@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { fetchThreadsWithProjectAndOwnerInfo } from "../utils/api/analytics";
 
 export function useUtilityData(
@@ -11,8 +11,8 @@ export function useUtilityData(
 ) {
   const [rows, setRows] = useState([]);
 
-  // Function to fetch data
-  const fetchData = async () => {
+  // Memoize the fetchData function using useCallback
+  const fetchData = useCallback(async () => {
     // Call onStart callback if provided
     if (callbacks.onStart) callbacks.onStart();
 
@@ -40,13 +40,13 @@ export function useUtilityData(
       // Reset shouldFetch so the button can be clicked again
       if (setShouldFetch) setShouldFetch(false);
     }
-  };
+  }, [fromDate, toDate, limit, callbacks, setShouldFetch]); // Add all dependencies
 
   // Initial data fetch when button is clicked
   useEffect(() => {
     if (!shouldFetch) return;
     fetchData();
-  }, [shouldFetch]);
+  }, [shouldFetch, fetchData]); // Include fetchData in deps
 
   return { rows };
 }

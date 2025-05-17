@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import { Box, Typography, Stepper, Step, StepLabel, Button } from "@mui/material";
-import { useUtility } from "../UtilityContext";
+import {
+  Box,
+  Typography,
+  Stepper,
+  Step,
+  StepLabel,
+  Button,
+} from "@mui/material";
+import { useUtility } from "../UtilityContext/hooks";
 import useStatsCalculation from "./hooks/useStatsCalculation";
 import useBidsData from "./hooks/useBidsData";
 import BasicStatsCards from "./components/BasicStatsCards";
@@ -13,18 +20,38 @@ import StatsStepper from "./components/StatsStepper";
 const CalculationsPage = () => {
   const { rows } = useUtility();
   const [activeStep, setActiveStep] = useState(0);
-  
+
   // Get statistics from our custom hooks
   const { stats, timeStats } = useStatsCalculation(rows);
   const { bidsData, bidsLoading, bidsError } = useBidsData(rows);
-  
+
   // Steps for the stepper navigation
   const steps = [
     { label: "Summary Stats", component: <BasicStatsCards stats={stats} /> },
-    { label: "Time Distribution", component: <TimeDistribution timeStats={timeStats} /> },
-    { label: "Bid Analysis", component: <BidAnalysisChart bidsData={bidsData} loading={bidsLoading} error={bidsError} /> },
-    { label: "Team Comparison", component: <TeamComparison rows={rows} timeStats={timeStats} bidsData={bidsData} /> },
-    { label: "Salary Calculator", component: <SalaryCalculator rows={rows} bidsData={bidsData} /> }
+    {
+      label: "Time Distribution",
+      component: <TimeDistribution timeStats={timeStats} />,
+    },
+    {
+      label: "Bid Analysis",
+      component: (
+        <BidAnalysisChart
+          bidsData={bidsData}
+          loading={bidsLoading}
+          error={bidsError}
+        />
+      ),
+    },
+    {
+      label: "Team Comparison",
+      component: (
+        <TeamComparison rows={rows} timeStats={timeStats} bidsData={bidsData} />
+      ),
+    },
+    {
+      label: "Salary Calculator",
+      component: <SalaryCalculator rows={rows} bidsData={bidsData} />,
+    },
   ];
 
   if (!stats) {
@@ -45,18 +72,16 @@ const CalculationsPage = () => {
       <Typography variant="h4" gutterBottom>
         Calculations and Analysis
       </Typography>
-      
-      <StatsStepper 
-        steps={steps} 
+
+      <StatsStepper
+        steps={steps}
         activeStep={activeStep}
         setActiveStep={setActiveStep}
       />
-      
-      <Box sx={{ mt: 4, mb: 4 }}>
-        {steps[activeStep].component}
-      </Box>
-      
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+
+      <Box sx={{ mt: 4, mb: 4 }}>{steps[activeStep].component}</Box>
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
         <Button
           disabled={activeStep === 0}
           onClick={() => setActiveStep((prev) => prev - 1)}

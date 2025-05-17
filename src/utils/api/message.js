@@ -1,4 +1,3 @@
-import { token } from "./config";
 import { apiRequest } from "./request";
 import { API_ENDPOINTS } from "../../constants"; // Import constants
 

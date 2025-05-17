@@ -16,7 +16,7 @@ import {
   Divider,
 } from "@mui/material";
 
-const SalaryCalculator = ({ rows, bidsData }) => {
+const SalaryCalculator = ({ rows }) => {
   // State for salary calculation parameters
   const [baseRate, setBaseRate] = useState(5); // Base hourly rate in USD
   const [commissionRate, setCommissionRate] = useState(20); // Commission percentage
@@ -47,7 +47,7 @@ const SalaryCalculator = ({ rows, bidsData }) => {
         else if (ampmPart === "AM" && hours === 12) hour24 = 0;
 
         return hour24;
-      } catch (e) {
+      } catch {
         return null;
       }
     };

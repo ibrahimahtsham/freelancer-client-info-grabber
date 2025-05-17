@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { UtilityContext } from "./provider";
+import { UtilityContext } from "./context"; // Import from the new file
 
 export function useUtility() {
   const context = useContext(UtilityContext);

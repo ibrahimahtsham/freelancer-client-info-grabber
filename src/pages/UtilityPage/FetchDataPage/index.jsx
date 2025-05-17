@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Typography, Box, Snackbar, Alert, Chip } from "@mui/material";
 import { useUtilityData } from "../../../hooks/useUtilityData";
 import { DEFAULT_VALUES } from "../../../constants";
-import { useUtility } from "../UtilityContext";
+import { useUtility } from "../UtilityContext/hooks";
 import DataFetchControls from "./DataFetchControls";
 import DataActions from "./DataActions";
 import FetchStatusDisplay from "./FetchStatusDisplay";

@@ -5,12 +5,7 @@ import { fetchMyUserId } from "./fetchMyUserId";
 import { fetchPaidMilestonesForProject } from "./fetchPaidMilestonesForProject";
 import { fetchFirstMessageDate } from "./fetchFirstMessageDate";
 import { DEFAULT_VALUES } from "../../../constants";
-import {
-  formatDate,
-  formatDateTime,
-  formatTime,
-  formatDateDDMMYYYY,
-} from "../../../utils/dateUtils"; // Import additional formatting function
+import { formatTime, formatDateDDMMYYYY } from "../../../utils/dateUtils"; // Import additional formatting function
 
 export async function fetchThreadsWithProjectAndOwnerInfo(
   progressCallback = null,
@@ -32,7 +27,7 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
   let myUserId;
   try {
     myUserId = await fetchMyUserId();
-  } catch (err) {
+  } catch {
     // Fallback to default if there's an error
     myUserId = DEFAULT_VALUES.MY_USER_ID;
   }

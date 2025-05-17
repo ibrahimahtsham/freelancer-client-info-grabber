@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { isInTimeRange } from "../../../../utils/dateUtils";
 
 export default function useStatsCalculation(rows) {
   // Calculate all statistics from row data
@@ -39,7 +38,7 @@ export default function useStatsCalculation(rows) {
         }
 
         return date;
-      } catch (e) {
+      } catch {
         console.warn("Failed to parse date:", dateString);
         return null;
       }

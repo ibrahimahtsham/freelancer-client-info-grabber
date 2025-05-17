@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const TeamComparison = ({ rows, timeStats, bidsData }) => {
+const TeamComparison = ({ rows }) => {
   // Calculate team stats based on time periods
   const teamStats = useMemo(() => {
     if (!rows || !rows.length) return null;

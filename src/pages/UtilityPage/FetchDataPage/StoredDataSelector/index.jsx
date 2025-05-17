@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Paper } from "@mui/material";
-import { useUtility } from "../../UtilityContext";
+import { useUtility } from "../../UtilityContext/hooks";
 import DatasetHeader from "./DatasetHeader";
 import NotificationSystem from "./NotificationSystem";
 import DatasetSelector from "./DatasetSelector";

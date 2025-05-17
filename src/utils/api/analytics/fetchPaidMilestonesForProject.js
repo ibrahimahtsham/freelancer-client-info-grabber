@@ -36,7 +36,7 @@ export async function fetchPaidMilestonesForProject(
     );
 
     return { totalPaid, milestones: paidMilestones };
-  } catch (error) {
+  } catch {
     return { totalPaid: 0, milestones: [] };
   }
 }

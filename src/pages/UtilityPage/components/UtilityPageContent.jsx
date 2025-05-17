@@ -4,7 +4,7 @@ import FetchDataPage from "../FetchDataPage";
 import TimeBreakdownsPage from "../TimeBreakdownsPage";
 import CalculationsPage from "../CalculationsPage";
 import StoredDataSelector from "../FetchDataPage/StoredDataSelector";
-import { useUtility } from "../UtilityContext";
+import { useUtility } from "../UtilityContext/hooks";
 import TabPanel from "./TabPanel";
 
 const UtilityPageContent = () => {
