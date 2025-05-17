@@ -5,6 +5,7 @@ import { fetchMyUserId } from "./fetchMyUserId";
 import { fetchPaidMilestonesForProject } from "./fetchPaidMilestonesForProject";
 import { fetchFirstMessageDate } from "./fetchFirstMessageDate";
 import { DEFAULT_VALUES } from "../../../constants";
+import { formatDateTime } from "../../../utils/dateUtils"; // Import the new function
 
 export async function fetchThreadsWithProjectAndOwnerInfo(
   progressCallback = null,
@@ -75,8 +76,10 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
         // Project info
         if (info.project) {
           enrichedThread.projectTitle = info.project.title || "N/A";
+
+          // Use formatDateTime for consistent date formatting
           enrichedThread.projectUploadDate = info.project.submitdate
-            ? new Date(info.project.submitdate * 1000).toLocaleString()
+            ? formatDateTime(info.project.submitdate)
             : "N/A";
 
           // Format bid price
@@ -140,9 +143,8 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
         if (thread.id) {
           const firstMsgDate = await fetchFirstMessageDate(thread.id);
           if (firstMsgDate) {
-            enrichedThread.firstMessageDate = new Date(
-              firstMsgDate * 1000
-            ).toLocaleString();
+            // Use formatDateTime for consistent date formatting
+            enrichedThread.firstMessageDate = formatDateTime(firstMsgDate);
           }
         }
       } catch (err) {

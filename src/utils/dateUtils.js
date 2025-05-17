@@ -41,3 +41,53 @@ export function to24Hour(hour, ampm) {
   if (ampm === "AM") return hour === 12 ? 0 : hour;
   return hour === 12 ? 12 : hour + 12;
 }
+
+// New function for standardized date formatting
+export function formatDate(dateInput) {
+  if (!dateInput) return "N/A";
+
+  // If it's already a date string, parse it
+  let date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+
+  // If input is a timestamp in seconds, convert to milliseconds
+  if (typeof dateInput === "number" && dateInput < 10000000000) {
+    date = new Date(dateInput * 1000);
+  }
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  // Format as day/month/year format
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+// Add or update this function
+
+export function formatDateTime(dateInput) {
+  if (!dateInput) return "N/A";
+
+  // If it's already a date string, parse it
+  let date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+
+  // If input is a timestamp in seconds, convert to milliseconds
+  if (typeof dateInput === "number" && dateInput < 10000000000) {
+    date = new Date(dateInput * 1000);
+  }
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  // Format as day/month/year with time
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}

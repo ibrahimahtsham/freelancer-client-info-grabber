@@ -15,14 +15,21 @@ import { DEFAULT_VALUES } from "../constants";
 
 const UtilityPage = () => {
   // Use realistic dates instead of future dates
-  const oneMonthAgo = new Date();
-  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  // Get first day of current month
+  const firstDayOfCurrentMonth = new Date();
+  firstDayOfCurrentMonth.setDate(1);
+
+  // Get first day of previous month
+  const firstDayOfPreviousMonth = new Date();
+  firstDayOfPreviousMonth.setDate(1);
+  firstDayOfPreviousMonth.setMonth(firstDayOfPreviousMonth.getMonth() - 1);
+
   const formatDate = (date) => {
     return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
   };
 
-  const [fromDate, setFromDate] = useState(formatDate(oneMonthAgo));
-  const [toDate, setToDate] = useState(formatDate(new Date()));
+  const [fromDate, setFromDate] = useState(formatDate(firstDayOfPreviousMonth));
+  const [toDate, setToDate] = useState(formatDate(firstDayOfCurrentMonth));
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [shouldFetch, setShouldFetch] = useState(false);
 

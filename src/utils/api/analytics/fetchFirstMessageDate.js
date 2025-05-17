@@ -3,16 +3,14 @@ import { API_ENDPOINTS } from "../../../constants";
 
 export async function fetchFirstMessageDate(threadId) {
   try {
-    // Following the exact API documentation structure
-    // Remove sort parameters as they're not documented
-    // Add thread_details to get more context if needed
+    // Using the messages API with threads[] parameter
     const response = await apiRequest(
-      `${API_ENDPOINTS.MESSAGES}?threads[]=${threadId}&limit=1&offset=0&thread_details=true`
+      `${API_ENDPOINTS.MESSAGES}?threads[]=${threadId}&limit=1&offset=0&sort_field=time_created&sort_direction=asc`
     );
 
     if (response.error) {
       console.warn(
-        `Error response for thread ${threadId}:`,
+        `Error fetching first message date for thread ${threadId}:`,
         response.error.message
       );
       return null;
@@ -20,8 +18,7 @@ export async function fetchFirstMessageDate(threadId) {
 
     const messages = response.data?.result?.messages || [];
 
-    // If we have messages, return the time of the first one
-    // The API should return them in order (oldest first)
+    // Return the timestamp of the first message if available
     if (messages.length > 0) {
       return messages[0].time_created;
     }
