@@ -15,6 +15,11 @@ export function UtilityProvider({ children }) {
   const [storedDatasets, setStoredDatasets] = useState([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState(null);
 
+  // Debug effect to monitor rows changes
+  useEffect(() => {
+    console.log(`Rows state updated: ${rows.length} items`);
+  }, [rows]);
+
   // Load available datasets from localStorage on component mount
   useEffect(() => {
     loadAvailableDatasets();
@@ -79,19 +84,77 @@ export function UtilityProvider({ children }) {
     }
   };
 
-  // Function to load a specific dataset
+  // Function to load a specific dataset with improved debugging and error handling
   const loadDataset = (datasetId) => {
     try {
+      console.log("Loading dataset:", datasetId); // Debug
+
+      // First, clear any existing state that might interfere
+      setLoading(true);
+      setError("");
+      setProgress(0);
+      setProgressText("Loading stored dataset...");
+
       const datasetJson = localStorage.getItem(datasetId);
-      if (datasetJson) {
-        const dataset = JSON.parse(datasetJson);
-        setRows(dataset.rows);
-        setSelectedDatasetId(datasetId);
-        return true;
+      if (!datasetJson) {
+        console.error("Dataset not found in localStorage:", datasetId);
+        setLoading(false);
+        return false;
       }
-      return false;
+
+      const dataset = JSON.parse(datasetJson);
+      if (!dataset || !Array.isArray(dataset.rows)) {
+        console.error("Invalid dataset format:", dataset);
+        setLoading(false);
+        return false;
+      }
+
+      console.log(`Loading ${dataset.rows.length} rows from dataset`); // Debug
+
+      // Set the selected ID
+      setSelectedDatasetId(datasetId);
+
+      // Force a synchronous update to rows to ensure it's applied
+      // This pattern helps avoid potential race conditions
+      setTimeout(() => {
+        // Update the rows array after a tick to ensure ID update is processed
+        console.log(`Setting rows to ${dataset.rows.length} items`);
+        setRows([...dataset.rows]); // Use spread to ensure a new array reference
+        setLoading(false);
+        console.log("Dataset loading complete");
+      }, 0);
+
+      return true;
     } catch (err) {
       console.error("Error loading dataset:", err);
+      setLoading(false);
+      return false;
+    }
+  };
+
+  // Add a specialized function for direct dataset loading
+  const forceLoadDataset = (datasetId) => {
+    try {
+      console.log("Force loading dataset:", datasetId);
+      const datasetJson = localStorage.getItem(datasetId);
+      if (!datasetJson) return false;
+
+      const dataset = JSON.parse(datasetJson);
+      if (!dataset || !Array.isArray(dataset.rows)) return false;
+
+      // Clear existing rows first to trigger proper re-renders
+      setRows([]);
+
+      // Then set with new data to ensure state change is detected
+      setTimeout(() => {
+        setSelectedDatasetId(datasetId);
+        setRows([...dataset.rows]);
+        console.log(`Force loaded ${dataset.rows.length} rows`);
+      }, 10);
+
+      return true;
+    } catch (err) {
+      console.error("Error force loading dataset:", err);
       return false;
     }
   };
@@ -105,6 +168,8 @@ export function UtilityProvider({ children }) {
       // If we're deleting the currently selected dataset, clear selection
       if (selectedDatasetId === datasetId) {
         setSelectedDatasetId(null);
+        // Also clear the rows to prevent showing deleted data
+        setRows([]);
       }
     } catch (err) {
       console.error("Error deleting dataset:", err);
@@ -129,6 +194,7 @@ export function UtilityProvider({ children }) {
     selectedDatasetId,
     saveCurrentDataset,
     loadDataset,
+    forceLoadDataset,
     deleteDataset,
     loadAvailableDatasets,
   };
