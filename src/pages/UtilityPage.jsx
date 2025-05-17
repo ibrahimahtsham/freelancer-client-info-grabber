@@ -120,10 +120,10 @@ const UtilityPage = () => {
             value={limit}
             onChange={(e) =>
               setLimit(
-                Math.max(1, Math.min(100, parseInt(e.target.value) || 5))
+                Math.max(1, Math.min(1000, parseInt(e.target.value) || 5))
               )
             }
-            InputProps={{ inputProps: { min: 1, max: 100 } }}
+            InputProps={{ inputProps: { min: 1, max: 1000 } }}
             disabled={!limitEnabled}
             sx={{ width: 150 }}
           />
