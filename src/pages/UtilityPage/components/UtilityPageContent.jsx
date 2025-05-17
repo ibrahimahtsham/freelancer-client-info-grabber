@@ -3,7 +3,7 @@ import { Box, Tabs, Tab, Paper } from "@mui/material";
 import FetchDataPage from "../FetchDataPage";
 import TimeBreakdownsPage from "../TimeBreakdownsPage";
 import CalculationsPage from "../CalculationsPage";
-import StoredDataSelector from "../StoredDataSelector";
+import StoredDataSelector from "../FetchDataPage/StoredDataSelector";
 import { useUtility } from "../UtilityContext";
 import TabPanel from "./TabPanel";
 
