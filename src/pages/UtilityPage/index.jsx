@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box } from "@mui/material";
 import { UtilityProvider } from "./UtilityContext";
-import UtilityPageContent from "./UtilityPageContent";
+import UtilityPageContent from "./components/UtilityPageContent";
 
-// Wrapper component that provides the context
 const UtilityPage = () => {
   return (
     <UtilityProvider>
