@@ -11,10 +11,12 @@ export function useUtilityData(
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [rateLimits, setRateLimits] = useState({ limit: "", remaining: "" });
+  const [error, setError] = useState(""); // Add error state
 
   // Function to fetch data
   const fetchData = async () => {
     setLoading(true);
+    setError(""); // Clear previous errors
 
     try {
       const { threads, rateLimits } = await fetchActiveThreads(
@@ -58,8 +60,13 @@ export function useUtilityData(
       });
 
       setRows(processedThreads);
-    } catch (error) {
-      // Error handling without logging
+    } catch (err) {
+      // Proper error handling
+      if (err.name === "ApiError") {
+        setError(`API Error (${err.status}): ${err.message}`);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
       // Reset shouldFetch so the button can be clicked again
@@ -77,5 +84,6 @@ export function useUtilityData(
     rows,
     loading,
     rateLimits,
+    error, // Return error state
   };
 }

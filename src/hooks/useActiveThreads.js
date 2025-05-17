@@ -22,11 +22,16 @@ export default function useActiveThreads() {
         },
         maxThreads,
         fromDate,
-        toDate // <-- pass toDate
+        toDate
       );
       setThreads(data);
     } catch (err) {
-      setError(err.message);
+      // Improved error handling for ApiError
+      if (err.name === "ApiError") {
+        setError(`API Error (${err.status}): ${err.message}`);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
       setProgress(0);

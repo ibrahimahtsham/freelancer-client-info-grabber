@@ -24,7 +24,7 @@ const UtilityPage = () => {
   const [limit, setLimit] = useState(5); // Default limit of 5
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  const { rows, loading, rateLimits } = useUtilityData(
+  const { rows, loading, rateLimits, error } = useUtilityData(
     fromDate,
     toDate,
     limit,
@@ -109,6 +109,12 @@ const UtilityPage = () => {
       >
         {loading ? "Fetching Data..." : "Fetch Data"}
       </Button>
+
+      {error && (
+        <Typography color="error" sx={{ mt: 2, mb: 2 }}>
+          {error}
+        </Typography>
+      )}
 
       <Box mt={4}>
         {loading && rows.length === 0 ? (

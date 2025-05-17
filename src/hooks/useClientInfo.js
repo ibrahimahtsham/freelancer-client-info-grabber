@@ -29,7 +29,11 @@ export default function useClientInfo() {
         ...(info.thread ? flatten(info.thread, "thread") : {}),
       });
     } catch (err) {
-      setError(err.message);
+      if (err.name === "ApiError") {
+        setError(`API Error (${err.status}): ${err.message}`);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
