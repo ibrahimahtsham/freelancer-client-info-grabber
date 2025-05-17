@@ -8,8 +8,8 @@ async function getOrCreateThread(clientId, projectId) {
     `https://www.freelancer.com/api/messages/0.1/threads/?context_type=project&context=${projectId}`
   );
 
-  if (existingThreadsData?.result?.threads?.length > 0) {
-    return existingThreadsData.result.threads[0].id;
+  if (existingThreadsData?.data?.result?.threads?.length > 0) {
+    return existingThreadsData.data.result.threads[0].id;
   }
 
   // Create new thread
@@ -29,7 +29,7 @@ async function getOrCreateThread(clientId, projectId) {
     }
   );
 
-  const threadId = threadData?.result?.thread?.id;
+  const threadId = threadData?.data?.result?.thread?.id;
   if (!threadId) throw new Error("Unable to create thread.");
   return threadId;
 }
@@ -50,8 +50,8 @@ export async function sendMessageWithThread(clientId, projectId, message) {
     }
   );
 
-  if (msgData.status !== "success") {
-    throw new Error(msgData.message || "Message failed to send.");
+  if (msgData.data.status !== "success") {
+    throw new Error(msgData.data.message || "Message failed to send.");
   }
 
   return { msgData, threadId };
