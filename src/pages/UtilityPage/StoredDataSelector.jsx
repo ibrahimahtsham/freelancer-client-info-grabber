@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FormControl,
   InputLabel,
@@ -12,6 +12,11 @@ import {
   Chip,
   Button,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
@@ -26,6 +31,11 @@ const StoredDataSelector = () => {
     rows,
   } = useUtility();
 
+  // State for delete confirmation dialogs
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
+  const [datasetToDelete, setDatasetToDelete] = useState(null);
+
   const handleChange = (event) => {
     const datasetId = event.target.value;
     if (datasetId) {
@@ -33,40 +43,119 @@ const StoredDataSelector = () => {
     }
   };
 
-  const handleDelete = (event, datasetId) => {
+  // Open delete confirmation dialog
+  const handleDeleteClick = (event, datasetId) => {
     event.stopPropagation();
-    if (confirm("Are you sure you want to delete this saved dataset?")) {
-      deleteDataset(datasetId);
-    }
+    setDatasetToDelete(datasetId);
+    setDeleteDialogOpen(true);
   };
 
-  const handleClearAllDatasets = () => {
-    if (
-      confirm(
-        "Are you sure you want to delete ALL saved datasets? This cannot be undone."
-      )
-    ) {
-      // Delete each dataset in storedDatasets
-      storedDatasets.forEach((dataset) => {
-        deleteDataset(dataset.id);
-      });
+  // Confirm delete action
+  const handleConfirmDelete = () => {
+    if (datasetToDelete) {
+      deleteDataset(datasetToDelete);
+      setDatasetToDelete(null);
     }
+    setDeleteDialogOpen(false);
   };
 
-  // Extract time from savedAt timestamp for prefix display
-  const getTimePrefix = (savedAt) => {
+  // Cancel delete action
+  const handleCancelDelete = () => {
+    setDatasetToDelete(null);
+    setDeleteDialogOpen(false);
+  };
+
+  // Open clear all confirmation dialog
+  const handleClearAllClick = () => {
+    setClearAllDialogOpen(true);
+  };
+
+  // Confirm clear all action
+  const handleConfirmClearAll = () => {
+    storedDatasets.forEach((dataset) => {
+      deleteDataset(dataset.id);
+    });
+    setClearAllDialogOpen(false);
+  };
+
+  // Format the full timestamp (date + time)
+  const getFormattedTimestamp = (savedAt) => {
     if (!savedAt) return "";
     const date = new Date(savedAt);
     if (isNaN(date.getTime())) return "";
 
-    // Format as HH:MM
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    // Format as DD/MM/YY HH:MM
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(date);
   };
 
   return (
     <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+      {/* Single item delete confirmation dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete this dataset? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Clear all confirmation dialog */}
+      <Dialog
+        open={clearAllDialogOpen}
+        onClose={() => setClearAllDialogOpen(false)}
+        aria-labelledby="clear-all-dialog-title"
+        aria-describedby="clear-all-dialog-description"
+      >
+        <DialogTitle id="clear-all-dialog-title">
+          Clear All Datasets
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="clear-all-dialog-description">
+            Are you sure you want to delete ALL saved datasets? This action
+            cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setClearAllDialogOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmClearAll}
+            color="error"
+            variant="contained"
+          >
+            Delete All
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Grid container spacing={2} alignItems="center">
-        {/* Updated to use size prop instead of xs */}
         <Grid size={{ xs: 9 }}>
           <Box>
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
@@ -77,7 +166,6 @@ const StoredDataSelector = () => {
             </Typography>
           </Box>
         </Grid>
-        {/* Updated to use size prop instead of xs */}
         <Grid
           size={{ xs: 3 }}
           sx={{ display: "flex", justifyContent: "flex-end" }}
@@ -96,7 +184,7 @@ const StoredDataSelector = () => {
               color="error"
               size="small"
               startIcon={<DeleteSweepIcon />}
-              onClick={handleClearAllDatasets}
+              onClick={handleClearAllClick}
             >
               Clear All
             </Button>
@@ -121,8 +209,8 @@ const StoredDataSelector = () => {
             const dataset = storedDatasets.find((d) => d.id === selected);
             if (!dataset) return selected;
 
-            const timePrefix = getTimePrefix(dataset.metadata.savedAt);
-            return `${timePrefix} • ${dataset.metadata.fromDate} to ${dataset.metadata.toDate} (${dataset.metadata.rowCount} records)`;
+            const timestamp = getFormattedTimestamp(dataset.metadata.savedAt);
+            return `${timestamp} • ${dataset.metadata.fromDate} to ${dataset.metadata.toDate} (${dataset.metadata.rowCount} records)`;
           }}
         >
           <MenuItem value="">
@@ -130,7 +218,7 @@ const StoredDataSelector = () => {
           </MenuItem>
 
           {storedDatasets.map((dataset) => {
-            const timePrefix = getTimePrefix(dataset.metadata.savedAt);
+            const timestamp = getFormattedTimestamp(dataset.metadata.savedAt);
 
             return (
               <MenuItem
@@ -140,18 +228,18 @@ const StoredDataSelector = () => {
               >
                 <Box>
                   <Typography variant="body2">
-                    <strong>{timePrefix}</strong> • {dataset.metadata.fromDate}{" "}
+                    <strong>{timestamp}</strong> • {dataset.metadata.fromDate}{" "}
                     to {dataset.metadata.toDate}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {dataset.metadata.rowCount} records • Limit:{" "}
-                    {dataset.metadata.limit} • Saved: {dataset.metadata.savedAt}
+                    {dataset.metadata.limit}
                   </Typography>
                 </Box>
                 <Tooltip title="Delete dataset">
                   <IconButton
                     size="small"
-                    onClick={(e) => handleDelete(e, dataset.id)}
+                    onClick={(e) => handleDeleteClick(e, dataset.id)}
                     sx={{ ml: 2 }}
                   >
                     <DeleteIcon fontSize="small" />

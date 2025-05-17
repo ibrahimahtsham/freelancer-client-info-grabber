@@ -10,6 +10,8 @@ import {
   FormControlLabel,
   Switch,
   ButtonGroup,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import DataTable from "../../components/DataTable";
@@ -19,6 +21,13 @@ import { DEFAULT_VALUES } from "../../constants";
 import { useUtility } from "./UtilityContext";
 
 const FetchDataPage = () => {
+  // Add state for snackbar
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   // Use realistic dates instead of future dates with time zone handling
   const formatDate = (date) => {
     // Format as YYYY-MM-DD with time zone consideration
@@ -101,26 +110,55 @@ const FetchDataPage = () => {
     setShouldFetch(true);
   };
 
-  // Add this function to save the current data
+  // Handle snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  // Add this function to save the current data - now using Snackbar
   const handleSaveData = () => {
     const savedId = saveCurrentDataset(
       fromDate,
       toDate,
       limitEnabled ? limit : null
     );
+
     if (savedId) {
-      alert(
-        `Dataset saved successfully! You can access it from the dropdown above.`
-      );
+      setSnackbar({
+        open: true,
+        message:
+          "Dataset saved successfully! You can access it from the dropdown above.",
+        severity: "success",
+      });
     } else {
-      alert(
-        "Failed to save dataset. The data might be too large for browser storage."
-      );
+      setSnackbar({
+        open: true,
+        message:
+          "Failed to save dataset. The data might be too large for browser storage.",
+        severity: "error",
+      });
     }
   };
 
   return (
     <Box>
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
       <Box
         sx={{
           display: "flex",
