@@ -114,7 +114,7 @@ const CalculationsPage = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
@@ -125,7 +125,7 @@ const CalculationsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
@@ -138,7 +138,7 @@ const CalculationsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
@@ -151,7 +151,7 @@ const CalculationsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
@@ -170,7 +170,7 @@ const CalculationsPage = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
@@ -181,7 +181,7 @@ const CalculationsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
@@ -192,7 +192,7 @@ const CalculationsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
@@ -203,7 +203,7 @@ const CalculationsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
           <Card>
             <CardContent>
               <Typography color="text.secondary" gutterBottom>
