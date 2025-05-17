@@ -1,0 +1,58 @@
+import React from "react";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+
+const columns = [
+  { field: "threadId", headerName: "Thread ID", width: 150 },
+  { field: "ownerId", headerName: "Owner ID", width: 150 },
+  { field: "projectId", headerName: "Project ID", width: 150 },
+  { field: "contextType", headerName: "Context Type", width: 150 },
+  { field: "projectTitle", headerName: "Project Title", width: 200 },
+  { field: "projectUploadDate", headerName: "Project Upload Date", width: 200 },
+  { field: "firstMessageDate", headerName: "First Message Date", width: 200 },
+  { field: "projectBidPrice", headerName: "Project Bid Price", width: 180 },
+  {
+    field: "projectLink",
+    headerName: "Project Link",
+    width: 200,
+    renderCell: (params) => (
+      <a href={params.value} target="_blank" rel="noopener noreferrer">
+        View
+      </a>
+    ),
+  },
+  { field: "ownerName", headerName: "Owner Name", width: 150 },
+  { field: "ownerLocation", headerName: "Owner Location", width: 150 },
+  {
+    field: "clientProfileLink",
+    headerName: "Client Profile Link",
+    width: 200,
+    renderCell: (params) => (
+      <a href={params.value} target="_blank" rel="noopener noreferrer">
+        Profile
+      </a>
+    ),
+  },
+  { field: "yourBidAmount", headerName: "Your Bid Amount", width: 150 },
+  {
+    field: "totalPaidMilestones",
+    headerName: "Total Paid (Milestones)",
+    width: 200,
+  },
+  { field: "awarded", headerName: "Awarded", width: 120 },
+  { field: "otherStatus", headerName: "Other Status", width: 150 },
+];
+
+const DataTable = ({ rows = [] }) => {
+  return (
+    <div style={{ height: 500, width: "100%" }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        pageSize={5}
+        components={{ Toolbar: GridToolbar }}
+      />
+    </div>
+  );
+};
+
+export default DataTable;
