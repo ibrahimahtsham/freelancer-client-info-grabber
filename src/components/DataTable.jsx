@@ -1,5 +1,6 @@
 import React from "react";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
+import { GridToolbar } from "@mui/x-data-grid";
 
 const columns = [
   { field: "threadId", headerName: "Thread ID", width: 150 },
@@ -42,14 +43,22 @@ const columns = [
   { field: "otherStatus", headerName: "Other Status", width: 150 },
 ];
 
-const DataTable = ({ rows = [] }) => {
+const DataTable = ({ rows = [], loading }) => {
   return (
-    <div style={{ height: 500, width: "100%" }}>
+    <div style={{ height: 500, width: "100%", overflow: "auto" }}>
       <DataGrid
         rows={rows}
         columns={columns}
-        pageSize={5}
-        components={{ Toolbar: GridToolbar }}
+        loading={loading}
+        pageSizeOptions={[5, 10, 25]}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 10 } },
+        }}
+        disableRowSelectionOnClick
+        slots={{
+          toolbar: GridToolbar,
+        }}
+        sx={{ width: "100%" }}
       />
     </div>
   );

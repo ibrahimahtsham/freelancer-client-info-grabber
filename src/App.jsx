@@ -51,12 +51,24 @@ export default function App() {
       <CssBaseline />
       <Router>
         <Navbar mode={mode} toggleMode={toggleMode} />
-        <Container maxWidth="md" sx={{ mt: 4 }}>
-          <Routes>
-            <Route path="/" element={<ClientPage {...clientPageProps} />} />
-            <Route path="/utility" element={<UtilityPage />} />
-          </Routes>
-        </Container>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Container maxWidth="md" sx={{ mt: 4 }}>
+                <ClientPage {...clientPageProps} />
+              </Container>
+            }
+          />
+          <Route
+            path="/utility"
+            element={
+              <Container maxWidth={false} sx={{ mt: 4, px: 2 }}>
+                <UtilityPage />
+              </Container>
+            }
+          />
+        </Routes>
       </Router>
     </ThemeProvider>
   );

@@ -24,7 +24,6 @@ const MessageForm = ({
       } catch (err) {
         setError(err.message);
         setSuccess("");
-        console.error(err);
       }
     } else {
       setError("Make sure all fields are filled.");
@@ -44,8 +43,8 @@ const MessageForm = ({
       .then(() => {
         alert("Message copied to clipboard!");
       })
-      .catch((err) => {
-        console.error("Copy failed", err);
+      .catch(() => {
+        // Handle copy failure without logging
       });
   };
 
