@@ -41,8 +41,10 @@ const FetchDataPage = () => {
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  // Get shared state from context
+  // Get shared state from context - THIS IS THE KEY CHANGE:
+  // We need to use the rows from context for rendering
   const {
+    rows, // ← Use this for rendering instead of utilityData.rows
     setRows,
     loading,
     setLoading,
@@ -57,7 +59,7 @@ const FetchDataPage = () => {
   } = useUtility();
 
   // Custom hook to handle data fetching
-  const utilityData = useUtilityData(
+  useUtilityData(
     fromDate,
     toDate,
     limitEnabled ? limit : null,
@@ -203,13 +205,13 @@ const FetchDataPage = () => {
       )}
 
       <Box mt={4}>
-        {loading && utilityData.rows.length === 0 ? (
+        {loading && rows.length === 0 ? (
           <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
             <CircularProgress />
             <Typography sx={{ ml: 2 }}>Loading data...</Typography>
           </Box>
-        ) : utilityData.rows.length > 0 ? (
-          <DataTable rows={utilityData.rows} loading={loading} />
+        ) : rows.length > 0 ? (
+          <DataTable rows={rows} loading={loading} />
         ) : shouldFetch ? (
           <Typography>No data found for the selected date range.</Typography>
         ) : (
