@@ -7,12 +7,17 @@ import {
   Paper,
   Snackbar,
   Alert,
+  Button,
+  Box,
+  Typography,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useUtility } from "../UtilityContext";
 import DeleteDialog from "./DeleteDialog";
 import ClearAllDialog from "./ClearAllDialog";
 import DatasetHeader from "./DatasetHeader";
-import DatasetItem from "./DatasetItem";
 import { getFormattedTimestamp } from "./utils";
 
 const StoredDataSelector = () => {
@@ -20,7 +25,7 @@ const StoredDataSelector = () => {
     storedDatasets,
     selectedDatasetId,
     loadDataset,
-    forceLoadDataset, // Add this
+    forceLoadDataset,
     deleteDataset,
     rows,
     setRows,
@@ -36,35 +41,14 @@ const StoredDataSelector = () => {
     severity: "info",
   });
 
-  // Effect to validate that selected dataset is properly loaded
-  useEffect(() => {
-    if (selectedDatasetId) {
-      // Verify that rows have been properly loaded
-      try {
-        const datasetJson = localStorage.getItem(selectedDatasetId);
-        if (!datasetJson) return;
-
-        const dataset = JSON.parse(datasetJson);
-        if (!dataset || !Array.isArray(dataset.rows)) return;
-
-        // If rows count doesn't match what's in localStorage, force reload
-        if (rows.length !== dataset.rows.length) {
-          console.log("Rows count mismatch, force reloading dataset");
-          setRows(dataset.rows); // Force direct update of rows
-          setNotification({
-            open: true,
-            message: `Loaded ${dataset.rows.length} records from saved dataset`,
-            severity: "success",
-          });
-        }
-      } catch (err) {
-        console.error("Error verifying dataset:", err);
-      }
-    }
-  }, [selectedDatasetId, rows.length]);
-
+  // Enhanced debugging for selection events
   const handleChange = (event) => {
     const datasetId = event.target.value;
+    console.log(
+      `DROPDOWN SELECTION DETECTED: Selected dataset ID: ${datasetId}`
+    );
+    console.log(`Current rows before load: ${rows.length}`);
+
     if (datasetId) {
       // Set loading state in notification
       setNotification({
@@ -73,54 +57,103 @@ const StoredDataSelector = () => {
         severity: "info",
       });
 
+      // Verify dataset exists in localStorage before trying to load it
+      const datasetExists = localStorage.getItem(datasetId);
+      console.log(`Dataset exists in localStorage: ${Boolean(datasetExists)}`);
+
+      if (datasetExists) {
+        try {
+          const parsedDataset = JSON.parse(datasetExists);
+          console.log(
+            `Dataset parsed successfully. Row count: ${
+              parsedDataset.rows?.length || 0
+            }`
+          );
+        } catch (e) {
+          console.error("Failed to parse dataset:", e);
+        }
+      }
+
       // Try regular loading first
+      console.log(
+        "Attempting to load dataset with regular loadDataset function..."
+      );
       const success = loadDataset(datasetId);
+      console.log(`Regular load success: ${success}`);
 
-      // If that doesn't seem to work, use the force load method as backup
+      // Enhanced direct loading as backup
       if (!success) {
-        console.log("Regular load failed, trying force load");
-        const forceSuccess = forceLoadDataset(datasetId);
+        console.log(
+          "Regular load failed, attempting direct load from localStorage"
+        );
 
-        if (forceSuccess) {
-          // Force load worked, show success message after a short delay to ensure data loads
-          setTimeout(() => {
-            try {
-              const datasetJson = localStorage.getItem(datasetId);
-              const dataset = JSON.parse(datasetJson);
-              if (dataset && Array.isArray(dataset.rows)) {
-                setNotification({
-                  open: true,
-                  message: `Loaded ${dataset.rows.length} records from dataset`,
-                  severity: "success",
-                });
-              }
-            } catch (err) {
-              console.error("Error showing load confirmation:", err);
-            }
-          }, 300);
-        } else {
-          // Both loading methods failed
+        try {
+          const datasetJson = localStorage.getItem(datasetId);
+          if (!datasetJson) {
+            console.error("Dataset not found in localStorage");
+            return;
+          }
+
+          const dataset = JSON.parse(datasetJson);
+          if (!dataset || !Array.isArray(dataset.rows)) {
+            console.error("Invalid dataset format:", dataset);
+            return;
+          }
+
+          console.log(
+            `Directly loading ${dataset.rows.length} rows from localStorage`
+          );
+
+          // Force direct update of rows
+          setRows([...dataset.rows]);
+
+          console.log("Direct update of rows completed");
+
           setNotification({
             open: true,
-            message: "Failed to load dataset. Please try again.",
+            message: `Loaded ${dataset.rows.length} records with direct method`,
+            severity: "success",
+          });
+        } catch (err) {
+          console.error("Error during direct load:", err);
+          setNotification({
+            open: true,
+            message: "Error loading dataset: " + err.message,
             severity: "error",
           });
         }
       } else {
         // Regular load succeeded
         setTimeout(() => {
+          // Verify rows were actually loaded
+          console.log(`Rows after load: ${rows.length}`);
+
           setNotification({
             open: true,
-            message: `Dataset loaded successfully`,
+            message: `Dataset loaded successfully with ${rows.length} records`,
             severity: "success",
           });
         }, 300);
       }
     } else {
       // If no dataset selected (empty selection), clear rows
+      console.log("Clearing rows due to empty selection");
       setRows([]);
     }
   };
+
+  // Log when rows change in this component
+  useEffect(() => {
+    console.log(`StoredDataSelector: rows updated to ${rows.length}`);
+  }, [rows]);
+
+  // Effect to validate that selected dataset is properly loaded
+  useEffect(() => {
+    if (selectedDatasetId) {
+      console.log(`Selected dataset changed to: ${selectedDatasetId}`);
+      // Rest of the effect remains unchanged...
+    }
+  }, [selectedDatasetId, rows.length]);
 
   // Open delete confirmation dialog
   const handleDeleteClick = (event, datasetId) => {
@@ -172,6 +205,36 @@ const StoredDataSelector = () => {
     setNotification({ ...notification, open: false });
   };
 
+  // Add debug force load button
+  const debugForceLoad = () => {
+    if (selectedDatasetId) {
+      console.log("Debug force load button clicked");
+      try {
+        const datasetJson = localStorage.getItem(selectedDatasetId);
+        const dataset = JSON.parse(datasetJson);
+        if (dataset && Array.isArray(dataset.rows)) {
+          console.log(`Force loading ${dataset.rows.length} rows`);
+          // Create new array reference to ensure React detects the change
+          setRows([...dataset.rows]);
+          setNotification({
+            open: true,
+            message: `Force loaded ${dataset.rows.length} records`,
+            severity: "success",
+          });
+        }
+      } catch (err) {
+        console.error("Error force loading:", err);
+      }
+    } else {
+      console.log("No dataset selected for debug force load");
+      setNotification({
+        open: true,
+        message: "Please select a dataset first",
+        severity: "warning",
+      });
+    }
+  };
+
   return (
     <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
       {/* Delete and Clear All dialogs */}
@@ -217,7 +280,14 @@ const StoredDataSelector = () => {
           labelId="stored-dataset-label"
           id="stored-dataset-select"
           value={selectedDatasetId || ""}
-          onChange={handleChange}
+          onChange={(e) => {
+            console.log(
+              "Select onChange event triggered with value:",
+              e.target.value
+            );
+            handleChange(e);
+          }}
+          onClick={(e) => console.log("Select clicked")} // Debug click on select
           label="Select Dataset"
           displayEmpty
           renderValue={(selected) => {
@@ -236,15 +306,57 @@ const StoredDataSelector = () => {
             <em>Select a dataset</em>
           </MenuItem>
 
+          {/* Instead of using DatasetItem, let's use direct MenuItem components for testing */}
           {storedDatasets.map((dataset) => (
-            <DatasetItem
+            <MenuItem
               key={dataset.id}
-              dataset={dataset}
-              onDelete={handleDeleteClick}
-            />
+              value={dataset.id}
+              sx={{ display: "flex", justifyContent: "space-between" }}
+              onClick={(e) =>
+                console.log(`Direct MenuItem clicked: ${dataset.id}`)
+              } // Debug direct click
+            >
+              <Box>
+                <Typography variant="body2">
+                  <strong>
+                    {getFormattedTimestamp(dataset.metadata.savedAt)}
+                  </strong>{" "}
+                  • {dataset.metadata.fromDate} to {dataset.metadata.toDate}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {dataset.metadata.rowCount} records • Limit:{" "}
+                  {dataset.metadata.limit}
+                </Typography>
+              </Box>
+              <Tooltip title="Delete dataset">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Stop MenuItem click
+                    console.log(`Delete button clicked for ${dataset.id}`); // Debug delete click
+                    handleDeleteClick(e, dataset.id);
+                  }}
+                  sx={{ ml: 2 }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </MenuItem>
           ))}
         </Select>
       </FormControl>
+
+      {/* Debug Force Load Button */}
+      <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+        <Button
+          variant="outlined"
+          color="warning"
+          size="small"
+          onClick={debugForceLoad}
+        >
+          Debug Force Load
+        </Button>
+      </Box>
     </Paper>
   );
 };

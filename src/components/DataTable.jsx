@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Box, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { GridToolbar } from "@mui/x-data-grid";
 
@@ -56,6 +57,34 @@ const columns = [
 ];
 
 const DataTable = ({ rows = [], loading }) => {
+  // Add this effect to log when the component receives new rows
+  useEffect(() => {
+    console.log(
+      `DataTable component received rows update: ${rows?.length || 0} rows`
+    );
+
+    // Log data sample for debugging
+    if (rows && rows.length > 0) {
+      console.log("Data sample:", rows[0]);
+    }
+  }, [rows]);
+
+  // For debugging: log rows changes
+  useEffect(() => {
+    console.log("DataTable received rows update:", rows?.length || 0);
+  }, [rows]);
+
+  // If rows is empty but not loading, show a message
+  if (!loading && (!rows || rows.length === 0)) {
+    return (
+      <Box sx={{ p: 2, textAlign: "center" }}>
+        <Typography>
+          No data to display. Please select a dataset or fetch data.
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <div style={{ height: 500, width: "100%", overflow: "auto" }}>
       <DataGrid

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -21,6 +21,13 @@ import { DEFAULT_VALUES } from "../../constants";
 import { useUtility } from "./UtilityContext";
 
 const FetchDataPage = () => {
+  const { rows } = useUtility();
+
+  // Add an effect to log when rows change in this component
+  useEffect(() => {
+    console.log(`FetchDataPage: rows updated to ${rows?.length || 0}`);
+  }, [rows]);
+
   // Add state for snackbar
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -54,7 +61,6 @@ const FetchDataPage = () => {
 
   // Get all context values and functions, including saveCurrentDataset
   const {
-    rows,
     setRows,
     loading,
     setLoading,

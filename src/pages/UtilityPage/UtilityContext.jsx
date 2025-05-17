@@ -1,4 +1,10 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 
 const UtilityContext = createContext();
 
@@ -15,9 +21,17 @@ export function UtilityProvider({ children }) {
   const [storedDatasets, setStoredDatasets] = useState([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState(null);
 
+  // Add a version counter that increments when data changes, forcing re-renders
+  const [dataVersion, setDataVersion] = useState(0);
+
+  // Use ref to avoid infinite loops but track last loaded dataset
+  const lastLoadedRef = useRef(null);
+
   // Debug effect to monitor rows changes
   useEffect(() => {
     console.log(`Rows state updated: ${rows.length} items`);
+    // Increment version to signal changes to all components
+    setDataVersion((v) => v + 1);
   }, [rows]);
 
   // Load available datasets from localStorage on component mount
@@ -87,9 +101,17 @@ export function UtilityProvider({ children }) {
   // Function to load a specific dataset with improved debugging and error handling
   const loadDataset = (datasetId) => {
     try {
-      console.log("Loading dataset:", datasetId); // Debug
+      // If we're trying to load the same dataset, don't do anything
+      if (lastLoadedRef.current === datasetId) {
+        console.log("Dataset already loaded:", datasetId);
+        return true;
+      }
 
-      // First, clear any existing state that might interfere
+      console.log("Loading dataset:", datasetId);
+      lastLoadedRef.current = datasetId;
+
+      // Clear existing state first to force UI update
+      setRows([]); // This clear will trigger a UI update
       setLoading(true);
       setError("");
       setProgress(0);
@@ -109,20 +131,23 @@ export function UtilityProvider({ children }) {
         return false;
       }
 
-      console.log(`Loading ${dataset.rows.length} rows from dataset`); // Debug
+      console.log(`Loading ${dataset.rows.length} rows from dataset`);
 
-      // Set the selected ID
+      // Set the selected ID first
       setSelectedDatasetId(datasetId);
 
-      // Force a synchronous update to rows to ensure it's applied
-      // This pattern helps avoid potential race conditions
+      // Use a small timeout to ensure state updates are processed in sequence
       setTimeout(() => {
-        // Update the rows array after a tick to ensure ID update is processed
-        console.log(`Setting rows to ${dataset.rows.length} items`);
-        setRows([...dataset.rows]); // Use spread to ensure a new array reference
+        // Create a new array reference to ensure React detects the change
+        const newRows = [...dataset.rows];
+        console.log(`Setting rows to ${newRows.length} items`);
+        setRows(newRows);
         setLoading(false);
         console.log("Dataset loading complete");
-      }, 0);
+
+        // Increment version to force updates across components
+        setDataVersion((v) => v + 1);
+      }, 50);
 
       return true;
     } catch (err) {
@@ -192,6 +217,7 @@ export function UtilityProvider({ children }) {
     setProgressText,
     storedDatasets,
     selectedDatasetId,
+    dataVersion, // Include version for components to subscribe to changes
     saveCurrentDataset,
     loadDataset,
     forceLoadDataset,
