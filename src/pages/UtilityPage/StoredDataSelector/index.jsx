@@ -1,24 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Paper,
-  Snackbar,
-  Alert,
-  Button,
-  Box,
-  Typography,
-  Tooltip,
-  IconButton,
-} from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
+import React, { useState } from "react";
+import { Paper } from "@mui/material";
 import { useUtility } from "../UtilityContext";
-import DeleteDialog from "./DeleteDialog";
-import ClearAllDialog from "./ClearAllDialog";
 import DatasetHeader from "./DatasetHeader";
-import { getFormattedTimestamp } from "./utils";
+import NotificationSystem from "./NotificationSystem";
+import DatasetSelector from "./DatasetSelector";
+import QuickAccessButtons from "./QuickAccessButtons";
+import DialogManager from "./DialogManager";
 
 const StoredDataSelector = () => {
   const {
@@ -40,10 +27,8 @@ const StoredDataSelector = () => {
     severity: "info",
   });
 
-  // Handle dataset selection
-  const handleChange = (event) => {
-    const datasetId = event.target.value;
-
+  // Handle dataset selection - either from dropdown or quick access
+  const handleDatasetSelect = (datasetId) => {
     if (datasetId) {
       // Show loading notification
       setNotification({
@@ -110,6 +95,11 @@ const StoredDataSelector = () => {
     }
   };
 
+  // Handle change for the dropdown selector
+  const handleChange = (event) => {
+    handleDatasetSelect(event.target.value);
+  };
+
   // Open delete confirmation dialog
   const handleDeleteClick = (event, datasetId) => {
     event.stopPropagation();
@@ -162,34 +152,21 @@ const StoredDataSelector = () => {
 
   return (
     <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-      {/* Delete and Clear All dialogs */}
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-      />
-      <ClearAllDialog
-        open={clearAllDialogOpen}
-        onClose={() => setClearAllDialogOpen(false)}
-        onConfirm={handleConfirmClearAll}
+      {/* Dialog management */}
+      <DialogManager
+        deleteDialogOpen={deleteDialogOpen}
+        clearAllDialogOpen={clearAllDialogOpen}
+        onDeleteCancel={handleCancelDelete}
+        onDeleteConfirm={handleConfirmDelete}
+        onClearAllClose={() => setClearAllDialogOpen(false)}
+        onClearAllConfirm={handleConfirmClearAll}
       />
 
       {/* Notifications */}
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={5000}
+      <NotificationSystem
+        notification={notification}
         onClose={handleNotificationClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleNotificationClose}
-          severity={notification.severity}
-          sx={{ width: "100%" }}
-          variant="filled"
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
+      />
 
       {/* Header with title and clear all button */}
       <DatasetHeader
@@ -199,98 +176,18 @@ const StoredDataSelector = () => {
       />
 
       {/* Dataset selector dropdown */}
-      <FormControl fullWidth>
-        <InputLabel id="stored-dataset-label">Select Dataset</InputLabel>
-        <Select
-          labelId="stored-dataset-label"
-          id="stored-dataset-select"
-          value={selectedDatasetId || ""}
-          onChange={handleChange}
-          label="Select Dataset"
-          displayEmpty
-          renderValue={(selected) => {
-            if (!selected) {
-              return <em>Select a dataset</em>;
-            }
+      <DatasetSelector
+        storedDatasets={storedDatasets}
+        selectedDatasetId={selectedDatasetId}
+        onDatasetChange={handleChange}
+        onDeleteClick={handleDeleteClick}
+      />
 
-            const dataset = storedDatasets.find((d) => d.id === selected);
-            if (!dataset) return selected;
-
-            const timestamp = getFormattedTimestamp(dataset.metadata.savedAt);
-            return `${timestamp} • ${dataset.metadata.fromDate} to ${dataset.metadata.toDate} (${dataset.metadata.rowCount} records)`;
-          }}
-        >
-          <MenuItem value="">
-            <em>Select a dataset</em>
-          </MenuItem>
-
-          {/* Direct MenuItem components */}
-          {storedDatasets.map((dataset) => (
-            <MenuItem
-              key={dataset.id}
-              value={dataset.id}
-              sx={{ display: "flex", justifyContent: "space-between" }}
-            >
-              <Box>
-                <Typography variant="body2">
-                  <strong>
-                    {getFormattedTimestamp(dataset.metadata.savedAt)}
-                  </strong>{" "}
-                  • {dataset.metadata.fromDate} to {dataset.metadata.toDate}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {dataset.metadata.rowCount} records • Limit:{" "}
-                  {dataset.metadata.limit}
-                </Typography>
-              </Box>
-              <Tooltip title="Delete dataset">
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent MenuItem click event
-                    handleDeleteClick(e, dataset.id);
-                  }}
-                  sx={{ ml: 2 }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      {/* Quick Access Section - Keeping this as a helpful enhancement */}
-      <Box sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 1 }}>
-        <Typography variant="subtitle2" align="center" color="text.secondary">
-          Quick Access
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: 1,
-          }}
-        >
-          {storedDatasets.slice(0, 5).map((dataset) => (
-            <Button
-              key={dataset.id}
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                // Simulate dataset selection
-                const event = { target: { value: dataset.id } };
-                handleChange(event);
-              }}
-            >
-              {getFormattedTimestamp(dataset.metadata.savedAt).slice(0, 10)}
-              {" • "}
-              {dataset.metadata.rowCount} records
-            </Button>
-          ))}
-        </Box>
-      </Box>
+      {/* Quick Access Buttons */}
+      <QuickAccessButtons
+        datasets={storedDatasets}
+        onDatasetSelect={handleDatasetSelect}
+      />
     </Paper>
   );
 };
