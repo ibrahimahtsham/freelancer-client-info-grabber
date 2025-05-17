@@ -1,4 +1,5 @@
 import { apiRequest } from "../request";
+import { API_ENDPOINTS } from "../../../constants"; // Import constants
 
 // Helper function to delay execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -34,7 +35,7 @@ export async function fetchActiveThreads(
   limit = 5
 ) {
   // Start with base URL
-  let url = "https://www.freelancer.com/api/messages/0.1/threads/";
+  let url = API_ENDPOINTS.THREADS; // Use constant
 
   // Create array to hold query parameters
   const params = [];

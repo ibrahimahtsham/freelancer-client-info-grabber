@@ -1,8 +1,9 @@
 import { apiRequest } from "./request";
+import { API_ENDPOINTS } from "../../constants"; // Import constants
 
 export async function fetchClientInfo(projectId) {
   const projectResponse = await apiRequest(
-    `https://www.freelancer.com/api/projects/0.1/projects/?projects[]=${projectId}`
+    `${API_ENDPOINTS.PROJECTS}?projects[]=${projectId}`
   );
 
   if (projectResponse.error) {
@@ -16,9 +17,7 @@ export async function fetchClientInfo(projectId) {
   const project = projectResponse.data.result.projects[0];
   const ownerId = project.owner_id;
 
-  const userResponse = await apiRequest(
-    `https://www.freelancer.com/api/users/0.1/users/${ownerId}/`
-  );
+  const userResponse = await apiRequest(`${API_ENDPOINTS.USERS}${ownerId}/`);
 
   if (userResponse.error) {
     throw userResponse.error;
@@ -30,7 +29,7 @@ export async function fetchClientInfo(projectId) {
 
   // Fetch thread info
   const threadResponse = await apiRequest(
-    `https://www.freelancer.com/api/messages/0.1/threads/?context_type=project&context=${projectId}`
+    `${API_ENDPOINTS.THREADS}?context_type=project&context=${projectId}`
   );
 
   const thread = threadResponse.data?.result?.threads?.[0] || null;

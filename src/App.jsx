@@ -8,10 +8,12 @@ import { sendMessageWithThread } from "./utils/api/message";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import ClientPage from "./pages/ClientPage";
 import UtilityPage from "./pages/UtilityPage";
+import { DEFAULT_VALUES } from "./constants"; // Import constants
 
 export default function App() {
   const { mode, theme, toggleMode } = useThemeMode("dark");
-  const [projectId, setProjectId] = useState("39325440");
+  // Use the constant for default project ID
+  const [projectId, setProjectId] = useState(DEFAULT_VALUES.PROJECT_ID);
   const [modalOpen, setModalOpen] = useState(false);
 
   const {

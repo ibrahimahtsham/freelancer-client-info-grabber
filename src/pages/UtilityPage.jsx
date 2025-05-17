@@ -10,6 +10,7 @@ import {
 import DataTable from "../components/DataTable";
 import DateRangeControls from "../components/DateRangeControls";
 import { useUtilityData } from "../hooks/useUtilityData";
+import { DEFAULT_VALUES } from "../constants"; // Import constants
 
 const UtilityPage = () => {
   // Use realistic dates instead of future dates
@@ -21,7 +22,7 @@ const UtilityPage = () => {
 
   const [fromDate, setFromDate] = useState(formatDate(oneMonthAgo));
   const [toDate, setToDate] = useState(formatDate(new Date()));
-  const [limit, setLimit] = useState(5); // Default limit of 5
+  const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT); // Use constant for default limit
   const [shouldFetch, setShouldFetch] = useState(false);
 
   const { rows, loading, rateLimits, error } = useUtilityData(

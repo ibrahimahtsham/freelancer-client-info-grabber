@@ -1,11 +1,12 @@
 import { token } from "./config";
 import { apiRequest } from "./request";
+import { API_ENDPOINTS } from "../../constants"; // Import constants
 
 // Helper to get or create thread
 async function getOrCreateThread(clientId, projectId) {
   // Try to get an existing thread
   const existingThreadsData = await apiRequest(
-    `https://www.freelancer.com/api/messages/0.1/threads/?context_type=project&context=${projectId}`
+    `${API_ENDPOINTS.THREADS}?context_type=project&context=${projectId}`
   );
 
   if (existingThreadsData?.data?.result?.threads?.length > 0) {
@@ -18,16 +19,13 @@ async function getOrCreateThread(clientId, projectId) {
     context_type: "project",
     context: projectId,
   });
-  const threadData = await apiRequest(
-    `https://www.freelancer.com/api/messages/0.1/threads/`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params,
-    }
-  );
+  const threadData = await apiRequest(API_ENDPOINTS.THREADS, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params,
+  });
 
   const threadId = threadData?.data?.result?.thread?.id;
   if (!threadId) throw new Error("Unable to create thread.");
@@ -40,7 +38,7 @@ export async function sendMessageWithThread(clientId, projectId, message) {
 
   const params = new URLSearchParams({ message });
   const msgData = await apiRequest(
-    `https://www.freelancer.com/api/messages/0.1/threads/${threadId}/messages/`,
+    `${API_ENDPOINTS.THREADS}${threadId}/messages/`,
     {
       method: "POST",
       headers: {
