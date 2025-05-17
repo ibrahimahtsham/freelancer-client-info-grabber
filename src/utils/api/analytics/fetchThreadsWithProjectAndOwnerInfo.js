@@ -5,7 +5,12 @@ import { fetchMyUserId } from "./fetchMyUserId";
 import { fetchPaidMilestonesForProject } from "./fetchPaidMilestonesForProject";
 import { fetchFirstMessageDate } from "./fetchFirstMessageDate";
 import { DEFAULT_VALUES } from "../../../constants";
-import { formatDate, formatDateTime } from "../../../utils/dateUtils"; // Import both formatting functions
+import {
+  formatDate,
+  formatDateTime,
+  formatTime,
+  formatDateDDMMYYYY,
+} from "../../../utils/dateUtils"; // Import additional formatting function
 
 export async function fetchThreadsWithProjectAndOwnerInfo(
   progressCallback = null,
@@ -79,9 +84,11 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
         if (info.project) {
           enrichedThread.projectTitle = info.project.title || "N/A";
 
-          // Use formatDateTime for timestamps that should include time
+          // Use formatDateDDMMYYYY and formatTime for date formatting
           enrichedThread.projectUploadDate = info.project.submitdate
-            ? formatDateTime(info.project.submitdate)
+            ? `${formatDateDDMMYYYY(info.project.submitdate)} ${formatTime(
+                info.project.submitdate
+              )}`
             : "N/A";
 
           // Format bid price
@@ -145,8 +152,10 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
         if (thread.id) {
           const firstMsgDate = await fetchFirstMessageDate(thread.id);
           if (firstMsgDate) {
-            // Use formatDateTime to include time
-            enrichedThread.firstMessageDate = formatDateTime(firstMsgDate);
+            // Use formatDateDDMMYYYY and formatTime for date and time formatting
+            enrichedThread.firstMessageDate = `${formatDateDDMMYYYY(
+              firstMsgDate
+            )} ${formatTime(firstMsgDate)}`;
           }
         }
       } catch (err) {

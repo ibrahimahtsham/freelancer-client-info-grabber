@@ -10,13 +10,22 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
-import DataTable from "../components/DataTable";
-import DateRangeControls from "../components/DateRangeControls";
-import { useUtilityData } from "../hooks/useUtilityData";
-import { DEFAULT_VALUES } from "../constants";
+import DataTable from "../../components/DataTable";
+import DateRangeControls from "../../components/DateRangeControls";
+import { useUtilityData } from "../../hooks/useUtilityData";
+import { DEFAULT_VALUES } from "../../constants";
+import { useUtility } from "./UtilityContext";
 
-const UtilityPage = () => {
-  // Use realistic dates instead of future dates
+const FetchDataPage = () => {
+  // Use realistic dates instead of future dates with time zone handling
+  const formatDate = (date) => {
+    // Format as YYYY-MM-DD with time zone consideration
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Get first day of current month
   const firstDayOfCurrentMonth = new Date();
   firstDayOfCurrentMonth.setDate(1);
@@ -26,24 +35,64 @@ const UtilityPage = () => {
   firstDayOfPreviousMonth.setDate(1);
   firstDayOfPreviousMonth.setMonth(firstDayOfPreviousMonth.getMonth() - 1);
 
-  const formatDate = (date) => {
-    return date.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-  };
-
   const [fromDate, setFromDate] = useState(formatDate(firstDayOfPreviousMonth));
   const [toDate, setToDate] = useState(formatDate(firstDayOfCurrentMonth));
-  const [limitEnabled, setLimitEnabled] = useState(false); // Default: limit disabled
+  const [limitEnabled, setLimitEnabled] = useState(false);
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  const { rows, loading, rateLimits, error, progress, progressText } =
-    useUtilityData(
-      fromDate,
-      toDate,
-      limitEnabled ? limit : null,
-      shouldFetch,
-      setShouldFetch
-    );
+  // Get shared state from context
+  const {
+    setRows,
+    loading,
+    setLoading,
+    rateLimits,
+    setRateLimits,
+    error,
+    setError,
+    progress,
+    setProgress,
+    progressText,
+    setProgressText,
+  } = useUtility();
+
+  // Custom hook to handle data fetching
+  const utilityData = useUtilityData(
+    fromDate,
+    toDate,
+    limitEnabled ? limit : null,
+    shouldFetch,
+    setShouldFetch,
+    // Update functions to use context state
+    {
+      onStart: () => {
+        setLoading(true);
+        setError("");
+        setProgress(0);
+        setProgressText("Initializing...");
+      },
+      onSuccess: (data) => {
+        setRows(data.threads);
+        setRateLimits(data.rateLimits);
+      },
+      onProgress: (percent, text) => {
+        setProgress(percent);
+        setProgressText(text);
+      },
+      onError: (err) => {
+        if (err.name === "ApiError") {
+          setError(`API Error (${err.status}): ${err.message}`);
+        } else {
+          setError(err.message || "An unknown error occurred");
+        }
+      },
+      onComplete: () => {
+        setLoading(false);
+        setProgress(0);
+        setProgressText("");
+      },
+    }
+  );
 
   const handleFetchData = () => {
     setShouldFetch(true);
@@ -59,7 +108,7 @@ const UtilityPage = () => {
         }}
       >
         <Typography variant="h4" gutterBottom>
-          Utility Page
+          Fetch Project Data
         </Typography>
 
         {rateLimits.remaining && (
@@ -146,7 +195,6 @@ const UtilityPage = () => {
         </Typography>
       )}
 
-      {/* Show progress bar while loading */}
       {loading && (
         <Box sx={{ my: 3 }}>
           <LinearProgress variant="determinate" value={progress} />
@@ -155,13 +203,13 @@ const UtilityPage = () => {
       )}
 
       <Box mt={4}>
-        {loading && rows.length === 0 ? (
+        {loading && utilityData.rows.length === 0 ? (
           <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
             <CircularProgress />
             <Typography sx={{ ml: 2 }}>Loading data...</Typography>
           </Box>
-        ) : rows.length > 0 ? (
-          <DataTable rows={rows} loading={loading} />
+        ) : utilityData.rows.length > 0 ? (
+          <DataTable rows={utilityData.rows} loading={loading} />
         ) : shouldFetch ? (
           <Typography>No data found for the selected date range.</Typography>
         ) : (
@@ -176,4 +224,4 @@ const UtilityPage = () => {
   );
 };
 
-export default UtilityPage;
+export default FetchDataPage;

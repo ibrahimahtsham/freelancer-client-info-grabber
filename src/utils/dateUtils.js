@@ -10,21 +10,50 @@ export function isInDateRange(dateStr, from, to) {
   return (!from || date >= from) && (!to || date <= to);
 }
 
-export function isInTimeRange(dateStr, startHour, endHour) {
-  if (!dateStr) return false;
-  const date = new Date(dateStr);
-  const hour = Number(
-    date.toLocaleString("en-PK", {
-      timeZone: "Asia/Karachi",
-      hour: "2-digit",
-      hour12: false,
-    })
-  );
-  if (startHour < endHour) {
-    return hour >= startHour && hour < endHour;
-  } else {
-    return hour >= startHour || hour < endHour;
+export function isInTimeRange(dateInput, startHour, endHour) {
+  if (!dateInput) return false;
+
+  // If it's a string in DD-MM-YYYY format, parse it
+  let date = dateInput;
+  if (typeof dateInput === "string") {
+    // If it includes time part, we're getting direct input from projectUploadDate
+    if (dateInput.includes(" ")) {
+      // Try to parse the time part directly
+      const timePart = dateInput.split(" ")[1];
+      if (timePart) {
+        // Extract hour from time like "1:30 PM"
+        const hour12 = parseInt(timePart.split(":")[0], 10);
+        const isPM = timePart.toLowerCase().includes("pm");
+        const hour24 =
+          isPM && hour12 !== 12
+            ? hour12 + 12
+            : hour12 === 12 && !isPM
+            ? 0
+            : hour12;
+
+        // Compare with startHour and endHour
+        if (startHour < endHour) {
+          return hour24 >= startHour && hour24 < endHour;
+        } else {
+          return hour24 >= startHour || hour24 < endHour;
+        }
+      }
+    }
+    // Default to Date object
+    date = new Date(dateInput);
   }
+
+  // Handle Date objects
+  if (date instanceof Date) {
+    const hour = date.getHours();
+    if (startHour < endHour) {
+      return hour >= startHour && hour < endHour;
+    } else {
+      return hour >= startHour || hour < endHour;
+    }
+  }
+
+  return false;
 }
 
 export function formatHour(hour) {
@@ -81,7 +110,7 @@ export function formatDateTime(dateInput) {
   // Check if date is valid
   if (isNaN(date.getTime())) return "Invalid Date";
 
-  // Format as day/month/year with time in Pakistan timezone
+  // Format as day/month/year with time (including seconds) in Pakistan timezone
   return date.toLocaleString("en-PK", {
     timeZone: "Asia/Karachi",
     day: "2-digit",
@@ -89,6 +118,53 @@ export function formatDateTime(dateInput) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit", // Added seconds
     hour12: true,
   });
+}
+
+export function formatDateDDMMYYYY(dateInput) {
+  if (!dateInput) return "N/A";
+
+  // If it's already a date string, parse it
+  let date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+
+  // If input is a timestamp in seconds, convert to milliseconds
+  if (typeof dateInput === "number" && dateInput < 10000000000) {
+    date = new Date(dateInput * 1000);
+  }
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) return "Invalid Date";
+
+  // Format as DD-MM-YYYY
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+}
+
+export function formatTime(dateInput) {
+  if (!dateInput) return "";
+
+  // If it's already a date string, parse it
+  let date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+
+  // If input is a timestamp in seconds, convert to milliseconds
+  if (typeof dateInput === "number" && dateInput < 10000000000) {
+    date = new Date(dateInput * 1000);
+  }
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) return "";
+
+  // Create time-only formatter
+  return new Intl.DateTimeFormat("en-PK", {
+    timeZone: "Asia/Karachi",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }).format(date);
 }

@@ -4,49 +4,39 @@ import { fetchThreadsWithProjectAndOwnerInfo } from "../utils/api/analytics";
 export function useUtilityData(
   fromDate,
   toDate,
-  limit = null, // Changed to accept null for unlimited
+  limit = null,
   shouldFetch = false,
-  setShouldFetch
+  setShouldFetch,
+  callbacks = {}
 ) {
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [rateLimits, setRateLimits] = useState({ limit: "", remaining: "" });
-  const [error, setError] = useState("");
-  const [progress, setProgress] = useState(0);
-  const [progressText, setProgressText] = useState("");
 
   // Function to fetch data
   const fetchData = async () => {
-    setLoading(true);
-    setError("");
-    setProgress(0);
-    setProgressText("Initializing...");
+    // Call onStart callback if provided
+    if (callbacks.onStart) callbacks.onStart();
 
     try {
       // Use the comprehensive data fetching function with progress tracking
       const { threads, rateLimits } = await fetchThreadsWithProjectAndOwnerInfo(
-        (percent, text) => {
-          setProgress(percent);
-          setProgressText(text);
-        },
-        limit, // This can now be null
+        callbacks.onProgress,
+        limit,
         fromDate,
         toDate
       );
 
+      // Update local state
       setRows(threads);
-      setRateLimits(rateLimits);
+
+      // Call onSuccess callback if provided
+      if (callbacks.onSuccess) callbacks.onSuccess({ threads, rateLimits });
     } catch (err) {
-      // Proper error handling
-      if (err.name === "ApiError") {
-        setError(`API Error (${err.status}): ${err.message}`);
-      } else {
-        setError(err.message || "An unknown error occurred");
-      }
+      // Call onError callback if provided
+      if (callbacks.onError) callbacks.onError(err);
     } finally {
-      setLoading(false);
-      setProgress(0);
-      setProgressText("");
+      // Call onComplete callback if provided
+      if (callbacks.onComplete) callbacks.onComplete();
+
       // Reset shouldFetch so the button can be clicked again
       if (setShouldFetch) setShouldFetch(false);
     }
@@ -58,12 +48,5 @@ export function useUtilityData(
     fetchData();
   }, [shouldFetch]);
 
-  return {
-    rows,
-    loading,
-    rateLimits,
-    error,
-    progress,
-    progressText,
-  };
+  return { rows };
 }
