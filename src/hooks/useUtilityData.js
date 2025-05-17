@@ -4,7 +4,7 @@ import { fetchThreadsWithProjectAndOwnerInfo } from "../utils/api/analytics";
 export function useUtilityData(
   fromDate,
   toDate,
-  limit = 5,
+  limit = null, // Changed to accept null for unlimited
   shouldFetch = false,
   setShouldFetch
 ) {
@@ -29,7 +29,7 @@ export function useUtilityData(
           setProgress(percent);
           setProgressText(text);
         },
-        limit,
+        limit, // This can now be null
         fromDate,
         toDate
       );

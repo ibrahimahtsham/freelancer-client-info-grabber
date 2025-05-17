@@ -7,6 +7,8 @@ import {
   Chip,
   TextField,
   LinearProgress,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import DataTable from "../components/DataTable";
 import DateRangeControls from "../components/DateRangeControls";
@@ -30,11 +32,18 @@ const UtilityPage = () => {
 
   const [fromDate, setFromDate] = useState(formatDate(firstDayOfPreviousMonth));
   const [toDate, setToDate] = useState(formatDate(firstDayOfCurrentMonth));
+  const [limitEnabled, setLimitEnabled] = useState(false); // Default: limit disabled
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [shouldFetch, setShouldFetch] = useState(false);
 
   const { rows, loading, rateLimits, error, progress, progressText } =
-    useUtilityData(fromDate, toDate, limit, shouldFetch, setShouldFetch);
+    useUtilityData(
+      fromDate,
+      toDate,
+      limitEnabled ? limit : null,
+      shouldFetch,
+      setShouldFetch
+    );
 
   const handleFetchData = () => {
     setShouldFetch(true);
@@ -82,6 +91,7 @@ const UtilityPage = () => {
           gap: 2,
           my: 3,
           alignItems: "flex-end",
+          flexWrap: "wrap",
         }}
       >
         <DateRangeControls
@@ -91,16 +101,33 @@ const UtilityPage = () => {
           setToDate={setToDate}
         />
 
-        <TextField
-          label="Result Limit"
-          type="number"
-          value={limit}
-          onChange={(e) =>
-            setLimit(Math.max(1, Math.min(100, parseInt(e.target.value) || 5)))
-          }
-          InputProps={{ inputProps: { min: 1, max: 100 } }}
-          sx={{ width: 150 }}
-        />
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={limitEnabled}
+                onChange={(e) => setLimitEnabled(e.target.checked)}
+                name="limitToggle"
+                color="primary"
+              />
+            }
+            label="Enable Result Limit"
+          />
+
+          <TextField
+            label="Result Limit"
+            type="number"
+            value={limit}
+            onChange={(e) =>
+              setLimit(
+                Math.max(1, Math.min(100, parseInt(e.target.value) || 5))
+              )
+            }
+            InputProps={{ inputProps: { min: 1, max: 100 } }}
+            disabled={!limitEnabled}
+            sx={{ width: 150 }}
+          />
+        </Box>
       </Box>
 
       <Button
@@ -140,6 +167,8 @@ const UtilityPage = () => {
         ) : (
           <Typography>
             Select a date range and click "Fetch Data" to begin.
+            {!limitEnabled &&
+              " (No limit applied - may fetch all available data)"}
           </Typography>
         )}
       </Box>

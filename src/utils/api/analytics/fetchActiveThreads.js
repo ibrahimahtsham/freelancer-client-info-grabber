@@ -1,5 +1,5 @@
 import { apiRequest } from "../request";
-import { API_ENDPOINTS } from "../../../constants"; // Import constants
+import { API_ENDPOINTS } from "../../../constants";
 
 // Helper function to delay execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -32,16 +32,18 @@ async function retryFetch(fetchFunction, maxRetries = 3) {
 export async function fetchActiveThreads(
   fromDate = null,
   toDate = null,
-  limit = 5
+  limit = null
 ) {
-  // Start with base URL
-  let url = API_ENDPOINTS.THREADS; // Use constant
+  // Start with base URL and required folder parameter
+  let url = `${API_ENDPOINTS.THREADS}?folder=active`;
 
   // Create array to hold query parameters
   const params = [];
 
-  // Set the fixed limit
-  params.push(`limit=${limit}`);
+  // Only add limit if it's provided (not null)
+  if (limit !== null && limit > 0) {
+    params.push(`limit=${limit}`);
+  }
 
   // Add date range parameters if provided
   if (fromDate) {
@@ -57,29 +59,35 @@ export async function fetchActiveThreads(
   }
 
   // Build the final URL with parameters
-  url += `?${params.join("&")}`;
+  if (params.length > 0) {
+    url += `&${params.join("&")}`;
+  }
 
   try {
     // Use retry mechanism for main request
-    const { data, rateLimits } = await retryFetch(() => apiRequest(url));
+    const { data, rateLimits, error } = await retryFetch(() => apiRequest(url));
 
     // Check for API errors
+    if (error) {
+      console.error("API error:", error);
+      throw error;
+    }
+
     if (data.status === "error") {
-      return { threads: [], rateLimits };
+      console.error("Data status error:", data.message);
+      throw new Error(data.message || "Failed to fetch threads");
     }
 
     // Extract threads
     const threads = data?.result?.threads || [];
+    console.log(`Fetched ${threads.length} threads`);
 
     return {
       threads,
       rateLimits,
     };
   } catch (error) {
-    // Return empty threads array with rate limit info
-    return {
-      threads: [],
-      rateLimits: { limit: "", remaining: "" },
-    };
+    console.error("Error fetching threads:", error);
+    throw error; // Propagate error so it can be handled upstream
   }
 }

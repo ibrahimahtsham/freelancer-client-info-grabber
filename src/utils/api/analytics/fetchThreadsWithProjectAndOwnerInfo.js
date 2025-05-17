@@ -5,11 +5,11 @@ import { fetchMyUserId } from "./fetchMyUserId";
 import { fetchPaidMilestonesForProject } from "./fetchPaidMilestonesForProject";
 import { fetchFirstMessageDate } from "./fetchFirstMessageDate";
 import { DEFAULT_VALUES } from "../../../constants";
-import { formatDateTime } from "../../../utils/dateUtils"; // Import the new function
+import { formatDate } from "../../../utils/dateUtils";
 
 export async function fetchThreadsWithProjectAndOwnerInfo(
   progressCallback = null,
-  maxThreads = DEFAULT_VALUES.LIMIT,
+  maxThreads = null, // Changed to accept null for unlimited
   fromDate = null,
   toDate = null
 ) {
@@ -17,8 +17,10 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
   const { threads, rateLimits } = await fetchActiveThreads(
     fromDate,
     toDate,
-    maxThreads
+    maxThreads // Pass null when no limit should be applied
   );
+
+  console.log(`Got ${threads.length} threads from fetchActiveThreads`);
   if (!threads.length) return { threads: [], rateLimits };
 
   // Get user ID once for all calls
@@ -76,10 +78,8 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
         // Project info
         if (info.project) {
           enrichedThread.projectTitle = info.project.title || "N/A";
-
-          // Use formatDateTime for consistent date formatting
           enrichedThread.projectUploadDate = info.project.submitdate
-            ? formatDateTime(info.project.submitdate)
+            ? formatDate(info.project.submitdate)
             : "N/A";
 
           // Format bid price
@@ -143,8 +143,7 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
         if (thread.id) {
           const firstMsgDate = await fetchFirstMessageDate(thread.id);
           if (firstMsgDate) {
-            // Use formatDateTime for consistent date formatting
-            enrichedThread.firstMessageDate = formatDateTime(firstMsgDate);
+            enrichedThread.firstMessageDate = formatDate(firstMsgDate);
           }
         }
       } catch (err) {
