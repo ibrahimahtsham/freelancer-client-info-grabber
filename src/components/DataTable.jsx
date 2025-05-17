@@ -50,7 +50,7 @@ const DataTable = ({ rows = [], loading }) => {
         rows={rows}
         columns={columns}
         loading={loading}
-        pageSizeOptions={[5, 10, 25]}
+        pageSizeOptions={[10, 25, 100]}
         initialState={{
           pagination: { paginationModel: { pageSize: 10 } },
         }}

@@ -6,5 +6,5 @@ export const API_ENDPOINTS = {
 
 export const DEFAULT_VALUES = {
   PROJECT_ID: "39325440",
-  LIMIT: 5,
+  LIMIT: 10,
 };
