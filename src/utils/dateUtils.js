@@ -81,8 +81,9 @@ export function formatDateTime(dateInput) {
   // Check if date is valid
   if (isNaN(date.getTime())) return "Invalid Date";
 
-  // Format as day/month/year with time
-  return date.toLocaleDateString("en-GB", {
+  // Format as day/month/year with time in Pakistan timezone
+  return date.toLocaleString("en-PK", {
+    timeZone: "Asia/Karachi",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

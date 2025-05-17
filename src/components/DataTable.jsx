@@ -3,6 +3,18 @@ import { DataGrid } from "@mui/x-data-grid";
 import { GridToolbar } from "@mui/x-data-grid";
 
 const columns = [
+  // Add this new row numbering column at the beginning
+  {
+    field: "sequenceNumber",
+    headerName: "#",
+    width: 70,
+    sortable: false,
+    filterable: false,
+    disableExport: true,
+    renderCell: (params) => {
+      return params.api.getRowIndexRelativeToVisibleRows(params.row.id) + 1;
+    },
+  },
   { field: "threadId", headerName: "Thread ID", width: 150 },
   { field: "ownerId", headerName: "Owner ID", width: 150 },
   { field: "projectId", headerName: "Project ID", width: 150 },
