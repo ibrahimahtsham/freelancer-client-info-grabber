@@ -15,6 +15,7 @@ import {
   Stack,
   Button,
   Backdrop,
+  Fab,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EmployeeList from "./components/EmployeeList";
@@ -75,7 +76,7 @@ const EmployeePage = () => {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container>
       {/* Page Header */}
       <Paper
         elevation={0}
@@ -133,7 +134,7 @@ const EmployeePage = () => {
       <Stack
         spacing={4}
         sx={{
-          maxWidth: "95%", // Increased from 85%
+          maxWidth: "98%", // Increased from 95%
           mx: "auto",
         }}
       >
@@ -168,8 +169,8 @@ const EmployeePage = () => {
           </CardContent>
         </Card>
 
-        {/* Employee Form - Always visible but with overlay when inactive */}
-        <Box position="relative" sx={{ height: formActive ? "auto" : "250px" }}>
+        {/* Employee Form - Fixed height regardless of active state */}
+        <Box position="relative" sx={{ height: "560px" }}>
           <Card
             elevation={4}
             sx={{
@@ -181,7 +182,7 @@ const EmployeePage = () => {
                   ? `2px solid ${theme.palette.primary.main}`
                   : `1px solid ${theme.palette.divider}`,
               position: "relative",
-              height: formActive ? "auto" : "100%",
+              height: "100%",
             }}
           >
             <Box
@@ -219,49 +220,62 @@ const EmployeePage = () => {
                 p: 3,
                 opacity: formActive ? 1 : 0,
                 filter: formActive ? "none" : "grayscale(0.6)",
+                height: "220px", // Fixed height for the form content
+                overflow: "auto",
               }}
             >
               <EmployeeForm
                 employee={editingEmployee}
                 onSubmit={handleFormSubmit}
                 onCancel={handleCancelForm}
+                compact={true} // Add a prop to enable compact mode
               />
             </CardContent>
           </Card>
 
-          {/* Overlay when form is inactive */}
+          {/* Overlay when form is inactive - now solid dark gray */}
           {!formActive && (
             <Backdrop
               open={!formActive}
               sx={{
                 position: "absolute",
                 zIndex: 1,
-                backgroundColor: "rgba(0,0,0,0.7)",
+                backgroundColor: "#333333", // Solid dark gray
                 borderRadius: 3,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
               }}
             >
-              <Button
-                variant="outlined"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleAddClick}
-                size="large"
+              <Typography
+                variant="h6"
                 sx={{
-                  borderRadius: 6,
-                  px: 5,
-                  py: 1.5,
-                  boxShadow: theme.shadows[3],
-                  minWidth: 200,
-                  borderWidth: 2,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    backgroundColor: theme.palette.primary.main,
-                    color: theme.palette.primary.contrastText,
-                  },
+                  color: "white",
+                  fontWeight: 500,
+                  mb: 1,
                 }}
               >
                 Add Employee
-              </Button>
+              </Typography>
+
+              <Fab
+                color="primary"
+                aria-label="add employee"
+                onClick={handleAddClick}
+                size="large"
+                sx={{
+                  boxShadow: theme.shadows[8],
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    transform: "scale(1.1)",
+                    boxShadow: theme.shadows[12],
+                  },
+                }}
+              >
+                <AddIcon sx={{ fontSize: 32 }} />
+              </Fab>
             </Backdrop>
           )}
         </Box>

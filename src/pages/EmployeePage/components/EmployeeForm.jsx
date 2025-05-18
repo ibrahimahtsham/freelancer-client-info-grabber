@@ -134,7 +134,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
               p: 2,
               bgcolor: alpha(theme.palette.background.default, 0.7),
               borderRadius: 2,
-              maxHeight: "250px", // Reduced height
+              maxHeight: "100",
               overflow: "hidden",
             }}
           >
