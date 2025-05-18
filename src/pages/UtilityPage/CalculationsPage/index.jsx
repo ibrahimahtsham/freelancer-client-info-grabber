@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { useUtility } from "../UtilityContext/hooks";
-import useStatsCalculation from "./hooks/useStatsCalculation";
-import useBidsData from "./hooks/useBidsData";
+import useStatsCalculation from "./utils/useStatsCalculation";
+import useBidsData from "./utils/useBidsData";
 import BasicStatsCards from "./components/BasicStatsCards";
 import TimeDistribution from "./components/TimeDistribution";
 import BidAnalysisChart from "./components/BidAnalysisChart";
