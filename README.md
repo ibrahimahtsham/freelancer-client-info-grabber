@@ -15,21 +15,61 @@ A comprehensive dashboard for freelancers and small teams working on Freelancer.
 
 ## 📸 Screenshots
 
-### Client Management Dashboard
+### 👥 Client Management Dashboard
 
-<!-- Screenshot of client page -->
+Manage client information and communications in one place
 
-![Client Dashboard](screenshot-client-page.png)
+![Client Dashboard](https://github.com/user-attachments/assets/6076e588-aeb2-41c7-8a8f-d817f5179d93)
 
-### Project Data Analysis
+### 📊 Project Data Analysis
 
-<!-- Screenshot of calculations page -->
+#### Data Import & Processing
 
-![Data Analysis](screenshot-calculations-page.png)
+Easily fetch and process project data from Freelancer.com
 
-### Employee Management
+![Data Import](https://github.com/user-attachments/assets/4af66943-3d3f-43b9-bed0-f0b886bd41fc)
 
-<!-- Screenshot of employee management page -->
+#### ⏱️ Time & Shift Breakdowns
+
+See which projects arrive during each team member's shift
+
+![Time Breakdowns](https://github.com/user-attachments/assets/314b319e-db2f-408a-9084-fc582a2a86b9)
+
+#### 📈 Advanced Analytics
+
+##### Summary Statistics
+
+Get a bird's-eye view of your project metrics
+
+![Summary Stats](https://github.com/user-attachments/assets/9f5abee9-9c0a-4d17-8afd-ad27be1558ed)
+
+##### Time Distribution Analysis
+
+Analyze when projects are posted and optimize your working hours
+
+![Time Distribution](https://github.com/user-attachments/assets/74dd55aa-3837-4575-b0c5-ed9d8e578bb7)
+
+##### Bid Success Metrics
+
+Track your bid success rates and optimize your proposal strategy
+
+![Bid Analysis](https://github.com/user-attachments/assets/901ae88b-8cbc-488d-8fb8-5c9c09483eb9)
+
+##### Team Performance Comparison
+
+Compare performance across team members to identify strengths
+
+![Team Comparison](https://github.com/user-attachments/assets/1b68c195-0edf-4054-bee6-5a42eff713f5)
+
+#### 💰 Salary & Commission Calculator
+
+Calculate team member compensation based on performance metrics
+
+![Salary Calculator](https://github.com/user-attachments/assets/26018a72-4eb5-486c-bf68-8ed21496c916)
+
+### 👨‍💼 Employee Management
+
+Define team members, roles, and shift schedules
 
 ![Employee Management](screenshot-employee-page.png)
 
