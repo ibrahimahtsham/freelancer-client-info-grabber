@@ -1,7 +1,7 @@
 import React from "react";
-import ClientInfoForm from "../components/ClientInfoForm";
-import MessageForm from "../components/MessageForm";
-import DetailsModal from "../components/DetailsModal";
+import ClientInfoForm from "../../components/ClientInfoForm";
+import MessageForm from "../../components/MessageForm";
+import DetailsModal from "../../components/DetailsModal";
 
 const ClientPage = (props) => (
   <>
