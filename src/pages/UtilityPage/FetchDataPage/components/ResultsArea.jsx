@@ -1,5 +1,5 @@
 import { Box, Typography, CircularProgress } from "@mui/material";
-import DataTable from "../components/DataTable";
+import DataTable from "../../components/DataTable";
 
 const ResultsArea = ({ rows, loading, shouldFetch, limitEnabled }) => {
   return (
