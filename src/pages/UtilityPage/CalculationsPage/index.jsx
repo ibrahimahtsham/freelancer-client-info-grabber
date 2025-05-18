@@ -1,12 +1,5 @@
-import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  Stepper,
-  Step,
-  StepLabel,
-  Button,
-} from "@mui/material";
+import { useState } from "react";
+import { Box, Typography, Button } from "@mui/material";
 import { useUtility } from "../UtilityContext/hooks";
 import useStatsCalculation from "./hooks/useStatsCalculation";
 import useBidsData from "./hooks/useBidsData";

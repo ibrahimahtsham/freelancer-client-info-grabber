@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button, Typography, Box, Paper } from "@mui/material";
 
 const TestLocalStorage = () => {

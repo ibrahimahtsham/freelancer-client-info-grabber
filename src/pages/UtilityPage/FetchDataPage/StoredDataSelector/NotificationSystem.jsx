@@ -1,4 +1,3 @@
-import React from "react";
 import { Snackbar, Alert } from "@mui/material";
 
 const NotificationSystem = ({ notification, onClose }) => {

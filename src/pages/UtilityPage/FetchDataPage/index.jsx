@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { Typography, Box, Snackbar, Alert, Chip } from "@mui/material";
 import { useUtilityData } from "../../../hooks/useUtilityData";
 import { DEFAULT_VALUES } from "../../../constants";
@@ -10,11 +10,6 @@ import ResultsArea from "./ResultsArea";
 
 const FetchDataPage = () => {
   const { rows } = useUtility();
-
-  // Effect to log when rows change in this component
-  useEffect(() => {
-    console.log(`FetchDataPage: rows updated to ${rows?.length || 0}`);
-  }, [rows]);
 
   // Snackbar notifications
   const [snackbar, setSnackbar] = useState({

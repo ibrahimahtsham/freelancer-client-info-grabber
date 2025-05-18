@@ -1,21 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { Box, Tabs, Tab, Paper } from "@mui/material";
 import FetchDataPage from "../FetchDataPage";
 import TimeBreakdownsPage from "../TimeBreakdownsPage";
 import CalculationsPage from "../CalculationsPage";
 import StoredDataSelector from "../FetchDataPage/StoredDataSelector";
-import { useUtility } from "../UtilityContext/hooks";
 import TabPanel from "./TabPanel";
 
 const UtilityPageContent = () => {
-  const { rows, dataVersion } = useUtility();
   const [tabValue, setTabValue] = useState(0);
-
-  useEffect(() => {
-    console.log(
-      `UtilityPageContent: rows updated to ${rows.length} items, version ${dataVersion}`
-    );
-  }, [rows, dataVersion]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);

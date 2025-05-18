@@ -20,7 +20,6 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
     maxThreads // Pass null when no limit should be applied
   );
 
-  console.log(`Got ${threads.length} threads from fetchActiveThreads`);
   if (!threads.length) return { threads: [], rateLimits };
 
   // Get user ID once for all calls

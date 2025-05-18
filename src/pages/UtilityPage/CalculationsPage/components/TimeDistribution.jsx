@@ -1,63 +1,73 @@
-import React from 'react';
-import { Grid, Card, CardContent, Typography, Box } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Grid, Card, CardContent, Typography, Box } from "@mui/material";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 // Note: You'll need to install recharts:
 // npm install recharts
 
 const TimeDistribution = ({ timeStats }) => {
   if (!timeStats) return null;
-  
+
   // Prepare data for chart
   const chartData = [
-    { 
-      name: 'Morning (6AM-12PM)', 
-      total: timeStats.morning.total, 
+    {
+      name: "Morning (6AM-12PM)",
+      total: timeStats.morning.total,
       awarded: timeStats.morning.awarded,
-      paid: timeStats.morning.paid
+      paid: timeStats.morning.paid,
     },
-    { 
-      name: 'Afternoon (12PM-5PM)', 
-      total: timeStats.afternoon.total, 
+    {
+      name: "Afternoon (12PM-5PM)",
+      total: timeStats.afternoon.total,
       awarded: timeStats.afternoon.awarded,
-      paid: timeStats.afternoon.paid
+      paid: timeStats.afternoon.paid,
     },
-    { 
-      name: 'Evening (5PM-9PM)', 
-      total: timeStats.evening.total, 
+    {
+      name: "Evening (5PM-9PM)",
+      total: timeStats.evening.total,
       awarded: timeStats.evening.awarded,
-      paid: timeStats.evening.paid
+      paid: timeStats.evening.paid,
     },
-    { 
-      name: 'Night (9PM-6AM)', 
-      total: timeStats.night.total, 
+    {
+      name: "Night (9PM-6AM)",
+      total: timeStats.night.total,
       awarded: timeStats.night.awarded,
-      paid: timeStats.night.paid
+      paid: timeStats.night.paid,
     },
   ];
-  
+
   // Calculate percentages for each time period
-  const timePeriodsWithRates = Object.keys(timeStats).map(period => {
+  const timePeriodsWithRates = Object.keys(timeStats).map((period) => {
     const data = timeStats[period];
-    const awardRate = data.total > 0 ? (data.awarded / data.total * 100).toFixed(1) : 0;
-    const avgPaid = data.awarded > 0 ? (data.paid / data.awarded).toFixed(2) : 0;
-    
+    const awardRate =
+      data.total > 0 ? ((data.awarded / data.total) * 100).toFixed(1) : 0;
+    const avgPaid =
+      data.awarded > 0 ? (data.paid / data.awarded).toFixed(2) : 0;
+
     return {
       period: period.charAt(0).toUpperCase() + period.slice(1),
       total: data.total,
       awarded: data.awarded,
       awardRate: `${awardRate}%`,
       paid: `$${data.paid.toFixed(2)}`,
-      avgPaid: `$${avgPaid}`
+      avgPaid: `$${avgPaid}`,
     };
   });
-  
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
         Time of Day Distribution
       </Typography>
-      
+
       {/* Chart visualization */}
       <Card sx={{ mb: 4, p: 2 }}>
         <CardContent>
@@ -85,13 +95,13 @@ const TimeDistribution = ({ timeStats }) => {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-      
+
       {/* Stats cards */}
       <Typography variant="h6" gutterBottom>
         Time Period Statistics
       </Typography>
       <Grid container spacing={3}>
-        {timePeriodsWithRates.map(item => (
+        {timePeriodsWithRates.map((item) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.period}>
             <Card>
               <CardContent>

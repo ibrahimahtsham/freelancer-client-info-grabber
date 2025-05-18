@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { UtilityContext } from "./context"; // Import from the new file
 import {
   loadAvailableDatasets,
@@ -24,7 +24,6 @@ export function UtilityProvider({ children }) {
 
   // Debug effect to monitor rows changes
   useEffect(() => {
-    console.log(`Rows state updated: ${rows.length} items`);
     // Increment version to signal changes to all components
     setDataVersion((v) => v + 1);
   }, [rows]);
@@ -67,11 +66,6 @@ export function UtilityProvider({ children }) {
     },
 
     loadDataset: (datasetId) => {
-      if (lastLoadedRef.current === datasetId) {
-        console.log("Dataset already loaded:", datasetId);
-        return true;
-      }
-
       lastLoadedRef.current = datasetId;
       setLoading(true);
       setError("");

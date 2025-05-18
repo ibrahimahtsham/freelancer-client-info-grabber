@@ -61,8 +61,6 @@ export function loadAvailableDatasets() {
 // Function to load a specific dataset
 export function loadDataset(datasetId, onLoadSuccess) {
   try {
-    console.log("Loading dataset:", datasetId);
-
     const datasetJson = localStorage.getItem(datasetId);
     if (!datasetJson) {
       console.error("Dataset not found in localStorage:", datasetId);
@@ -74,8 +72,6 @@ export function loadDataset(datasetId, onLoadSuccess) {
       console.error("Invalid dataset format:", dataset);
       return false;
     }
-
-    console.log(`Loading ${dataset.rows.length} rows from dataset`);
 
     if (onLoadSuccess) {
       onLoadSuccess(dataset);
@@ -91,8 +87,6 @@ export function loadDataset(datasetId, onLoadSuccess) {
 // Specialized function for direct dataset loading
 export function forceLoadDataset(datasetId, onLoadSuccess) {
   try {
-    console.log("Force loading dataset:", datasetId);
-
     const datasetJson = localStorage.getItem(datasetId);
     if (!datasetJson) return false;
 

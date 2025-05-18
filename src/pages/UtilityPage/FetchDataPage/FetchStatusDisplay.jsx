@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Typography, LinearProgress } from "@mui/material";
 
 const FetchStatusDisplay = ({ error, loading, progress, progressText }) => {

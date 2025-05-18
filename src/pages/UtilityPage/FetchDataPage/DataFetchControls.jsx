@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, TextField, FormControlLabel, Switch } from "@mui/material";
 import DateRangeControls from "../../../components/DateRangeControls";
 

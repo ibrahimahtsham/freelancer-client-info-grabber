@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Typography, Chip, Button, Grid } from "@mui/material";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 

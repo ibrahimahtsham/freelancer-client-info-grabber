@@ -1,4 +1,3 @@
-import React from "react";
 import DeleteDialog from "./DeleteDialog";
 import ClearAllDialog from "./ClearAllDialog";
 

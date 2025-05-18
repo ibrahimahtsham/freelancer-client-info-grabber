@@ -80,7 +80,6 @@ export async function fetchActiveThreads(
 
     // Extract threads
     const threads = data?.result?.threads || [];
-    console.log(`Fetched ${threads.length} threads`);
 
     return {
       threads,

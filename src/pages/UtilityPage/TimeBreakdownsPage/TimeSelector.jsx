@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Typography, FormControl, Select, MenuItem } from "@mui/material";
 
 const TimeSelector = ({ label, hour, ampm, onHourChange, onAmPmChange }) => (

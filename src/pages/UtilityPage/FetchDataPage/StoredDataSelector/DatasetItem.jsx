@@ -1,4 +1,3 @@
-import React from "react";
 import { MenuItem, Typography, Box, IconButton, Tooltip } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { getFormattedTimestamp } from "./utils";
