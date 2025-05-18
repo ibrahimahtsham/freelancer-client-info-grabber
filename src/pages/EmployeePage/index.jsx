@@ -17,7 +17,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EmployeeList from "./components/EmployeeList";
 import EmployeeForm from "./components/EmployeeForm";
-import { useEmployees } from "../../contexts/EmployeeContext";
+import { useEmployees } from "../../contexts/EmployeeHooks";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 
 const EmployeePage = () => {

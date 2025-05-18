@@ -1,5 +1,6 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { setCookie, getCookie } from "../utils/cookieUtils";
+import EmployeeContext from "./EmployeeContextDefinition";
 
 // Default employees data
 const defaultEmployees = [
@@ -22,8 +23,6 @@ const defaultEmployees = [
     endAmPm: "PM",
   },
 ];
-
-const EmployeeContext = createContext();
 
 export function EmployeeProvider({ children }) {
   const [employees, setEmployees] = useState([]);
@@ -83,11 +82,4 @@ export function EmployeeProvider({ children }) {
   );
 }
 
-// Custom hook to use the employee context
-export function useEmployees() {
-  const context = useContext(EmployeeContext);
-  if (!context) {
-    throw new Error("useEmployees must be used within an EmployeeProvider");
-  }
-  return context;
-}
+export default EmployeeProvider;

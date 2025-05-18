@@ -16,7 +16,7 @@ import {
   Divider,
   Alert,
 } from "@mui/material";
-import { useEmployees } from "../../../../contexts/EmployeeContext";
+import { useEmployees } from "../../../../contexts/EmployeeHooks";
 import { to24Hour } from "../../../../utils/dateUtils";
 
 const SalaryCalculator = ({ rows }) => {

@@ -18,7 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useEmployees } from "../../../../contexts/EmployeeContext";
+import { useEmployees } from "../../../../contexts/EmployeeHooks";
 import { to24Hour } from "../../../../utils/dateUtils";
 
 const TeamComparison = ({ rows }) => {
