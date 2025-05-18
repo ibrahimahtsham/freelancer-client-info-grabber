@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { parseTime, isInShift, to24Hour } from "./TimeUtils";
+import { parseTime, isInShift, to24Hour } from "../TimeUtils";
 
 /**
  * Custom hook for processing time-based project data

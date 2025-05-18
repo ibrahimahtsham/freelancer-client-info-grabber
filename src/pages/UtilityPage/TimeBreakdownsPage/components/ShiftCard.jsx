@@ -6,7 +6,7 @@ import {
   Paper,
   CircularProgress,
 } from "@mui/material";
-import DataTable from "../components/DataTable";
+import DataTable from "../../components/DataTable";
 import TimeSelector from "./TimeSelector";
 
 const ShiftCard = ({
