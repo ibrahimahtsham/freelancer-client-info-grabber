@@ -1,5 +1,5 @@
-import { apiRequest } from "../request";
-import { API_ENDPOINTS, DEFAULT_VALUES } from "../../../constants";
+import { apiRequest } from "../../../../apis/request";
+import { API_ENDPOINTS, DEFAULT_VALUES } from "../../../../constants";
 
 export async function fetchPaidMilestonesForProject(
   projectId,

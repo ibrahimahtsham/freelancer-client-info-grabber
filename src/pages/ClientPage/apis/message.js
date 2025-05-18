@@ -1,5 +1,5 @@
-import { apiRequest } from "./request";
-import { API_ENDPOINTS } from "../../constants"; // Import constants
+import { apiRequest } from "../../../apis/request";
+import { API_ENDPOINTS } from "../../../constants"; // Import constants
 
 // Helper to get or create thread
 async function getOrCreateThread(clientId, projectId) {

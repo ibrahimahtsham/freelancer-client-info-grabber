@@ -1,11 +1,11 @@
 import { fetchActiveThreads } from "./fetchActiveThreads";
-import { fetchClientInfo } from "../client";
+import { fetchClientInfo } from "../../../ClientPage/apis/client";
 import { fetchMyBidForProject } from "./fetchMyBidForProject";
-import { fetchMyUserId } from "./fetchMyUserId";
+import { fetchMyUserId } from "./fetchMyUserID";
 import { fetchPaidMilestonesForProject } from "./fetchPaidMilestonesForProject";
 import { fetchFirstMessageDate } from "./fetchFirstMessageDate";
-import { DEFAULT_VALUES } from "../../../constants";
-import { formatTime, formatDateDDMMYYYY } from "../../../utils/dateUtils"; // Import additional formatting function
+import { DEFAULT_VALUES } from "../../../../constants";
+import { formatTime, formatDateDDMMYYYY } from "../../../../utils/dateUtils"; // Import additional formatting function
 
 export async function fetchThreadsWithProjectAndOwnerInfo(
   progressCallback = null,

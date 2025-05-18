@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fetchClientInfo } from "../utils/api/client";
+import { fetchClientInfo } from "../pages/ClientPage/apis/client";
 import flatten from "../utils/flatten";
 
 export default function useClientInfo() {

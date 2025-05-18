@@ -1,5 +1,5 @@
-import { apiRequest } from "../request";
-import { API_ENDPOINTS } from "../../../constants";
+import { apiRequest } from "../../../../apis/request";
+import { API_ENDPOINTS } from "../../../../constants";
 
 export async function fetchFirstMessageDate(threadId) {
   try {

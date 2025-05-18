@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchThreadsWithProjectAndOwnerInfo } from "../utils/api/analytics";
+import { fetchThreadsWithProjectAndOwnerInfo } from "../pages/UtilityPage/FetchDataPage/apis";
 
 export function useUtilityData(
   fromDate,

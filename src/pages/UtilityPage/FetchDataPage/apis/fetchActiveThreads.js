@@ -1,5 +1,5 @@
-import { apiRequest } from "../request";
-import { API_ENDPOINTS } from "../../../constants";
+import { apiRequest } from "../../../../apis/request";
+import { API_ENDPOINTS } from "../../../../constants";
 
 // Helper function to delay execution
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

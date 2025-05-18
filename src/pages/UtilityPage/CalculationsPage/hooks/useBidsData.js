@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiRequest } from "../../../../utils/api/request";
+import { apiRequest } from "../../../../apis/request";
 import { API_ENDPOINTS } from "../../../../constants";
 
 export default function useBidsData(rows, fromDate, toDate) {

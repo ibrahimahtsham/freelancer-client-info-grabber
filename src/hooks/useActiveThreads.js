@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fetchThreadsWithProjectAndOwnerInfo } from "../utils/api/analytics";
+import { fetchThreadsWithProjectAndOwnerInfo } from "../pages/UtilityPage/FetchDataPage/apis";
 
 export default function useActiveThreads() {
   const [threads, setThreads] = useState([]);

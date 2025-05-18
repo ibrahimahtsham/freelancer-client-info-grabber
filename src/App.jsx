@@ -4,7 +4,7 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import Navbar from "./components/Navbar";
 import useThemeMode from "./hooks/useThemeMode";
 import useClientInfo from "./hooks/useClientInfo";
-import { sendMessageWithThread } from "./utils/api/message";
+import { sendMessageWithThread } from "./pages/ClientPage/apis/message";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import ClientPage from "./pages/ClientPage";
 import UtilityPage from "./pages/UtilityPage";
