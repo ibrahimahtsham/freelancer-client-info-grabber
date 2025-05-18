@@ -72,7 +72,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Stack spacing={4}>
+      <Stack spacing={3}>
         {/* Employee Name Section */}
         <Box>
           <Typography
@@ -91,7 +91,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: 2,
               bgcolor: alpha(theme.palette.background.default, 0.7),
               borderRadius: 2,
             }}
@@ -113,7 +113,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           </Paper>
         </Box>
 
-        {/* Color Selection Section - Full width color picker */}
+        {/* Color Selection Section - Reduced size */}
         <Box>
           <Typography
             variant="subtitle1"
@@ -131,9 +131,11 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: 2,
               bgcolor: alpha(theme.palette.background.default, 0.7),
               borderRadius: 2,
+              maxHeight: "250px", // Reduced height
+              overflow: "hidden",
             }}
           >
             <ChromePicker
@@ -153,7 +155,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           </Paper>
         </Box>
 
-        {/* Shift Hours Section - Each field takes 25% width */}
+        {/* Shift Hours Section - Each field takes exactly 25% width */}
         <Box>
           <Typography
             variant="subtitle1"
@@ -171,13 +173,13 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: 2,
               bgcolor: alpha(theme.palette.background.default, 0.7),
               borderRadius: 2,
             }}
           >
             <Grid container spacing={2}>
-              <Grid item xs={3}>
+              <Grid item xs={3} sx={{ width: "25%" }}>
                 <Typography variant="body2" gutterBottom fontWeight="500">
                   Start Hour
                 </Typography>
@@ -189,7 +191,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.startHour}
                     onChange={handleChange}
                     label="Hour"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1.5 } }}
+                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
                       <MenuItem key={`start-${hour}`} value={hour}>
@@ -200,7 +202,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={3}>
+              <Grid item xs={3} sx={{ width: "25%" }}>
                 <Typography variant="body2" gutterBottom fontWeight="500">
                   Start AM/PM
                 </Typography>
@@ -212,7 +214,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.startAmPm}
                     onChange={handleChange}
                     label="AM/PM"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1.5 } }}
+                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
                   >
                     <MenuItem value="AM">AM</MenuItem>
                     <MenuItem value="PM">PM</MenuItem>
@@ -220,7 +222,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={3}>
+              <Grid item xs={3} sx={{ width: "25%" }}>
                 <Typography variant="body2" gutterBottom fontWeight="500">
                   End Hour
                 </Typography>
@@ -232,7 +234,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.endHour}
                     onChange={handleChange}
                     label="Hour"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1.5 } }}
+                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
                       <MenuItem key={`end-${hour}`} value={hour}>
@@ -243,7 +245,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={3}>
+              <Grid item xs={3} sx={{ width: "25%" }}>
                 <Typography variant="body2" gutterBottom fontWeight="500">
                   End AM/PM
                 </Typography>
@@ -255,7 +257,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.endAmPm}
                     onChange={handleChange}
                     label="AM/PM"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1.5 } }}
+                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
                   >
                     <MenuItem value="AM">AM</MenuItem>
                     <MenuItem value="PM">PM</MenuItem>
@@ -266,9 +268,9 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           </Paper>
         </Box>
 
-        {/* Action Button */}
+        {/* Action Button - Smaller vertical spacing */}
         <Box
-          sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}
+          sx={{ mt: 1, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}
         >
           <Stack direction="row" spacing={3} justifyContent="center">
             <Button
@@ -277,10 +279,9 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
               startIcon={<CancelIcon />}
               sx={{
                 borderRadius: 2,
-                px: 4,
-                py: 1.5,
+                px: 3,
+                py: 1,
               }}
-              size="large"
             >
               Cancel
             </Button>
@@ -292,11 +293,10 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
               startIcon={<SaveIcon />}
               sx={{
                 borderRadius: 2,
-                px: 6,
-                py: 1.5,
-                minWidth: 200,
+                px: 4,
+                py: 1,
+                minWidth: 180,
               }}
-              size="large"
             >
               {employee ? "Update Employee" : "Add Employee"}
             </Button>

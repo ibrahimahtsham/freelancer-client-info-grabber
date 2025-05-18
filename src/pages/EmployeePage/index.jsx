@@ -14,6 +14,7 @@ import {
   Paper,
   Stack,
   Button,
+  Backdrop,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EmployeeList from "./components/EmployeeList";
@@ -128,15 +129,15 @@ const EmployeePage = () => {
         </Box>
       </Fade>
 
-      {/* Main Content - Vertical Stack */}
+      {/* Main Content - Vertical Stack with increased width */}
       <Stack
         spacing={4}
         sx={{
-          maxWidth: "85%",
+          maxWidth: "95%", // Increased from 85%
           mx: "auto",
         }}
       >
-        {/* Employee List - Now on top */}
+        {/* Employee List with increased height */}
         <Card
           elevation={3}
           sx={{
@@ -151,29 +152,13 @@ const EmployeePage = () => {
                 borderTopLeftRadius: 12,
                 borderTopRightRadius: 12,
                 borderBottom: `1px solid ${theme.palette.divider}`,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
               }}
             >
               <Typography variant="h6" component="h2" fontWeight="500">
                 Sales Team ({employees.length})
               </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleAddClick}
-                sx={{
-                  borderRadius: 6,
-                  px: 3,
-                  boxShadow: theme.shadows[2],
-                }}
-              >
-                Add Employee
-              </Button>
             </Box>
-            <Box sx={{ p: 3, maxHeight: "60vh", overflow: "auto" }}>
+            <Box sx={{ p: 3, maxHeight: "50vh", overflow: "auto" }}>
               <EmployeeList
                 employees={employees}
                 onEdit={handleEditClick}
@@ -183,49 +168,103 @@ const EmployeePage = () => {
           </CardContent>
         </Card>
 
-        {/* Employee Form - Now below, conditionally rendered */}
-        {formActive && (
-          <Fade in={formActive}>
-            <Card
-              elevation={4}
-              sx={{
-                borderRadius: 3,
-                border: !editingEmployee
+        {/* Employee Form - Always visible but with overlay when inactive */}
+        <Box position="relative" sx={{ height: formActive ? "auto" : "250px" }}>
+          <Card
+            elevation={4}
+            sx={{
+              borderRadius: 3,
+              border:
+                !editingEmployee && formActive
                   ? `2px solid ${theme.palette.success.main}`
-                  : `2px solid ${theme.palette.primary.main}`,
+                  : editingEmployee && formActive
+                  ? `2px solid ${theme.palette.primary.main}`
+                  : `1px solid ${theme.palette.divider}`,
+              position: "relative",
+              height: formActive ? "auto" : "100%",
+            }}
+          >
+            <Box
+              sx={{
+                p: 3,
+                backgroundColor:
+                  !editingEmployee && formActive
+                    ? alpha(theme.palette.success.main, 0.1)
+                    : editingEmployee && formActive
+                    ? alpha(theme.palette.primary.main, 0.1)
+                    : theme.palette.background.default,
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
               }}
             >
-              <Box
+              <Typography
+                variant="h6"
+                fontWeight="500"
+                color={
+                  !editingEmployee && formActive
+                    ? "success.main"
+                    : formActive
+                    ? "primary.main"
+                    : "text.secondary"
+                }
+              >
+                {!editingEmployee
+                  ? "Add New Employee"
+                  : `Edit ${editingEmployee?.name}`}
+              </Typography>
+            </Box>
+            <Divider />
+            <CardContent
+              sx={{
+                p: 3,
+                opacity: formActive ? 1 : 0,
+                filter: formActive ? "none" : "grayscale(0.6)",
+              }}
+            >
+              <EmployeeForm
+                employee={editingEmployee}
+                onSubmit={handleFormSubmit}
+                onCancel={handleCancelForm}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Overlay when form is inactive */}
+          {!formActive && (
+            <Backdrop
+              open={!formActive}
+              sx={{
+                position: "absolute",
+                zIndex: 1,
+                backgroundColor: "rgba(0,0,0,0.7)",
+                borderRadius: 3,
+              }}
+            >
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddClick}
+                size="large"
                 sx={{
-                  p: 3,
-                  backgroundColor: !editingEmployee
-                    ? alpha(theme.palette.success.main, 0.1)
-                    : alpha(theme.palette.primary.main, 0.1),
-                  borderTopLeftRadius: 12,
-                  borderTopRightRadius: 12,
+                  borderRadius: 6,
+                  px: 5,
+                  py: 1.5,
+                  boxShadow: theme.shadows[3],
+                  minWidth: 200,
+                  borderWidth: 2,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    backgroundColor: theme.palette.primary.main,
+                    color: theme.palette.primary.contrastText,
+                  },
                 }}
               >
-                <Typography
-                  variant="h6"
-                  fontWeight="500"
-                  color={!editingEmployee ? "success.main" : "primary.main"}
-                >
-                  {!editingEmployee
-                    ? "Add New Employee"
-                    : `Edit ${editingEmployee?.name}`}
-                </Typography>
-              </Box>
-              <Divider />
-              <CardContent sx={{ p: 4 }}>
-                <EmployeeForm
-                  employee={editingEmployee}
-                  onSubmit={handleFormSubmit}
-                  onCancel={handleCancelForm}
-                />
-              </CardContent>
-            </Card>
-          </Fade>
-        )}
+                Add Employee
+              </Button>
+            </Backdrop>
+          )}
+        </Box>
       </Stack>
     </Container>
   );
