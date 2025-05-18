@@ -36,10 +36,13 @@ A comprehensive dashboard for freelancers and small teams working on Freelancer.
 ## 🚀 Getting Started
 
 1. Clone the repository
-2. Install dependencies: `npm install`
-3. Run development server: `npm run dev`
-4. Build for production: `npm run build`
-5. Deploy to GitHub Pages: `npm run deploy`
+2. Run the provided batch script: `run_or_deploy.bat`
+3. Choose an option when prompted:
+   - Option 1: Start the development server
+   - Option 2: Deploy to GitHub Pages (automatically opens the deployed site)
+   - Option 3: Run linting and dependency checks
+
+The script will automatically install dependencies on first run.
 
 ## 🛠️ Technologies
 
