@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
-import { parseTime, isInShift, to24Hour } from "../../../../utils/dateUtils";
+import {
+  parseProjectDateTime,
+  isInShift,
+  to24Hour,
+} from "../../../../utils/projectTimeUtils";
 
 /**
  * Custom hook for processing time-based project data
  */
-export function useTimeProcessing({ rows, employees = [] }) {
+export function useTimeProcessing({ rows, employees, selectedEmployeeIndex }) {
   // State for filtered projects
   const [filteredProjects, setFilteredProjects] = useState([]);
 
@@ -27,103 +31,47 @@ export function useTimeProcessing({ rows, employees = [] }) {
     if (!rows.length || !employees.length) return;
 
     // Start processing in non-blocking chunks
-    let employeeProjects = employees.map(() => ({
-      awarded: [],
-      other: [],
-    }));
+    const processedProjects = {};
 
-    let totalProcessed = 0;
-    let totalWithDate = 0;
-    let successfullyParsed = 0;
-    let exampleDate = "";
+    employees.forEach((employee, index) => {
+      // Convert shift times using the shared utility
+      const startHour24 = to24Hour(employee.startHour, employee.startAmPm);
+      const endHour24 = to24Hour(employee.endHour, employee.endAmPm);
 
-    // Set initial processing state
-    setProcessingState({
-      isProcessing: true,
-      progress: 0,
-      stage: "Analyzing project dates",
-    });
-
-    // Process in chunks of 50 items to avoid UI freezes
-    const chunkSize = 50;
-    const totalChunks = Math.ceil(rows.length / chunkSize);
-    let currentChunk = 0;
-
-    const processNextChunk = () => {
-      const start = currentChunk * chunkSize;
-      const end = Math.min(start + chunkSize, rows.length);
-
-      // Process this chunk
-      for (let i = start; i < end; i++) {
-        const row = rows[i];
-
-        if (row.projectUploadDate && row.projectUploadDate !== "N/A") {
-          totalWithDate++;
-          if (!exampleDate) exampleDate = row.projectUploadDate;
-
-          // Parse the time
-          const hour = parseTime(row.projectUploadDate);
-
-          if (hour !== null) {
-            successfullyParsed++;
-
-            // Check each employee's shift
-            employees.forEach((employee, index) => {
-              // Calculate 24-hour shift times
-              const employeeStart = to24Hour(
-                employee.startHour,
-                employee.startAmPm
-              );
-              const employeeEnd = to24Hour(employee.endHour, employee.endAmPm);
-
-              // Check if in employee's shift
-              if (isInShift(hour, employeeStart, employeeEnd)) {
-                if (row.awarded === "Yes") {
-                  employeeProjects[index].awarded.push(row);
-                } else {
-                  employeeProjects[index].other.push(row);
-                }
-              }
-            });
-          }
-        }
-      }
-
-      currentChunk++;
-      totalProcessed = end;
-
-      // Update progress
-      setProcessingState({
-        isProcessing: currentChunk < totalChunks,
-        progress: Math.round((currentChunk / totalChunks) * 100),
-        stage: `Processing ${totalProcessed} of ${rows.length} projects`,
+      // Filter projects for this employee using shared logic
+      const employeeProjects = rows.filter((row) => {
+        const hour = parseProjectDateTime(row.projectUploadDate);
+        return isInShift(hour, startHour24, endHour24);
       });
 
-      // If more chunks to process, schedule the next one
-      if (currentChunk < totalChunks) {
-        setTimeout(processNextChunk, 10); // Small delay to let UI update
-      } else {
-        // All done, update filtered projects
-        setFilteredProjects(employeeProjects);
+      // Separate awarded and other projects
+      processedProjects[index] = {
+        awarded: employeeProjects.filter(
+          (project) => project.awarded === "Yes"
+        ),
+        other: employeeProjects.filter((project) => project.awarded !== "Yes"),
+      };
+    });
 
-        setDebugInfo({
-          total: totalWithDate,
-          parsed: successfullyParsed,
-          example: exampleDate,
-        });
+    // Complete the processing and update state
+    setFilteredProjects(processedProjects);
 
-        // Mark processing as complete
-        setProcessingState({
-          isProcessing: false,
-          progress: 100,
-          stage: "Completed",
-        });
-      }
-    };
+    setDebugInfo({
+      total: rows.length,
+      parsed: Object.values(processedProjects).reduce(
+        (sum, projects) =>
+          sum + projects.awarded.length + projects.other.length,
+        0
+      ),
+      example: rows.length > 0 ? rows[0].projectUploadDate : "",
+    });
 
-    // Start processing the first chunk
-    processNextChunk();
-  }, [rows, employees]);
+    setProcessingState({
+      isProcessing: false,
+      progress: 100,
+      stage: "Completed",
+    });
+  }, [rows, employees, selectedEmployeeIndex]);
 
   return { filteredProjects, processingState, debugInfo };
 }

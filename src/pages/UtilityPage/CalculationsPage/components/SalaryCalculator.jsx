@@ -17,7 +17,11 @@ import {
   Alert,
 } from "@mui/material";
 import { useEmployees } from "../../../../contexts/EmployeeHooks";
-import { to24Hour } from "../../../../utils/dateUtils";
+import {
+  parseProjectDateTime,
+  isInShift,
+  to24Hour,
+} from "../../../../utils/projectTimeUtils";
 
 const SalaryCalculator = ({ rows }) => {
   // Use employee data from context (cookies)
@@ -66,51 +70,14 @@ const SalaryCalculator = ({ rows }) => {
 
     const selectedEmployee = employeeMap[selectedEmployeeId];
 
-    // Parse dates & determine shift
-    const parseDateTime = (dateString) => {
-      if (!dateString || dateString === "N/A") return null;
-
-      try {
-        const parts = dateString.split(" ");
-        if (parts.length < 2) return null;
-
-        const timePart = parts[1];
-        const ampmPart = parts[2];
-
-        // Parse time
-        const [hours] = timePart.split(":").map(Number);
-
-        // Convert to 24-hour format
-        let hour24 = hours;
-        if (ampmPart === "PM" && hours < 12) hour24 += 12;
-        else if (ampmPart === "AM" && hours === 12) hour24 = 0;
-
-        return hour24;
-      } catch {
-        return null;
-      }
-    };
-
-    // Check if in shift - using employee data from context
-    const isInShift = (hour) => {
-      if (hour === null) return false;
-
-      const start = selectedEmployee.startHour24;
-      const end = selectedEmployee.endHour24;
-
-      // Handle shifts that span across midnight
-      if (start > end) {
-        return hour >= start || hour < end;
-      } else {
-        return hour >= start && hour < end;
-      }
-    };
-
-    // Filter projects by person's shift
+    // Filter projects by person's shift using shared utility
     const personProjects = rows.filter((row) => {
-      const hour = parseDateTime(row.projectUploadDate);
-      if (hour === null) return false;
-      return isInShift(hour);
+      const hour = parseProjectDateTime(row.projectUploadDate);
+      return isInShift(
+        hour,
+        selectedEmployee.startHour24,
+        selectedEmployee.endHour24
+      );
     });
 
     // Get awarded projects
