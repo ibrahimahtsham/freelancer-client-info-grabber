@@ -13,10 +13,15 @@ import {
   useTheme,
   Paper,
   alpha,
+  Slider,
+  Stack,
 } from "@mui/material";
 import { ChromePicker } from "react-color";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import WorkIcon from "@mui/icons-material/Work";
+import FormatColorFillIcon from "@mui/icons-material/FormatColorFill";
 
 const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
   const theme = useTheme();
@@ -65,6 +70,11 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
     onSubmit(formData);
   };
 
+  // Get display time
+  const getTimeDisplay = (hour, ampm) => {
+    return `${hour}:00 ${ampm}`;
+  };
+
   // Styled form sections to match the inactive state aesthetic
   const formSectionStyle = {
     p: 2.5,
@@ -80,6 +90,16 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
     },
   };
 
+  const timeBoxStyle = {
+    p: 2,
+    borderRadius: "10px",
+    border: `1px solid ${theme.palette.divider}`,
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? alpha(theme.palette.background.default, 0.3)
+        : alpha(theme.palette.background.paper, 0.8),
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <Paper
@@ -90,6 +110,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           backgroundColor: alpha(theme.palette.background.default, 0.5),
         }}
       >
+        {/* Employee Information Section */}
         <Box sx={formSectionStyle}>
           <Typography
             variant="subtitle1"
@@ -116,47 +137,104 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                 display: "inline-block",
               }}
             />
+            <WorkIcon sx={{ fontSize: 18, mr: 0.5 }} />
             Employee Information
           </Typography>
 
-          <TextField
-            fullWidth
-            label="Employee Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            variant="outlined"
-            placeholder="Enter employee name"
-            sx={{
-              mb: 3,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-              },
-            }}
-          />
+          <Grid container spacing={3}>
+            {/* Name Field */}
+            <Grid item xs={12} md={7}>
+              <TextField
+                fullWidth
+                label="Employee Name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                variant="outlined"
+                placeholder="Enter employee name"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "10px",
+                  },
+                }}
+              />
+            </Grid>
 
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Employee Color
-            </Typography>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 1.5,
-                borderRadius: "10px",
-                bgcolor:
-                  theme.palette.mode === "dark"
-                    ? alpha(theme.palette.background.paper, 0.4)
-                    : theme.palette.grey[50],
-                border: `1px solid ${theme.palette.divider}`,
-              }}
-            >
+            {/* Color Field */}
+            <Grid item xs={12} md={5}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 1, display: "flex", alignItems: "center" }}
+              >
+                <FormatColorFillIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                Employee Color
+              </Typography>
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 2,
+                  p: 1,
+                  borderRadius: "10px",
+                  border: `1px solid ${theme.palette.divider}`,
+                  bgcolor:
+                    theme.palette.mode === "dark"
+                      ? alpha(theme.palette.background.paper, 0.4)
+                      : theme.palette.grey[50],
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "8px",
+                    bgcolor: formData.color,
+                    boxShadow: "0px 2px 4px rgba(0,0,0,0.2)",
+                  }}
+                />
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+                    {formData.color.toUpperCase()}
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      borderRadius: 5,
+                      textTransform: "none",
+                      fontSize: "0.75rem",
+                      py: 0.25,
+                    }}
+                    onClick={() =>
+                      (document.getElementById(
+                        "color-picker-panel"
+                      ).style.display =
+                        document.getElementById("color-picker-panel").style
+                          .display === "none"
+                          ? "block"
+                          : "none")
+                    }
+                  >
+                    Change Color
+                  </Button>
+                </Box>
+              </Box>
+
+              {/* Hidden Color Picker panel */}
+              <Box
+                id="color-picker-panel"
+                sx={{
+                  mt: 2,
+                  p: 1.5,
+                  borderRadius: "10px",
+                  border: `1px solid ${theme.palette.divider}`,
+                  display: "none",
+                  bgcolor:
+                    theme.palette.mode === "dark"
+                      ? alpha(theme.palette.background.paper, 0.4)
+                      : theme.palette.grey[50],
                 }}
               >
                 <ChromePicker
@@ -174,35 +252,11 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                   }}
                 />
               </Box>
-              <Box
-                sx={{
-                  mt: 1,
-                  p: 1.5,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  bgcolor: "background.paper",
-                  borderRadius: "8px",
-                  border: `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "8px",
-                    bgcolor: formData.color,
-                    boxShadow: "0px 2px 4px rgba(0,0,0,0.2)",
-                  }}
-                />
-                <Typography variant="body2" fontWeight={500}>
-                  {formData.color.toUpperCase()}
-                </Typography>
-              </Box>
-            </Paper>
-          </Box>
+            </Grid>
+          </Grid>
         </Box>
 
+        {/* Shift Hours Section - Improved UI */}
         <Box sx={formSectionStyle}>
           <Typography
             variant="subtitle1"
@@ -229,84 +283,202 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                 display: "inline-block",
               }}
             />
+            <AccessTimeIcon sx={{ fontSize: 18, mr: 0.5 }} />
             Shift Hours
           </Typography>
 
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Start Time
-              </Typography>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <FormControl fullWidth>
-                  <InputLabel id="start-hour-label">Hour</InputLabel>
-                  <Select
-                    labelId="start-hour-label"
-                    name="startHour"
-                    value={formData.startHour}
-                    onChange={handleChange}
-                    label="Hour"
-                    sx={{ borderRadius: "10px" }}
-                  >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
-                      <MenuItem key={`start-${hour}`} value={hour}>
-                        {hour}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth>
-                  <InputLabel id="start-ampm-label">AM/PM</InputLabel>
-                  <Select
-                    labelId="start-ampm-label"
-                    name="startAmPm"
-                    value={formData.startAmPm}
-                    onChange={handleChange}
-                    label="AM/PM"
-                    sx={{ borderRadius: "10px" }}
-                  >
-                    <MenuItem value="AM">AM</MenuItem>
-                    <MenuItem value="PM">PM</MenuItem>
-                  </Select>
-                </FormControl>
+          <Grid container spacing={3}>
+            {/* Start Time */}
+            <Grid item xs={12} md={6}>
+              <Box sx={timeBoxStyle}>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                  Start Time
+                </Typography>
+
+                <Typography
+                  variant="h5"
+                  sx={{
+                    textAlign: "center",
+                    color: theme.palette.primary.main,
+                    my: 2,
+                    fontWeight: "medium",
+                  }}
+                >
+                  {getTimeDisplay(formData.startHour, formData.startAmPm)}
+                </Typography>
+
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="start-hour-label">Hour</InputLabel>
+                    <Select
+                      labelId="start-hour-label"
+                      name="startHour"
+                      value={formData.startHour}
+                      onChange={handleChange}
+                      label="Hour"
+                      sx={{ borderRadius: "10px" }}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                        (hour) => (
+                          <MenuItem key={`start-${hour}`} value={hour}>
+                            {hour}
+                          </MenuItem>
+                        )
+                      )}
+                    </Select>
+                  </FormControl>
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="start-ampm-label">AM/PM</InputLabel>
+                    <Select
+                      labelId="start-ampm-label"
+                      name="startAmPm"
+                      value={formData.startAmPm}
+                      onChange={handleChange}
+                      label="AM/PM"
+                      sx={{ borderRadius: "10px" }}
+                    >
+                      <MenuItem value="AM">AM</MenuItem>
+                      <MenuItem value="PM">PM</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Stack>
               </Box>
             </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                End Time
-              </Typography>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <FormControl fullWidth>
-                  <InputLabel id="end-hour-label">Hour</InputLabel>
-                  <Select
-                    labelId="end-hour-label"
-                    name="endHour"
-                    value={formData.endHour}
-                    onChange={handleChange}
-                    label="Hour"
-                    sx={{ borderRadius: "10px" }}
-                  >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
-                      <MenuItem key={`end-${hour}`} value={hour}>
-                        {hour}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth>
-                  <InputLabel id="end-ampm-label">AM/PM</InputLabel>
-                  <Select
-                    labelId="end-ampm-label"
-                    name="endAmPm"
-                    value={formData.endAmPm}
-                    onChange={handleChange}
-                    label="AM/PM"
-                    sx={{ borderRadius: "10px" }}
-                  >
-                    <MenuItem value="AM">AM</MenuItem>
-                    <MenuItem value="PM">PM</MenuItem>
-                  </Select>
-                </FormControl>
+
+            {/* End Time */}
+            <Grid item xs={12} md={6}>
+              <Box sx={timeBoxStyle}>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                  End Time
+                </Typography>
+
+                <Typography
+                  variant="h5"
+                  sx={{
+                    textAlign: "center",
+                    color: theme.palette.error.main,
+                    my: 2,
+                    fontWeight: "medium",
+                  }}
+                >
+                  {getTimeDisplay(formData.endHour, formData.endAmPm)}
+                </Typography>
+
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="end-hour-label">Hour</InputLabel>
+                    <Select
+                      labelId="end-hour-label"
+                      name="endHour"
+                      value={formData.endHour}
+                      onChange={handleChange}
+                      label="Hour"
+                      sx={{ borderRadius: "10px" }}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                        (hour) => (
+                          <MenuItem key={`end-${hour}`} value={hour}>
+                            {hour}
+                          </MenuItem>
+                        )
+                      )}
+                    </Select>
+                  </FormControl>
+                  <FormControl fullWidth size="small">
+                    <InputLabel id="end-ampm-label">AM/PM</InputLabel>
+                    <Select
+                      labelId="end-ampm-label"
+                      name="endAmPm"
+                      value={formData.endAmPm}
+                      onChange={handleChange}
+                      label="AM/PM"
+                      sx={{ borderRadius: "10px" }}
+                    >
+                      <MenuItem value="AM">AM</MenuItem>
+                      <MenuItem value="PM">PM</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Box>
+            </Grid>
+
+            {/* Visual representation of hours */}
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 2,
+                  borderRadius: "10px",
+                  bgcolor: alpha(theme.palette.background.paper, 0.3),
+                  border: `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Working Hours Visualization
+                </Typography>
+
+                <Box
+                  sx={{
+                    height: 28,
+                    bgcolor: alpha(theme.palette.grey[300], 0.3),
+                    borderRadius: 2,
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      bottom: 0,
+                      left: `${
+                        ((formData.startHour +
+                          (formData.startAmPm === "PM" ? 12 : 0)) /
+                          24) *
+                        100
+                      }%`,
+                      right: `${
+                        100 -
+                        ((formData.endHour +
+                          (formData.endAmPm === "PM" ? 12 : 0)) /
+                          24) *
+                          100
+                      }%`,
+                      bgcolor: formData.color,
+                      borderRadius: 2,
+                    }}
+                  />
+
+                  {/* Time markers */}
+                  {["12 AM", "6 AM", "12 PM", "6 PM", "12 AM"].map(
+                    (marker, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          bottom: 0,
+                          left: `${idx * 25}%`,
+                          width: 1,
+                          bgcolor: alpha(theme.palette.text.secondary, 0.4),
+                          "&::after": {
+                            content: `"${marker}"`,
+                            position: "absolute",
+                            top: "100%",
+                            left: "-12px",
+                            fontSize: "0.7rem",
+                            color: theme.palette.text.secondary,
+                            whiteSpace: "nowrap",
+                          },
+                        }}
+                      />
+                    )
+                  )}
+                </Box>
               </Box>
             </Grid>
           </Grid>
