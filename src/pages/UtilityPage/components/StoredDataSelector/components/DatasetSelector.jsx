@@ -9,7 +9,7 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getFormattedTimestamp } from "./utils";
+import { getFormattedTimestamp } from "../utils";
 
 const DatasetSelector = ({
   storedDatasets,

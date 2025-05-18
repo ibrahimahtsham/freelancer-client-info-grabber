@@ -1,5 +1,5 @@
 import { Box, Typography, Button } from "@mui/material";
-import { getFormattedTimestamp } from "./utils";
+import { getFormattedTimestamp } from "../utils";
 
 const QuickAccessButtons = ({ datasets, onDatasetSelect }) => {
   if (!datasets || datasets.length === 0) return null;

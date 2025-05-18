@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Paper } from "@mui/material";
 import { useUtility } from "../../UtilityContext/hooks";
-import DatasetHeader from "./DatasetHeader";
-import NotificationSystem from "./NotificationSystem";
-import DatasetSelector from "./DatasetSelector";
-import QuickAccessButtons from "./QuickAccessButtons";
-import DialogManager from "./DialogManager";
+import DatasetHeader from "./components/DatasetHeader";
+import NotificationSystem from "./components/NotificationSystem";
+import DatasetSelector from "./components/DatasetSelector";
+import QuickAccessButtons from "./components/QuickAccessButtons";
+import DialogManager from "./components/DialogManager";
 
 const StoredDataSelector = () => {
   const {

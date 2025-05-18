@@ -1,6 +1,6 @@
 import { MenuItem, Typography, Box, IconButton, Tooltip } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getFormattedTimestamp } from "./utils";
+import { getFormattedTimestamp } from "../utils";
 
 const DatasetItem = ({ dataset, onDelete }) => {
   const timestamp = getFormattedTimestamp(dataset.metadata.savedAt);
