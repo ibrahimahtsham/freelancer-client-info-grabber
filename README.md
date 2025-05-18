@@ -1,4 +1,3 @@
-```markdown
 # Freelancer Client & Project Manager
 
 A comprehensive dashboard for freelancers and small teams working on Freelancer.com to manage clients, analyze project data, and track team performance.
@@ -70,4 +69,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📄 License
 
 This project is licensed under the MIT License.
-```
