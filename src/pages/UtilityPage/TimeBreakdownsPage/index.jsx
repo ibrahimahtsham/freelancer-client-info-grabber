@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Box, Typography, Alert, LinearProgress, Chip } from "@mui/material";
 import { useUtility } from "../UtilityContext/hooks";
 import ShiftCard from "./components/ShiftCard";
-import { useTimeProcessing } from "./components/useTimeProcessing";
+import { useTimeProcessing } from "./utils/useTimeProcessing";
 
 /**
  * Time Breakdowns Page Component
