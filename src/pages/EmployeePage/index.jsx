@@ -2,21 +2,31 @@ import { useState } from "react";
 import {
   Box,
   Typography,
-  Paper,
-  Button,
   Container,
   Grid,
   Alert,
+  Fade,
+  Card,
+  CardContent,
+  Divider,
+  useTheme,
+  alpha,
+  Paper,
+  Stack,
+  Button,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import EmployeeList from "./components/EmployeeList";
 import EmployeeForm from "./components/EmployeeForm";
 import { useEmployees } from "../../contexts/EmployeeContext";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 
 const EmployeePage = () => {
+  const theme = useTheme();
   const { employees, addEmployee, updateEmployee, deleteEmployee } =
     useEmployees();
   const [editingEmployee, setEditingEmployee] = useState(null);
-  const [isAdding, setIsAdding] = useState(false);
+  const [formActive, setFormActive] = useState(false);
   const [notification, setNotification] = useState({
     show: false,
     message: "",
@@ -24,13 +34,13 @@ const EmployeePage = () => {
   });
 
   const handleAddClick = () => {
-    setIsAdding(true);
+    setFormActive(true);
     setEditingEmployee(null);
   };
 
   const handleEditClick = (employee) => {
+    setFormActive(true);
     setEditingEmployee(employee);
-    setIsAdding(false);
   };
 
   const handleDeleteClick = (id) => {
@@ -39,19 +49,19 @@ const EmployeePage = () => {
   };
 
   const handleFormSubmit = (employeeData) => {
-    if (isAdding) {
+    if (!editingEmployee) {
       addEmployee(employeeData);
       showNotification("Employee added successfully", "success");
-    } else if (editingEmployee) {
+    } else {
       updateEmployee(editingEmployee.id, employeeData);
       showNotification("Employee updated successfully", "success");
     }
-    setIsAdding(false);
+    setFormActive(false);
     setEditingEmployee(null);
   };
 
   const handleCancelForm = () => {
-    setIsAdding(false);
+    setFormActive(false);
     setEditingEmployee(null);
   };
 
@@ -65,62 +75,158 @@ const EmployeePage = () => {
 
   return (
     <Container maxWidth="lg">
-      <Typography variant="h4" gutterBottom>
-        Employee Management
-      </Typography>
-      <Typography variant="body1" paragraph>
-        Manage employee shifts and profiles. Changes are saved automatically via
-        browser cookies.
-      </Typography>
+      {/* Page Header */}
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 5,
+          p: 3,
+          display: "flex",
+          alignItems: "center",
+          gap: 3,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          borderRadius: "16px 16px 0 0",
+          bgcolor: alpha(theme.palette.background.default, 0.6),
+        }}
+      >
+        <PeopleAltIcon
+          sx={{
+            fontSize: 48,
+            color: theme.palette.primary.main,
+            p: 1,
+            borderRadius: "50%",
+            bgcolor: alpha(theme.palette.primary.main, 0.1),
+          }}
+        />
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom fontWeight="500">
+            Employee Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Manage sales team members, their shifts and profile settings
+          </Typography>
+        </Box>
+      </Paper>
 
-      {notification.show && (
-        <Alert severity={notification.severity} sx={{ mb: 2 }}>
-          {notification.message}
-        </Alert>
-      )}
-
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={7}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
+      {/* Notification */}
+      <Fade in={notification.show}>
+        <Box sx={{ mb: 4 }}>
+          {notification.show && (
+            <Alert
+              severity={notification.severity}
+              variant="filled"
+              sx={{
+                boxShadow: theme.shadows[3],
+                borderRadius: 2,
+                px: 3,
+                py: 1.5,
+              }}
             >
-              <Typography variant="h6">Employee List</Typography>
+              {notification.message}
+            </Alert>
+          )}
+        </Box>
+      </Fade>
+
+      {/* Main Content - Vertical Stack */}
+      <Stack
+        spacing={4}
+        sx={{
+          maxWidth: "85%",
+          mx: "auto",
+        }}
+      >
+        {/* Employee List - Now on top */}
+        <Card
+          elevation={3}
+          sx={{
+            borderRadius: 3,
+          }}
+        >
+          <CardContent sx={{ p: 0 }}>
+            <Box
+              sx={{
+                p: 3,
+                backgroundColor: theme.palette.background.default,
+                borderTopLeftRadius: 12,
+                borderTopRightRadius: 12,
+                borderBottom: `1px solid ${theme.palette.divider}`,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6" component="h2" fontWeight="500">
+                Sales Team ({employees.length})
+              </Typography>
               <Button
                 variant="contained"
                 color="primary"
+                startIcon={<AddIcon />}
                 onClick={handleAddClick}
-                disabled={isAdding}
+                sx={{
+                  borderRadius: 6,
+                  px: 3,
+                  boxShadow: theme.shadows[2],
+                }}
               >
                 Add Employee
               </Button>
             </Box>
-            <EmployeeList
-              employees={employees}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-            />
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={5}>
-          {(isAdding || editingEmployee) && (
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                {isAdding ? "Add New Employee" : "Edit Employee"}
-              </Typography>
-              <EmployeeForm
-                employee={editingEmployee}
-                onSubmit={handleFormSubmit}
-                onCancel={handleCancelForm}
+            <Box sx={{ p: 3, maxHeight: "60vh", overflow: "auto" }}>
+              <EmployeeList
+                employees={employees}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
               />
-            </Paper>
-          )}
-        </Grid>
-      </Grid>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Employee Form - Now below, conditionally rendered */}
+        {formActive && (
+          <Fade in={formActive}>
+            <Card
+              elevation={4}
+              sx={{
+                borderRadius: 3,
+                border: !editingEmployee
+                  ? `2px solid ${theme.palette.success.main}`
+                  : `2px solid ${theme.palette.primary.main}`,
+              }}
+            >
+              <Box
+                sx={{
+                  p: 3,
+                  backgroundColor: !editingEmployee
+                    ? alpha(theme.palette.success.main, 0.1)
+                    : alpha(theme.palette.primary.main, 0.1),
+                  borderTopLeftRadius: 12,
+                  borderTopRightRadius: 12,
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  fontWeight="500"
+                  color={!editingEmployee ? "success.main" : "primary.main"}
+                >
+                  {!editingEmployee
+                    ? "Add New Employee"
+                    : `Edit ${editingEmployee?.name}`}
+                </Typography>
+              </Box>
+              <Divider />
+              <CardContent sx={{ p: 4 }}>
+                <EmployeeForm
+                  employee={editingEmployee}
+                  onSubmit={handleFormSubmit}
+                  onCancel={handleCancelForm}
+                />
+              </CardContent>
+            </Card>
+          </Fade>
+        )}
+      </Stack>
     </Container>
   );
 };
