@@ -4,22 +4,9 @@ import { parseTime, isInShift, to24Hour } from "../../../../utils/dateUtils";
 /**
  * Custom hook for processing time-based project data
  */
-export function useTimeProcessing({
-  rows,
-  ibrahimStartHour,
-  ibrahimStartAmPm,
-  ibrahimEndHour,
-  ibrahimEndAmPm,
-  hafsaStartHour,
-  hafsaStartAmPm,
-  hafsaEndHour,
-  hafsaEndAmPm,
-}) {
+export function useTimeProcessing({ rows, employees = [] }) {
   // State for filtered projects
-  const [filteredProjects, setFilteredProjects] = useState({
-    ibrahim: { awarded: [], other: [] },
-    hafsa: { awarded: [], other: [] },
-  });
+  const [filteredProjects, setFilteredProjects] = useState([]);
 
   // State for processing status
   const [processingState, setProcessingState] = useState({
@@ -37,21 +24,18 @@ export function useTimeProcessing({
 
   // Process data in smaller chunks to avoid UI freezing
   useEffect(() => {
-    if (!rows.length) return;
+    if (!rows.length || !employees.length) return;
 
     // Start processing in non-blocking chunks
-    let ibrahimProjects = [];
-    let hafsaProjects = [];
+    let employeeProjects = employees.map(() => ({
+      awarded: [],
+      other: [],
+    }));
+
     let totalProcessed = 0;
     let totalWithDate = 0;
     let successfullyParsed = 0;
     let exampleDate = "";
-
-    // Calculate 24-hour shift times
-    const ibrahimStart = to24Hour(ibrahimStartHour, ibrahimStartAmPm);
-    const ibrahimEnd = to24Hour(ibrahimEndHour, ibrahimEndAmPm);
-    const hafsaStart = to24Hour(hafsaStartHour, hafsaStartAmPm);
-    const hafsaEnd = to24Hour(hafsaEndHour, hafsaEndAmPm);
 
     // Set initial processing state
     setProcessingState({
@@ -83,15 +67,24 @@ export function useTimeProcessing({
           if (hour !== null) {
             successfullyParsed++;
 
-            // Check if in Ibrahim's shift
-            if (isInShift(hour, ibrahimStart, ibrahimEnd)) {
-              ibrahimProjects.push(row);
-            }
+            // Check each employee's shift
+            employees.forEach((employee, index) => {
+              // Calculate 24-hour shift times
+              const employeeStart = to24Hour(
+                employee.startHour,
+                employee.startAmPm
+              );
+              const employeeEnd = to24Hour(employee.endHour, employee.endAmPm);
 
-            // Check if in Hafsa's shift
-            if (isInShift(hour, hafsaStart, hafsaEnd)) {
-              hafsaProjects.push(row);
-            }
+              // Check if in employee's shift
+              if (isInShift(hour, employeeStart, employeeEnd)) {
+                if (row.awarded === "Yes") {
+                  employeeProjects[index].awarded.push(row);
+                } else {
+                  employeeProjects[index].other.push(row);
+                }
+              }
+            });
           }
         }
       }
@@ -111,17 +104,8 @@ export function useTimeProcessing({
         setTimeout(processNextChunk, 10); // Small delay to let UI update
       } else {
         // All done, update filtered projects
-        const ibrahim = {
-          awarded: ibrahimProjects.filter((row) => row.awarded === "Yes"),
-          other: ibrahimProjects.filter((row) => row.awarded !== "Yes"),
-        };
+        setFilteredProjects(employeeProjects);
 
-        const hafsa = {
-          awarded: hafsaProjects.filter((row) => row.awarded === "Yes"),
-          other: hafsaProjects.filter((row) => row.awarded !== "Yes"),
-        };
-
-        setFilteredProjects({ ibrahim, hafsa });
         setDebugInfo({
           total: totalWithDate,
           parsed: successfullyParsed,
@@ -139,17 +123,7 @@ export function useTimeProcessing({
 
     // Start processing the first chunk
     processNextChunk();
-  }, [
-    rows,
-    ibrahimStartHour,
-    ibrahimStartAmPm,
-    ibrahimEndHour,
-    ibrahimEndAmPm,
-    hafsaStartHour,
-    hafsaStartAmPm,
-    hafsaEndHour,
-    hafsaEndAmPm,
-  ]);
+  }, [rows, employees]);
 
   return { filteredProjects, processingState, debugInfo };
 }

@@ -1,6 +1,7 @@
 import { AppBar, Toolbar, Typography, IconButton, Button } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
+import PeopleIcon from "@mui/icons-material/People";
 import { Link as RouterLink } from "react-router-dom";
 
 const Navbar = ({ mode, toggleMode }) => (
@@ -14,6 +15,14 @@ const Navbar = ({ mode, toggleMode }) => (
       </Button>
       <Button component={RouterLink} to="/utility" color="inherit">
         Utility
+      </Button>
+      <Button
+        component={RouterLink}
+        to="/employees"
+        color="inherit"
+        startIcon={<PeopleIcon />}
+      >
+        Employees
       </Button>
       <IconButton color="inherit" onClick={toggleMode}>
         {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}

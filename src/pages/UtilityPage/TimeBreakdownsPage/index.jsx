@@ -1,6 +1,15 @@
 import { useState } from "react";
-import { Box, Typography, Alert, LinearProgress, Chip } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Alert,
+  LinearProgress,
+  Chip,
+  Tabs,
+  Tab,
+} from "@mui/material";
 import { useUtility } from "../UtilityContext/hooks";
+import { useEmployees } from "../../../contexts/EmployeeContext";
 import ShiftCard from "./components/ShiftCard";
 import { useTimeProcessing } from "./utils/useTimeProcessing";
 
@@ -10,31 +19,47 @@ import { useTimeProcessing } from "./utils/useTimeProcessing";
  */
 const TimeBreakdownsPage = () => {
   const { rows } = useUtility();
+  const { employees } = useEmployees();
+  const [selectedEmployee, setSelectedEmployee] = useState(0);
 
-  // Ibrahim shift (default: 10pm - 7am)
-  const [ibrahimStartHour, setIbrahimStartHour] = useState(10);
-  const [ibrahimStartAmPm, setIbrahimStartAmPm] = useState("PM");
-  const [ibrahimEndHour, setIbrahimEndHour] = useState(7);
-  const [ibrahimEndAmPm, setIbrahimEndAmPm] = useState("AM");
+  // Fallback to default employees if none in context
+  const employeeList =
+    employees.length > 0
+      ? employees
+      : [
+          {
+            id: "1",
+            name: "Ibrahim",
+            color: "#4caf50",
+            startHour: 10,
+            startAmPm: "PM",
+            endHour: 7,
+            endAmPm: "AM",
+          },
+          {
+            id: "2",
+            name: "Hafsa",
+            color: "#e91e63",
+            startHour: 12,
+            startAmPm: "PM",
+            endHour: 10,
+            endAmPm: "PM",
+          },
+        ];
 
-  // Hafsa shift (default: 12pm - 10pm)
-  const [hafsaStartHour, setHafsaStartHour] = useState(12);
-  const [hafsaStartAmPm, setHafsaStartAmPm] = useState("PM");
-  const [hafsaEndHour, setHafsaEndHour] = useState(10);
-  const [hafsaEndAmPm, setHafsaEndAmPm] = useState("PM");
+  // Get the current employee details
+  const currentEmployee = employeeList[selectedEmployee];
 
-  // Use the time processing hook to handle all data transformation
+  // Use the time processing hook with the selected employee's shift
   const { filteredProjects, processingState, debugInfo } = useTimeProcessing({
     rows,
-    ibrahimStartHour,
-    ibrahimStartAmPm,
-    ibrahimEndHour,
-    ibrahimEndAmPm,
-    hafsaStartHour,
-    hafsaStartAmPm,
-    hafsaEndHour,
-    hafsaEndAmPm,
+    employees: employeeList,
+    selectedEmployeeIndex: selectedEmployee,
   });
+
+  const handleTabChange = (event, newValue) => {
+    setSelectedEmployee(newValue);
+  };
 
   // When no data is available
   if (rows.length === 0) {
@@ -53,7 +78,7 @@ const TimeBreakdownsPage = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Time Breakdowns by Shift
+        Time Breakdowns by Employee Shift
       </Typography>
 
       <Box
@@ -104,39 +129,52 @@ const TimeBreakdownsPage = () => {
         </Alert>
       )}
 
-      {/* Ibrahim's shift card - green background */}
+      {/* Employee tabs */}
+      <Box sx={{ mb: 3 }}>
+        <Tabs
+          value={selectedEmployee}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {employeeList.map((emp) => (
+            <Tab
+              key={emp.id}
+              label={emp.name}
+              sx={{
+                borderBottom: `3px solid ${emp.color}`,
+              }}
+            />
+          ))}
+        </Tabs>
+      </Box>
+
+      {/* Employee's shift card */}
       <ShiftCard
-        title="Ibrahim's"
-        backgroundColor="rgba(76, 175, 80, 0.15)"
-        startHour={ibrahimStartHour}
-        startAmPm={ibrahimStartAmPm}
-        endHour={ibrahimEndHour}
-        endAmPm={ibrahimEndAmPm}
-        setStartHour={setIbrahimStartHour}
-        setStartAmPm={setIbrahimStartAmPm}
-        setEndHour={setIbrahimEndHour}
-        setEndAmPm={setIbrahimEndAmPm}
-        awardedProjects={filteredProjects.ibrahim.awarded}
-        otherProjects={filteredProjects.ibrahim.other}
+        title={currentEmployee.name}
+        backgroundColor={`${currentEmployee.color}15`} // 15 opacity hex
+        startHour={currentEmployee.startHour}
+        startAmPm={currentEmployee.startAmPm}
+        endHour={currentEmployee.endHour}
+        endAmPm={currentEmployee.endAmPm}
+        setStartHour={() => {}} // These are now managed via the Employees page
+        setStartAmPm={() => {}}
+        setEndHour={() => {}}
+        setEndAmPm={() => {}}
+        awardedProjects={filteredProjects[selectedEmployee]?.awarded || []}
+        otherProjects={filteredProjects[selectedEmployee]?.other || []}
         loading={processingState.isProcessing}
+        readOnly={true}
       />
 
-      {/* Hafsa's shift card - pink background */}
-      <ShiftCard
-        title="Hafsa's"
-        backgroundColor="rgba(233, 30, 99, 0.15)"
-        startHour={hafsaStartHour}
-        startAmPm={hafsaStartAmPm}
-        endHour={hafsaEndHour}
-        endAmPm={hafsaEndAmPm}
-        setStartHour={setHafsaStartHour}
-        setStartAmPm={setHafsaStartAmPm}
-        setEndHour={setHafsaEndHour}
-        setEndAmPm={setHafsaEndAmPm}
-        awardedProjects={filteredProjects.hafsa.awarded}
-        otherProjects={filteredProjects.hafsa.other}
-        loading={processingState.isProcessing}
-      />
+      <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+        <Alert severity="info">
+          <Typography variant="body2">
+            To modify employee shift times, please use the{" "}
+            <strong>Employees</strong> page in the navigation bar.
+          </Typography>
+        </Alert>
+      </Box>
     </Box>
   );
 };
