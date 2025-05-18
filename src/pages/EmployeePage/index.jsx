@@ -13,6 +13,7 @@ import {
   Paper,
   Backdrop,
   Fab,
+  Button,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EmployeeList from "./components/EmployeeList";
@@ -119,16 +120,26 @@ const EmployeePage = () => {
     borderTopRightRadius: 12,
   };
 
+  // Updated backdrop style to work with both light and dark modes
   const backdropStyle = {
     position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 1,
-    backgroundColor: "#333333",
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? alpha(theme.palette.background.paper, 0.7)
+        : alpha(theme.palette.grey[200], 0.85),
+    backdropFilter: "blur(5px)",
     borderRadius: 3,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
+    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
   };
 
   return (
@@ -202,8 +213,8 @@ const EmployeePage = () => {
           </CardContent>
         </Card>
 
-        {/* Employee Form */}
-        <Box position="relative" sx={{ height: "560px" }}>
+        {/* Employee Form - Fixed height issue */}
+        <Box position="relative" sx={{ height: "auto", minHeight: "560px" }}>
           <Card elevation={4} sx={formCardStyle}>
             <Box sx={formHeaderStyle}>
               <Typography
@@ -227,7 +238,8 @@ const EmployeePage = () => {
               sx={{
                 p: 3,
                 opacity: formActive ? 1 : 0,
-                height: "220px",
+                minHeight: "400px", // Increased from 220px
+                maxHeight: "60vh", // Use viewport height for responsiveness
                 overflow: "auto",
               }}
             >
@@ -239,30 +251,61 @@ const EmployeePage = () => {
             </CardContent>
           </Card>
 
-          {/* Add Employee Overlay */}
+          {/* Improved Add Employee Overlay */}
           {!formActive && (
             <Backdrop open={true} sx={backdropStyle}>
-              <Typography
-                variant="h6"
-                sx={{ color: "white", fontWeight: 500, mb: 1 }}
-              >
-                Add Employee
-              </Typography>
-              <Fab
-                color="primary"
-                onClick={handleAddClick}
-                size="large"
+              <Box
                 sx={{
-                  boxShadow: theme.shadows[8],
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "scale(1.1)",
-                    boxShadow: theme.shadows[12],
-                  },
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  p: 3,
+                  borderRadius: 3,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                  backdropFilter: "blur(10px)",
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                  boxShadow: theme.shadows[4],
+                  maxWidth: "250px",
+                  textAlign: "center",
                 }}
               >
-                <AddIcon sx={{ fontSize: 32 }} />
-              </Fab>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 500,
+                    mb: 2,
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  Add New Team Member
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Create a new employee profile with shift hours and color
+                  coding
+                </Typography>
+
+                <Fab
+                  color="primary"
+                  onClick={handleAddClick}
+                  size="large"
+                  sx={{
+                    boxShadow: theme.shadows[8],
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "scale(1.1)",
+                      boxShadow: theme.shadows[12],
+                    },
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: 32 }} />
+                </Fab>
+              </Box>
             </Backdrop>
           )}
         </Box>
