@@ -194,7 +194,6 @@ const EmployeePage = () => {
                 p: 2,
                 opacity: formActive ? 1 : 0,
                 minHeight: 400,
-                maxHeight: "60vh",
                 overflow: "auto",
               }}
             >

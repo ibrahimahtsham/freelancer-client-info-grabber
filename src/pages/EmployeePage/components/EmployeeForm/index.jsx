@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Paper, Grid, alpha, useTheme } from "@mui/material";
+import { Paper, Grid, alpha, useTheme, Box } from "@mui/material";
 import EmployeeInformationSection from "./components/EmployeeInformationSection";
 import ShiftHoursSection from "./components/ShiftHoursSection";
 import ActionButtonsSection from "./components/ActionButtonsSection";
@@ -78,39 +78,73 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
           bgcolor: alpha(theme.palette.background.default, 0.5),
         }}
       >
-        <Grid container spacing={3}>
-          {/* Employee Information Section */}
-          <Grid item xs={12} md={4}>
-            <EmployeeInformationSection
-              formData={formData}
-              handleChange={handleChange}
-              handleColorPickerOpen={handleColorPickerOpen}
-              employee={employee}
-              sectionStyle={sectionStyle}
-              theme={theme}
-            />
+        <Grid container direction="column" spacing={3} sx={{ width: "100%" }}>
+          {/* Top row: Two columns */}
+          <Grid item xs={12}>
+            <Grid
+              container
+              spacing={3}
+              sx={{
+                display: "flex",
+                width: "100%",
+              }}
+            >
+              {/* Employee Information Section */}
+              <Grid
+                item
+                xs={12}
+                md={6}
+                sx={{
+                  flex: 1,
+                  width: { xs: "100%", md: "50%" },
+                }}
+              >
+                <EmployeeInformationSection
+                  formData={formData}
+                  handleChange={handleChange}
+                  handleColorPickerOpen={handleColorPickerOpen}
+                  employee={employee}
+                  sectionStyle={sectionStyle}
+                  theme={theme}
+                />
+              </Grid>
+
+              {/* Shift Hours Section */}
+              <Grid
+                item
+                xs={12}
+                md={6}
+                sx={{
+                  flex: 1,
+                  width: { xs: "100%", md: "50%" },
+                }}
+              >
+                <ShiftHoursSection
+                  formData={formData}
+                  handleChange={handleChange}
+                  employee={employee}
+                  sectionStyle={sectionStyle}
+                  theme={theme}
+                  getTimeDisplay={getTimeDisplay}
+                />
+              </Grid>
+            </Grid>
           </Grid>
 
-          {/* Shift Hours Section */}
-          <Grid item xs={12} md={4}>
-            <ShiftHoursSection
-              formData={formData}
-              handleChange={handleChange}
-              employee={employee}
-              sectionStyle={sectionStyle}
-              theme={theme}
-              getTimeDisplay={getTimeDisplay}
-            />
-          </Grid>
-
-          {/* Action Buttons Section */}
-          <Grid item xs={12} md={4}>
-            <ActionButtonsSection
-              employee={employee}
-              onCancel={onCancel}
-              sectionStyle={sectionStyle}
-              theme={theme}
-            />
+          {/* Bottom row: One column */}
+          <Grid item>
+            <Box sx={{ maxWidth: "600px", mx: "auto" }}>
+              <ActionButtonsSection
+                employee={employee}
+                onCancel={onCancel}
+                sectionStyle={{
+                  ...sectionStyle,
+                  height: "auto",
+                  minHeight: 250,
+                }}
+                theme={theme}
+              />
+            </Box>
           </Grid>
         </Grid>
       </Paper>

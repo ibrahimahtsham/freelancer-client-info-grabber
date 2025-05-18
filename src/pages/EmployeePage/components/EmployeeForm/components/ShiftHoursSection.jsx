@@ -210,7 +210,7 @@ const ShiftHoursSection = ({
               }%`,
               bgcolor: formData.color,
               boxShadow: `0 0 8px ${formData.color}`,
-              border: `2px solid ${theme.palette.background.paper}`,
+              //dont give a border
               borderRadius: 1,
               zIndex: 2,
             }}
