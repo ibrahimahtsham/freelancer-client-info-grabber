@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Container,
-  Grid,
   Alert,
   Fade,
   Card,
@@ -12,8 +11,6 @@ import {
   useTheme,
   alpha,
   Paper,
-  Stack,
-  Button,
   Backdrop,
   Fab,
 } from "@mui/material";
@@ -35,6 +32,7 @@ const EmployeePage = () => {
     severity: "success",
   });
 
+  // Event handlers
   const handleAddClick = () => {
     setFormActive(true);
     setEditingEmployee(null);
@@ -75,31 +73,69 @@ const EmployeePage = () => {
     );
   };
 
+  // Style objects
+  const headerStyle = {
+    mb: 5,
+    p: 3,
+    display: "flex",
+    alignItems: "center",
+    gap: 3,
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    borderRadius: "16px 16px 0 0",
+    bgcolor: alpha(theme.palette.background.default, 0.6),
+  };
+
+  const iconStyle = {
+    fontSize: 48,
+    color: theme.palette.primary.main,
+    p: 1,
+    borderRadius: "50%",
+    bgcolor: alpha(theme.palette.primary.main, 0.1),
+  };
+
+  const formCardStyle = {
+    borderRadius: 3,
+    border: formActive
+      ? `2px solid ${
+          !editingEmployee
+            ? theme.palette.success.main
+            : theme.palette.primary.main
+        }`
+      : `1px solid ${theme.palette.divider}`,
+    height: "100%",
+  };
+
+  const formHeaderStyle = {
+    p: 3,
+    backgroundColor: formActive
+      ? alpha(
+          !editingEmployee
+            ? theme.palette.success.main
+            : theme.palette.primary.main,
+          0.1
+        )
+      : theme.palette.background.default,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  };
+
+  const backdropStyle = {
+    position: "absolute",
+    zIndex: 1,
+    backgroundColor: "#333333",
+    borderRadius: 3,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  };
+
   return (
     <Container>
       {/* Page Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          mb: 5,
-          p: 3,
-          display: "flex",
-          alignItems: "center",
-          gap: 3,
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          borderRadius: "16px 16px 0 0",
-          bgcolor: alpha(theme.palette.background.default, 0.6),
-        }}
-      >
-        <PeopleAltIcon
-          sx={{
-            fontSize: 48,
-            color: theme.palette.primary.main,
-            p: 1,
-            borderRadius: "50%",
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-          }}
-        />
+      <Paper elevation={0} sx={headerStyle}>
+        <PeopleAltIcon sx={iconStyle} />
         <Box>
           <Typography variant="h4" component="h1" gutterBottom fontWeight="500">
             Employee Management
@@ -130,21 +166,18 @@ const EmployeePage = () => {
         </Box>
       </Fade>
 
-      {/* Main Content - Vertical Stack with increased width */}
-      <Stack
-        spacing={4}
+      {/* Main Content */}
+      <Box
         sx={{
-          maxWidth: "98%", // Increased from 95%
+          maxWidth: "98%",
           mx: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
         }}
       >
-        {/* Employee List with increased height */}
-        <Card
-          elevation={3}
-          sx={{
-            borderRadius: 3,
-          }}
-        >
+        {/* Employee List */}
+        <Card elevation={3} sx={{ borderRadius: 3 }}>
           <CardContent sx={{ p: 0 }}>
             <Box
               sx={{
@@ -169,43 +202,18 @@ const EmployeePage = () => {
           </CardContent>
         </Card>
 
-        {/* Employee Form - Fixed height regardless of active state */}
+        {/* Employee Form */}
         <Box position="relative" sx={{ height: "560px" }}>
-          <Card
-            elevation={4}
-            sx={{
-              borderRadius: 3,
-              border:
-                !editingEmployee && formActive
-                  ? `2px solid ${theme.palette.success.main}`
-                  : editingEmployee && formActive
-                  ? `2px solid ${theme.palette.primary.main}`
-                  : `1px solid ${theme.palette.divider}`,
-              position: "relative",
-              height: "100%",
-            }}
-          >
-            <Box
-              sx={{
-                p: 3,
-                backgroundColor:
-                  !editingEmployee && formActive
-                    ? alpha(theme.palette.success.main, 0.1)
-                    : editingEmployee && formActive
-                    ? alpha(theme.palette.primary.main, 0.1)
-                    : theme.palette.background.default,
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-              }}
-            >
+          <Card elevation={4} sx={formCardStyle}>
+            <Box sx={formHeaderStyle}>
               <Typography
                 variant="h6"
                 fontWeight="500"
                 color={
-                  !editingEmployee && formActive
-                    ? "success.main"
-                    : formActive
-                    ? "primary.main"
+                  formActive
+                    ? !editingEmployee
+                      ? "success.main"
+                      : "primary.main"
                     : "text.secondary"
                 }
               >
@@ -219,8 +227,7 @@ const EmployeePage = () => {
               sx={{
                 p: 3,
                 opacity: formActive ? 1 : 0,
-                filter: formActive ? "none" : "grayscale(0.6)",
-                height: "220px", // Fixed height for the form content
+                height: "220px",
                 overflow: "auto",
               }}
             >
@@ -228,41 +235,21 @@ const EmployeePage = () => {
                 employee={editingEmployee}
                 onSubmit={handleFormSubmit}
                 onCancel={handleCancelForm}
-                compact={true} // Add a prop to enable compact mode
               />
             </CardContent>
           </Card>
 
-          {/* Overlay when form is inactive - now solid dark gray */}
+          {/* Add Employee Overlay */}
           {!formActive && (
-            <Backdrop
-              open={!formActive}
-              sx={{
-                position: "absolute",
-                zIndex: 1,
-                backgroundColor: "#333333", // Solid dark gray
-                borderRadius: 3,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 2,
-              }}
-            >
+            <Backdrop open={true} sx={backdropStyle}>
               <Typography
                 variant="h6"
-                sx={{
-                  color: "white",
-                  fontWeight: 500,
-                  mb: 1,
-                }}
+                sx={{ color: "white", fontWeight: 500, mb: 1 }}
               >
                 Add Employee
               </Typography>
-
               <Fab
                 color="primary"
-                aria-label="add employee"
                 onClick={handleAddClick}
                 size="large"
                 sx={{
@@ -279,7 +266,7 @@ const EmployeePage = () => {
             </Backdrop>
           )}
         </Box>
-      </Stack>
+      </Box>
     </Container>
   );
 };

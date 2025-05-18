@@ -1,19 +1,15 @@
+import React from "react";
 import {
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  ListItemSecondaryAction,
+  Box,
+  Typography,
   Avatar,
   IconButton,
-  Typography,
-  Box,
   Tooltip,
+  Paper,
+  Stack,
   Chip,
-  Card,
-  alpha,
   useTheme,
-  Zoom,
+  alpha,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -25,135 +21,160 @@ const EmployeeList = ({ employees, onEdit, onDelete }) => {
 
   if (!employees.length) {
     return (
-      <Box sx={{ textAlign: "center", py: 4 }}>
-        <Typography variant="body1" color="text.secondary">
-          No employees found. Add your first team member!
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+          color: "text.secondary",
+        }}
+      >
+        <PersonIcon sx={{ fontSize: 60 }} />
+        <Typography variant="h6" color="inherit">
+          No team members yet
+        </Typography>
+        <Typography variant="body2" color="inherit">
+          Add your first employee to get started
         </Typography>
       </Box>
     );
   }
 
-  // Format time to be more readable
-  const formatTime = (hour, ampm) => `${hour}${ampm}`;
+  // Format shift time to be more readable
+  const formatShiftTime = (startHour, startAmPm, endHour, endAmPm) => {
+    return `${startHour}:00 ${startAmPm} - ${endHour}:00 ${endAmPm}`;
+  };
 
   return (
-    <List sx={{ width: "100%" }}>
-      {employees.map((employee, index) => (
-        <Zoom
-          in={true}
+    <Stack spacing={2}>
+      {employees.map((employee) => (
+        <Paper
           key={employee.id}
-          style={{ transitionDelay: `${index * 50}ms` }}
+          elevation={1}
+          sx={{
+            borderRadius: "12px",
+            overflow: "hidden",
+            transition:
+              "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+            "&:hover": {
+              transform: "translateY(-3px)",
+              boxShadow: theme.shadows[4],
+            },
+            position: "relative",
+          }}
         >
-          <Box sx={{ mb: 2 }}>
-            <Card
-              sx={{
-                borderRadius: 2,
-                border: `1px solid ${alpha(employee.color, 0.3)}`,
-                boxShadow: `0 2px 8px ${alpha(employee.color, 0.15)}`,
-                transition: "all 0.2s ease-in-out",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: `0 4px 12px ${alpha(employee.color, 0.25)}`,
-                },
-                position: "relative",
-                pr: 10,
-              }}
-            >
-              <ListItem>
-                <ListItemAvatar>
-                  <Avatar
-                    sx={{
-                      bgcolor: employee.color,
-                      width: 45,
-                      height: 45,
-                      boxShadow: theme.shadows[3],
-                    }}
-                  >
-                    <PersonIcon />
-                  </Avatar>
-                </ListItemAvatar>
+          {/* Color accent bar */}
+          <Box
+            sx={{
+              height: "6px",
+              backgroundColor: employee.color,
+              width: "100%",
+            }}
+          />
 
-                <ListItemText
-                  primary={
-                    <Typography
-                      variant="subtitle1"
-                      component="span"
-                      fontWeight="500"
-                    >
-                      {employee.name}
-                    </Typography>
-                  }
-                  secondary={
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", mt: 0.5 }}
-                    >
-                      <AccessTimeIcon
-                        sx={{
-                          mr: 0.5,
-                          fontSize: "0.875rem",
-                          color: "text.secondary",
-                        }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {formatTime(employee.startHour, employee.startAmPm)} -{" "}
-                        {formatTime(employee.endHour, employee.endAmPm)}
-                      </Typography>
-                    </Box>
-                  }
-                />
+          <Box
+            sx={{
+              p: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {/* Employee info */}
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Avatar
+                sx={{
+                  bgcolor: employee.color,
+                  color: theme.palette.getContrastText(employee.color),
+                  width: 50,
+                  height: 50,
+                  mr: 2,
+                }}
+              >
+                {employee.name.charAt(0).toUpperCase()}
+              </Avatar>
 
-                {/* Added increased margin-right to create more space from buttons */}
-                <Box sx={{ display: "flex", alignItems: "center", mr: 12 }}>
-                  <Chip
-                    label="Active"
-                    size="small"
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 500, mb: 0.5 }}>
+                  {employee.name}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <AccessTimeIcon
                     sx={{
-                      bgcolor: alpha(employee.color, 0.1),
-                      color: employee.color,
-                      fontWeight: 500,
-                      border: `1px solid ${alpha(employee.color, 0.3)}`,
+                      mr: 0.5,
+                      fontSize: "0.875rem",
+                      color: "text.secondary",
                     }}
                   />
+                  <Typography variant="body2" color="text.secondary">
+                    {formatShiftTime(
+                      employee.startHour,
+                      employee.startAmPm,
+                      employee.endHour,
+                      employee.endAmPm
+                    )}
+                  </Typography>
                 </Box>
+              </Box>
+            </Box>
 
-                <ListItemSecondaryAction sx={{ right: 16 }}>
-                  <Tooltip title="Edit employee">
-                    <IconButton
-                      onClick={() => onEdit(employee)}
-                      sx={{
-                        color: theme.palette.primary.main,
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        mr: 1,
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.2),
-                        },
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+            {/* Status and actions */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Chip
+                label="Active"
+                size="small"
+                sx={{
+                  bgcolor: alpha(employee.color, 0.1),
+                  color: employee.color,
+                  fontWeight: 500,
+                  borderRadius: "8px",
+                  border: `1px solid ${alpha(employee.color, 0.3)}`,
+                }}
+              />
 
-                  <Tooltip title="Delete employee">
-                    <IconButton
-                      onClick={() => onDelete(employee.id)}
-                      sx={{
-                        color: theme.palette.error.main,
-                        bgcolor: alpha(theme.palette.error.main, 0.1),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.error.main, 0.2),
-                        },
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </ListItemSecondaryAction>
-              </ListItem>
-            </Card>
+              <Box sx={{ display: "flex" }}>
+                <Tooltip title="Edit">
+                  <IconButton
+                    onClick={() => onEdit(employee)}
+                    size="small"
+                    sx={{
+                      color: theme.palette.primary.main,
+                      "&:hover": {
+                        bgcolor:
+                          theme.palette.primary.lighter ||
+                          alpha(theme.palette.primary.main, 0.1),
+                      },
+                    }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Delete">
+                  <IconButton
+                    onClick={() => onDelete(employee.id)}
+                    size="small"
+                    sx={{
+                      color: theme.palette.error.main,
+                      "&:hover": {
+                        bgcolor:
+                          theme.palette.error.lighter ||
+                          alpha(theme.palette.error.main, 0.1),
+                      },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
           </Box>
-        </Zoom>
+        </Paper>
       ))}
-    </List>
+    </Stack>
   );
 };
 

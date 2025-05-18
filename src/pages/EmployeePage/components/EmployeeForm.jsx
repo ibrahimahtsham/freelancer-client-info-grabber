@@ -3,24 +3,19 @@ import {
   TextField,
   Button,
   Box,
-  MenuItem,
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
   Grid,
   Typography,
   Divider,
-  alpha,
-  Paper,
   useTheme,
-  Stack,
+  Paper,
 } from "@mui/material";
 import { ChromePicker } from "react-color";
-import ColorLensIcon from "@mui/icons-material/ColorLens";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
-import BadgeIcon from "@mui/icons-material/Badge";
 
 const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
   const theme = useTheme();
@@ -44,7 +39,6 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
         endAmPm: employee.endAmPm || "PM",
       });
     } else {
-      // Reset to defaults when not editing
       setFormData({
         name: "",
         color: "#3f51b5",
@@ -72,117 +66,100 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Stack spacing={3}>
-        {/* Employee Name Section */}
-        <Box>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              mb: 2,
-              color: theme.palette.text.secondary,
-            }}
-          >
-            <BadgeIcon /> Employee Information
-          </Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight={500} sx={{ mb: 1 }}>
+          Employee Information
+        </Typography>
+        <TextField
+          fullWidth
+          label="Employee Name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          variant="outlined"
+          placeholder="Enter employee name"
+          sx={{
+            mb: 2,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "10px",
+            },
+          }}
+        />
 
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Employee Color
+          </Typography>
           <Paper
             elevation={0}
             sx={{
-              p: 2,
-              bgcolor: alpha(theme.palette.background.default, 0.7),
-              borderRadius: 2,
+              p: 1.5,
+              borderRadius: "10px",
+              bgcolor: theme.palette.grey[50],
+              border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <TextField
-              fullWidth
-              label="Employee Name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              variant="outlined"
-              placeholder="Enter employee name"
-              InputProps={{
-                sx: { borderRadius: 2, py: 0.5 },
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-              size="medium"
-            />
-          </Paper>
-        </Box>
-
-        {/* Color Selection Section - Reduced size */}
-        <Box>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              mb: 2,
-              color: theme.palette.text.secondary,
-            }}
-          >
-            <ColorLensIcon /> Employee Color
-          </Typography>
-
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              bgcolor: alpha(theme.palette.background.default, 0.7),
-              borderRadius: 2,
-              maxHeight: "100",
-              overflow: "hidden",
-            }}
-          >
-            <ChromePicker
-              color={formData.color}
-              onChangeComplete={handleColorChange}
-              disableAlpha
-              styles={{
-                default: {
-                  picker: {
-                    width: "100%",
-                    boxShadow: "none",
-                    backgroundColor: "transparent",
+            >
+              <ChromePicker
+                color={formData.color}
+                onChangeComplete={handleColorChange}
+                disableAlpha
+                styles={{
+                  default: {
+                    picker: {
+                      width: "100%",
+                      boxShadow: "none",
+                      borderRadius: "8px",
+                    },
                   },
-                },
+                }}
+              />
+            </Box>
+            <Box
+              sx={{
+                mt: 1,
+                p: 1.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                bgcolor: "background.paper",
+                borderRadius: "8px",
+                border: `1px solid ${theme.palette.divider}`,
               }}
-            />
+            >
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "8px",
+                  bgcolor: formData.color,
+                  boxShadow: "0px 2px 4px rgba(0,0,0,0.2)",
+                }}
+              />
+              <Typography variant="body2" fontWeight={500}>
+                {formData.color.toUpperCase()}
+              </Typography>
+            </Box>
           </Paper>
         </Box>
 
-        {/* Shift Hours Section - Each field takes exactly 25% width */}
-        <Box>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              mb: 2,
-              color: theme.palette.text.secondary,
-            }}
-          >
-            <AccessTimeIcon /> Shift Hours
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle1" fontWeight={500} sx={{ mb: 1 }}>
+            Shift Hours
           </Typography>
-
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              bgcolor: alpha(theme.palette.background.default, 0.7),
-              borderRadius: 2,
-            }}
-          >
-            <Grid container spacing={2}>
-              <Grid item xs={3} sx={{ width: "25%" }}>
-                <Typography variant="body2" gutterBottom fontWeight="500">
-                  Start Hour
-                </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Start Time
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
                 <FormControl fullWidth>
                   <InputLabel id="start-hour-label">Hour</InputLabel>
                   <Select
@@ -191,7 +168,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.startHour}
                     onChange={handleChange}
                     label="Hour"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
+                    sx={{ borderRadius: "10px" }}
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
                       <MenuItem key={`start-${hour}`} value={hour}>
@@ -200,12 +177,6 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-
-              <Grid item xs={3} sx={{ width: "25%" }}>
-                <Typography variant="body2" gutterBottom fontWeight="500">
-                  Start AM/PM
-                </Typography>
                 <FormControl fullWidth>
                   <InputLabel id="start-ampm-label">AM/PM</InputLabel>
                   <Select
@@ -214,18 +185,19 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.startAmPm}
                     onChange={handleChange}
                     label="AM/PM"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
+                    sx={{ borderRadius: "10px" }}
                   >
                     <MenuItem value="AM">AM</MenuItem>
                     <MenuItem value="PM">PM</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-
-              <Grid item xs={3} sx={{ width: "25%" }}>
-                <Typography variant="body2" gutterBottom fontWeight="500">
-                  End Hour
-                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                End Time
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
                 <FormControl fullWidth>
                   <InputLabel id="end-hour-label">Hour</InputLabel>
                   <Select
@@ -234,7 +206,7 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.endHour}
                     onChange={handleChange}
                     label="Hour"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
+                    sx={{ borderRadius: "10px" }}
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
                       <MenuItem key={`end-${hour}`} value={hour}>
@@ -243,12 +215,6 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-
-              <Grid item xs={3} sx={{ width: "25%" }}>
-                <Typography variant="body2" gutterBottom fontWeight="500">
-                  End AM/PM
-                </Typography>
                 <FormControl fullWidth>
                   <InputLabel id="end-ampm-label">AM/PM</InputLabel>
                   <Select
@@ -257,52 +223,38 @@ const EmployeeForm = ({ employee, onSubmit, onCancel }) => {
                     value={formData.endAmPm}
                     onChange={handleChange}
                     label="AM/PM"
-                    sx={{ borderRadius: 2, ".MuiSelect-select": { py: 1 } }}
+                    sx={{ borderRadius: "10px" }}
                   >
                     <MenuItem value="AM">AM</MenuItem>
                     <MenuItem value="PM">PM</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
+              </Box>
             </Grid>
-          </Paper>
+          </Grid>
         </Box>
+      </Box>
 
-        {/* Action Button - Smaller vertical spacing */}
-        <Box
-          sx={{ mt: 1, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}
+      <Divider sx={{ my: 2 }} />
+      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={onCancel}
+          startIcon={<CancelIcon />}
+          sx={{ borderRadius: "10px" }}
         >
-          <Stack direction="row" spacing={3} justifyContent="center">
-            <Button
-              variant="outlined"
-              onClick={onCancel}
-              startIcon={<CancelIcon />}
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-              }}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type="submit"
-              variant="contained"
-              color={employee ? "primary" : "success"}
-              startIcon={<SaveIcon />}
-              sx={{
-                borderRadius: 2,
-                px: 4,
-                py: 1,
-                minWidth: 180,
-              }}
-            >
-              {employee ? "Update Employee" : "Add Employee"}
-            </Button>
-          </Stack>
-        </Box>
-      </Stack>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          color={employee ? "primary" : "success"}
+          startIcon={<SaveIcon />}
+          sx={{ borderRadius: "10px" }}
+        >
+          {employee ? "Update" : "Add Employee"}
+        </Button>
+      </Box>
     </form>
   );
 };
