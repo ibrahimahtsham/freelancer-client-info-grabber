@@ -37,7 +37,7 @@ export default function App() {
             <Route
               path="/employees"
               element={
-                <Container maxWidth="lg" sx={{ mt: 4 }}>
+                <Container maxWidth={false} sx={{ mt: 4, px: 2 }}>
                   <EmployeePage />
                 </Container>
               }
