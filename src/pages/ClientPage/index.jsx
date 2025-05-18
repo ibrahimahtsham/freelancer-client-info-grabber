@@ -5,11 +5,10 @@ import MessageForm from "./components/MessageForm";
 import DetailsModal from "./components/DetailsModal";
 import useClientInfo from "./utils/useClientInfo";
 import { sendMessageWithThread } from "./apis/message";
-import { DEFAULT_VALUES } from "../../constants";
 
 const ClientPage = () => {
   // Move state from App.jsx to here
-  const [projectId, setProjectId] = useState(DEFAULT_VALUES.PROJECT_ID);
+  const [projectId, setProjectId] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
   // Use the custom hook directly in this component

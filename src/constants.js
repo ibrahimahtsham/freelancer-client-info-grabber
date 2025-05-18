@@ -9,7 +9,6 @@ export const API_ENDPOINTS = {
 };
 
 export const DEFAULT_VALUES = {
-  PROJECT_ID: "39325440",
   LIMIT: 10,
   MY_USER_ID: 9608928, // Added your user ID as a constant
 };
