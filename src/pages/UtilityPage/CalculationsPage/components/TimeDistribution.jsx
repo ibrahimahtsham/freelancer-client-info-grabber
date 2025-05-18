@@ -16,37 +16,54 @@ import {
 const TimeDistribution = ({ timeStats }) => {
   if (!timeStats) return null;
 
+  // Ensure paid values are valid numbers
+  const safeTimeStats = {
+    morning: {
+      ...timeStats.morning,
+      paid: Number(timeStats.morning.paid) || 0,
+    },
+    afternoon: {
+      ...timeStats.afternoon,
+      paid: Number(timeStats.afternoon.paid) || 0,
+    },
+    evening: {
+      ...timeStats.evening,
+      paid: Number(timeStats.evening.paid) || 0,
+    },
+    night: { ...timeStats.night, paid: Number(timeStats.night.paid) || 0 },
+  };
+
   // Prepare data for chart
   const chartData = [
     {
       name: "Morning (6AM-12PM)",
-      total: timeStats.morning.total,
-      awarded: timeStats.morning.awarded,
-      paid: timeStats.morning.paid,
+      total: safeTimeStats.morning.total,
+      awarded: safeTimeStats.morning.awarded,
+      paid: safeTimeStats.morning.paid,
     },
     {
       name: "Afternoon (12PM-5PM)",
-      total: timeStats.afternoon.total,
-      awarded: timeStats.afternoon.awarded,
-      paid: timeStats.afternoon.paid,
+      total: safeTimeStats.afternoon.total,
+      awarded: safeTimeStats.afternoon.awarded,
+      paid: safeTimeStats.afternoon.paid,
     },
     {
       name: "Evening (5PM-9PM)",
-      total: timeStats.evening.total,
-      awarded: timeStats.evening.awarded,
-      paid: timeStats.evening.paid,
+      total: safeTimeStats.evening.total,
+      awarded: safeTimeStats.evening.awarded,
+      paid: safeTimeStats.evening.paid,
     },
     {
       name: "Night (9PM-6AM)",
-      total: timeStats.night.total,
-      awarded: timeStats.night.awarded,
-      paid: timeStats.night.paid,
+      total: safeTimeStats.night.total,
+      awarded: safeTimeStats.night.awarded,
+      paid: safeTimeStats.night.paid,
     },
   ];
 
   // Calculate percentages for each time period
-  const timePeriodsWithRates = Object.keys(timeStats).map((period) => {
-    const data = timeStats[period];
+  const timePeriodsWithRates = Object.keys(safeTimeStats).map((period) => {
+    const data = safeTimeStats[period];
     const awardRate =
       data.total > 0 ? ((data.awarded / data.total) * 100).toFixed(1) : 0;
     const avgPaid =
