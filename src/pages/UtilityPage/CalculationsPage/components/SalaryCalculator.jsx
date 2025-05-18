@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,7 @@ import {
   FormControlLabel,
   Radio,
   Divider,
+  Alert,
 } from "@mui/material";
 import { useEmployees } from "../../../../contexts/EmployeeContext";
 import { to24Hour } from "../../../../utils/dateUtils";
@@ -26,14 +27,27 @@ const SalaryCalculator = ({ rows }) => {
   const [baseRate, setBaseRate] = useState(5); // Base hourly rate in USD
   const [commissionRate, setCommissionRate] = useState(20); // Commission percentage
   const [hoursPerProject, setHoursPerProject] = useState(10); // Average hours per project
-  const [selectedPerson, setSelectedPerson] = useState("ibrahim");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 
-  // Find employees from context, or use fallback defaults
+  // Set the first employee as default when employees data loads
+  useEffect(() => {
+    if (employees && employees.length > 0 && !selectedEmployeeId) {
+      setSelectedEmployeeId(employees[0].id);
+    }
+  }, [employees, selectedEmployeeId]);
+
+  // Format shift time for display
+  const formatShiftTime = (emp) => {
+    if (!emp) return "";
+    return `${emp.startHour}${emp.startAmPm.toLowerCase()}-${
+      emp.endHour
+    }${emp.endAmPm.toLowerCase()}`;
+  };
+
+  // Create a map of employee data for easy access
   const employeeMap = {};
   employees.forEach((emp) => {
-    // Use lowercase name as key for simplicity
-    const key = emp.name.toLowerCase();
-    employeeMap[key] = {
+    employeeMap[emp.id] = {
       ...emp,
       startHour24: to24Hour(emp.startHour, emp.startAmPm),
       endHour24: to24Hour(emp.endHour, emp.endAmPm),
@@ -42,7 +56,15 @@ const SalaryCalculator = ({ rows }) => {
 
   // Helper function to calculate salary
   const calculateSalary = () => {
-    if (!rows || !rows.length) return null;
+    if (
+      !rows ||
+      !rows.length ||
+      !selectedEmployeeId ||
+      !employeeMap[selectedEmployeeId]
+    )
+      return null;
+
+    const selectedEmployee = employeeMap[selectedEmployeeId];
 
     // Parse dates & determine shift
     const parseDateTime = (dateString) => {
@@ -69,23 +91,12 @@ const SalaryCalculator = ({ rows }) => {
       }
     };
 
-    // Check if in shift - dynamically based on employee data
-    const isInShift = (hour, employeeKey) => {
+    // Check if in shift - using employee data from context
+    const isInShift = (hour) => {
       if (hour === null) return false;
 
-      const employee = employeeMap[employeeKey];
-      if (!employee) {
-        // Fallback to hard-coded values if employee not found
-        if (employeeKey === "ibrahim") {
-          return hour >= 22 || hour < 7; // 10PM - 7AM
-        } else if (employeeKey === "hafsa") {
-          return hour >= 12 && hour < 22; // 12PM - 10PM
-        }
-        return false;
-      }
-
-      const start = employee.startHour24;
-      const end = employee.endHour24;
+      const start = selectedEmployee.startHour24;
+      const end = selectedEmployee.endHour24;
 
       // Handle shifts that span across midnight
       if (start > end) {
@@ -95,11 +106,11 @@ const SalaryCalculator = ({ rows }) => {
       }
     };
 
-    // Filter projects by person
+    // Filter projects by person's shift
     const personProjects = rows.filter((row) => {
       const hour = parseDateTime(row.projectUploadDate);
       if (hour === null) return false;
-      return isInShift(hour, selectedPerson);
+      return isInShift(hour);
     });
 
     // Get awarded projects
@@ -138,6 +149,27 @@ const SalaryCalculator = ({ rows }) => {
 
   const salaryData = calculateSalary();
 
+  // If no employees, show alert
+  if (employees.length === 0) {
+    return (
+      <Box>
+        <Typography variant="h5" gutterBottom>
+          Salary Calculator
+        </Typography>
+        <Alert severity="info">
+          <Typography>
+            No employees found. Please add employees in the Employees page
+            first.
+          </Typography>
+        </Alert>
+      </Box>
+    );
+  }
+
+  // Get the currently selected employee
+  const selectedEmployee =
+    employees.find((emp) => emp.id === selectedEmployeeId) || employees[0];
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
@@ -157,19 +189,17 @@ const SalaryCalculator = ({ rows }) => {
                 <FormLabel component="legend">Select Team Member</FormLabel>
                 <RadioGroup
                   row
-                  value={selectedPerson}
-                  onChange={(e) => setSelectedPerson(e.target.value)}
+                  value={selectedEmployeeId}
+                  onChange={(e) => setSelectedEmployeeId(e.target.value)}
                 >
-                  <FormControlLabel
-                    value="ibrahim"
-                    control={<Radio />}
-                    label="Ibrahim (10PM-7AM)"
-                  />
-                  <FormControlLabel
-                    value="hafsa"
-                    control={<Radio />}
-                    label="Hafsa (12PM-10PM)"
-                  />
+                  {employees.map((emp) => (
+                    <FormControlLabel
+                      key={emp.id}
+                      value={emp.id}
+                      control={<Radio />}
+                      label={`${emp.name} (${formatShiftTime(emp)})`}
+                    />
+                  ))}
                 </RadioGroup>
               </FormControl>
 
@@ -251,8 +281,7 @@ const SalaryCalculator = ({ rows }) => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Salary Calculation for{" "}
-                {selectedPerson === "ibrahim" ? "Ibrahim" : "Hafsa"}
+                Salary Calculation for {selectedEmployee?.name || "Employee"}
               </Typography>
 
               {salaryData ? (

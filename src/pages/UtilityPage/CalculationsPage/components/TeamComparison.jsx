@@ -6,6 +6,7 @@ import {
   CardContent,
   Grid,
   Divider,
+  Alert,
 } from "@mui/material";
 import {
   BarChart,
@@ -26,40 +27,33 @@ const TeamComparison = ({ rows }) => {
 
   // Calculate team stats based on time periods
   const teamStats = useMemo(() => {
-    if (!rows || !rows.length) return null;
+    if (!rows || !rows.length || !employees || employees.length < 2)
+      return null;
 
-    // Find Ibrahim and Hafsa in the employees list, or use defaults
-    let ibrahimEmployee = employees.find(
-      (emp) => emp.name.toLowerCase() === "ibrahim"
-    );
-    let hafsaEmployee = employees.find(
-      (emp) => emp.name.toLowerCase() === "hafsa"
-    );
+    // We'll work with the first two employees in the list
+    const firstEmployee = employees[0];
+    const secondEmployee = employees[1];
 
-    // Process based on employee shifts from context
-    const ibrahimShift = ibrahimEmployee
-      ? {
-          start: to24Hour(ibrahimEmployee.startHour, ibrahimEmployee.startAmPm),
-          end: to24Hour(ibrahimEmployee.endHour, ibrahimEmployee.endAmPm),
-          name: ibrahimEmployee.name,
-        }
-      : {
-          start: 22, // 10 PM (fallback)
-          end: 7, // 7 AM (fallback)
-          name: "Ibrahim",
-        };
+    if (!firstEmployee || !secondEmployee) return null;
 
-    const hafsaShift = hafsaEmployee
-      ? {
-          start: to24Hour(hafsaEmployee.startHour, hafsaEmployee.startAmPm),
-          end: to24Hour(hafsaEmployee.endHour, hafsaEmployee.endAmPm),
-          name: hafsaEmployee.name,
-        }
-      : {
-          start: 12, // 12 PM (fallback)
-          end: 22, // 10 PM (fallback)
-          name: "Hafsa",
-        };
+    // Get shift data from employees
+    const firstShift = {
+      start: to24Hour(firstEmployee.startHour, firstEmployee.startAmPm),
+      end: to24Hour(firstEmployee.endHour, firstEmployee.endAmPm),
+      name: firstEmployee.name,
+      id: firstEmployee.id,
+    };
+
+    const secondShift = {
+      start: to24Hour(secondEmployee.startHour, secondEmployee.startAmPm),
+      end: to24Hour(secondEmployee.endHour, secondEmployee.endAmPm),
+      name: secondEmployee.name,
+      id: secondEmployee.id,
+    };
+
+    // Use IDs as keys for stats tracking
+    const firstId = firstEmployee.id;
+    const secondId = secondEmployee.id;
 
     // Helper to parse dates & check if in shift time
     const parseDateTime = (dateString) => {
@@ -107,20 +101,22 @@ const TeamComparison = ({ rows }) => {
       }
     };
 
-    // Initialize stats object
-    const stats = {
-      ibrahim: {
-        total: 0,
-        awarded: 0,
-        totalBid: 0,
-        totalPaid: 0,
-      },
-      hafsa: {
-        total: 0,
-        awarded: 0,
-        totalBid: 0,
-        totalPaid: 0,
-      },
+    // Initialize stats object using employee IDs
+    const stats = {};
+    stats[firstId] = {
+      total: 0,
+      awarded: 0,
+      totalBid: 0,
+      totalPaid: 0,
+      name: firstEmployee.name,
+    };
+
+    stats[secondId] = {
+      total: 0,
+      awarded: 0,
+      totalBid: 0,
+      totalPaid: 0,
+      name: secondEmployee.name,
     };
 
     // Process each row
@@ -129,28 +125,28 @@ const TeamComparison = ({ rows }) => {
       if (!dateTime) return;
 
       // Check which shift the project belongs to
-      let person = null;
+      let employeeId = null;
 
-      if (isInShift(dateTime.hour, ibrahimShift)) {
-        person = "ibrahim";
-      } else if (isInShift(dateTime.hour, hafsaShift)) {
-        person = "hafsa";
+      if (isInShift(dateTime.hour, firstShift)) {
+        employeeId = firstId;
+      } else if (isInShift(dateTime.hour, secondShift)) {
+        employeeId = secondId;
       } else {
         // Outside both shifts, skip
         return;
       }
 
       // Update stats
-      stats[person].total++;
+      stats[employeeId].total++;
 
       if (row.awarded === "Yes") {
-        stats[person].awarded++;
+        stats[employeeId].awarded++;
       }
 
       // Parse bid amount
       const bidAmount = parseFloat(row.yourBidAmount?.replace("$", "") || 0);
       if (!isNaN(bidAmount)) {
-        stats[person].totalBid += bidAmount;
+        stats[employeeId].totalBid += bidAmount;
       }
 
       // Parse paid amount
@@ -158,13 +154,13 @@ const TeamComparison = ({ rows }) => {
         row.totalPaidMilestones?.replace("$", "") || 0
       );
       if (!isNaN(paidAmount)) {
-        stats[person].totalPaid += paidAmount;
+        stats[employeeId].totalPaid += paidAmount;
       }
     });
 
     // Calculate derived stats
-    const calculate = (person) => {
-      const s = stats[person];
+    const calculate = (employeeId) => {
+      const s = stats[employeeId];
       return {
         ...s,
         awardRate: s.total > 0 ? ((s.awarded / s.total) * 100).toFixed(1) : 0,
@@ -173,44 +169,65 @@ const TeamComparison = ({ rows }) => {
       };
     };
 
-    return {
-      ibrahim: calculate("ibrahim"),
-      hafsa: calculate("hafsa"),
-    };
+    // Return results with employee IDs as keys
+    const result = {};
+    result[firstId] = calculate(firstId);
+    result[secondId] = calculate(secondId);
+
+    return result;
   }, [rows, employees]);
 
-  // If no stats, show message
-  if (!teamStats) {
+  // If no stats or not enough employees, show message
+  if (!teamStats || !employees || employees.length < 2) {
     return (
       <Box>
         <Typography variant="h5" gutterBottom>
           Team Comparison
         </Typography>
-        <Typography>No data available for team comparison.</Typography>
+        <Alert severity="info">
+          <Typography>
+            Team comparison requires at least two employees with shift
+            information. Please add employee information in the Employees page.
+          </Typography>
+        </Alert>
       </Box>
     );
   }
 
+  // Get the employee IDs
+  const employeeIds = Object.keys(teamStats);
+  const firstEmployee = employees[0];
+  const secondEmployee = employees[1];
+
+  // Format time for display
+  const formatShiftTime = (emp) => {
+    if (!emp) return "N/A";
+    return `${emp.startHour}${emp.startAmPm.toLowerCase()} - ${
+      emp.endHour
+    }${emp.endAmPm.toLowerCase()}`;
+  };
+
   // Prepare data for charts
   const compareData = [
     {
-      name: "Ibrahim",
-      Projects: teamStats.ibrahim.total,
-      Awarded: teamStats.ibrahim.awarded,
-      Paid: parseFloat(teamStats.ibrahim.totalPaid.toFixed(2)),
+      name: teamStats[employeeIds[0]].name,
+      Projects: teamStats[employeeIds[0]].total,
+      Awarded: teamStats[employeeIds[0]].awarded,
+      Paid: parseFloat(teamStats[employeeIds[0]].totalPaid.toFixed(2)),
     },
     {
-      name: "Hafsa",
-      Projects: teamStats.hafsa.total,
-      Awarded: teamStats.hafsa.awarded,
-      Paid: parseFloat(teamStats.hafsa.totalPaid.toFixed(2)),
+      name: teamStats[employeeIds[1]].name,
+      Projects: teamStats[employeeIds[1]].total,
+      Awarded: teamStats[employeeIds[1]].awarded,
+      Paid: parseFloat(teamStats[employeeIds[1]].totalPaid.toFixed(2)),
     },
   ];
 
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Ibrahim vs Hafsa Comparison
+        {teamStats[employeeIds[0]].name} vs {teamStats[employeeIds[1]].name}{" "}
+        Comparison
       </Typography>
 
       {/* Comparison chart */}
@@ -264,33 +281,33 @@ const TeamComparison = ({ rows }) => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Ibrahim's Performance
+                {firstEmployee.name}'s Performance
               </Typography>
               <Typography>
-                <strong>Shift:</strong> 10 PM - 7 AM
+                <strong>Shift:</strong> {formatShiftTime(firstEmployee)}
               </Typography>
               <Divider sx={{ my: 1 }} />
               <Typography>
-                <strong>Projects:</strong> {teamStats.ibrahim.total}
+                <strong>Projects:</strong> {teamStats[firstEmployee.id].total}
               </Typography>
               <Typography>
-                <strong>Awarded:</strong> {teamStats.ibrahim.awarded} (
-                {teamStats.ibrahim.awardRate}%)
+                <strong>Awarded:</strong> {teamStats[firstEmployee.id].awarded}{" "}
+                ({teamStats[firstEmployee.id].awardRate}%)
               </Typography>
               <Typography>
                 <strong>Total Bids:</strong> $
-                {teamStats.ibrahim.totalBid.toFixed(2)}
+                {teamStats[firstEmployee.id].totalBid.toFixed(2)}
               </Typography>
               <Typography>
-                <strong>Avg. Bid:</strong> ${teamStats.ibrahim.avgBid}
+                <strong>Avg. Bid:</strong> ${teamStats[firstEmployee.id].avgBid}
               </Typography>
               <Typography>
                 <strong>Total Paid:</strong> $
-                {teamStats.ibrahim.totalPaid.toFixed(2)}
+                {teamStats[firstEmployee.id].totalPaid.toFixed(2)}
               </Typography>
               <Typography>
                 <strong>Avg. Paid per Award:</strong> $
-                {teamStats.ibrahim.avgPaid}
+                {teamStats[firstEmployee.id].avgPaid}
               </Typography>
             </CardContent>
           </Card>
@@ -300,32 +317,34 @@ const TeamComparison = ({ rows }) => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Hafsa's Performance
+                {secondEmployee.name}'s Performance
               </Typography>
               <Typography>
-                <strong>Shift:</strong> 12 PM - 10 PM
+                <strong>Shift:</strong> {formatShiftTime(secondEmployee)}
               </Typography>
               <Divider sx={{ my: 1 }} />
               <Typography>
-                <strong>Projects:</strong> {teamStats.hafsa.total}
+                <strong>Projects:</strong> {teamStats[secondEmployee.id].total}
               </Typography>
               <Typography>
-                <strong>Awarded:</strong> {teamStats.hafsa.awarded} (
-                {teamStats.hafsa.awardRate}%)
+                <strong>Awarded:</strong> {teamStats[secondEmployee.id].awarded}{" "}
+                ({teamStats[secondEmployee.id].awardRate}%)
               </Typography>
               <Typography>
                 <strong>Total Bids:</strong> $
-                {teamStats.hafsa.totalBid.toFixed(2)}
+                {teamStats[secondEmployee.id].totalBid.toFixed(2)}
               </Typography>
               <Typography>
-                <strong>Avg. Bid:</strong> ${teamStats.hafsa.avgBid}
+                <strong>Avg. Bid:</strong> $
+                {teamStats[secondEmployee.id].avgBid}
               </Typography>
               <Typography>
                 <strong>Total Paid:</strong> $
-                {teamStats.hafsa.totalPaid.toFixed(2)}
+                {teamStats[secondEmployee.id].totalPaid.toFixed(2)}
               </Typography>
               <Typography>
-                <strong>Avg. Paid per Award:</strong> ${teamStats.hafsa.avgPaid}
+                <strong>Avg. Paid per Award:</strong> $
+                {teamStats[secondEmployee.id].avgPaid}
               </Typography>
             </CardContent>
           </Card>
