@@ -6,7 +6,7 @@ import EmployeeContext from "./EmployeeContextDefinition";
 const defaultEmployees = [
   {
     id: "1",
-    name: "Ibrahim",
+    name: "Joe",
     color: "#4caf50",
     startHour: 10,
     startAmPm: "PM",
@@ -15,7 +15,7 @@ const defaultEmployees = [
   },
   {
     id: "2",
-    name: "Hafsa",
+    name: "Bill",
     color: "#e91e63",
     startHour: 12,
     startAmPm: "PM",
