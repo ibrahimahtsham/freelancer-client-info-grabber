@@ -6,11 +6,11 @@ import { useSalaryCalculation } from "../../utils/useSalaryCalculation";
 import { calculateSalary } from "../../utils/salaryCalculations";
 
 // Import subcomponents
-import EmployeeSelector from "./EmployeeSelector";
-import SalaryConfigPanel from "./SalaryConfigPanel";
-import CommissionPanel from "./CommissionPanel";
-import BonusPanel from "./BonusPanel";
-import SalaryResults from "./SalaryResults";
+import EmployeeSelector from "./components/EmployeeSelector";
+import SalaryConfigPanel from "./components/SalaryConfigPanel";
+import CommissionPanel from "./components/CommissionPanel";
+import BonusPanel from "./components/BonusPanel";
+import SalaryResults from "./components/SalaryResultslaryResults";
 
 const SalaryCalculator = ({ rows }) => {
   // Get employee data from context
