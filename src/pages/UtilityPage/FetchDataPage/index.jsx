@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Typography, Box, Snackbar, Alert, Chip } from "@mui/material";
-import { useUtilityData } from "../../../hooks/useUtilityData";
+import { useUtilityData } from "../utils/useUtilityData";
 import { DEFAULT_VALUES } from "../../../constants";
 import { useUtility } from "../UtilityContext/hooks";
 import DataFetchControls from "./DataFetchControls";
