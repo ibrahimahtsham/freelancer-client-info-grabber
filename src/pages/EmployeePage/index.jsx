@@ -13,7 +13,6 @@ import {
   Paper,
   Backdrop,
   Fab,
-  Button,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EmployeeList from "./components/EmployeeList";
@@ -33,7 +32,6 @@ const EmployeePage = () => {
     severity: "success",
   });
 
-  // Event handlers
   const handleAddClick = () => {
     setFormActive(true);
     setEditingEmployee(null);
@@ -74,79 +72,30 @@ const EmployeePage = () => {
     );
   };
 
-  // Style objects
-  const headerStyle = {
-    mb: 5,
-    p: 3,
-    display: "flex",
-    alignItems: "center",
-    gap: 3,
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    borderRadius: "16px 16px 0 0",
-    bgcolor: alpha(theme.palette.background.default, 0.6),
-  };
-
-  const iconStyle = {
-    fontSize: 48,
-    color: theme.palette.primary.main,
-    p: 1,
-    borderRadius: "50%",
-    bgcolor: alpha(theme.palette.primary.main, 0.1),
-  };
-
-  const formCardStyle = {
-    borderRadius: 3,
-    border: formActive
-      ? `2px solid ${
-          !editingEmployee
-            ? theme.palette.success.main
-            : theme.palette.primary.main
-        }`
-      : `1px solid ${theme.palette.divider}`,
-    height: "100%",
-  };
-
-  const formHeaderStyle = {
-    p: 3,
-    backgroundColor: formActive
-      ? alpha(
-          !editingEmployee
-            ? theme.palette.success.main
-            : theme.palette.primary.main,
-          0.1
-        )
-      : theme.palette.background.default,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  };
-
-  // Updated backdrop style to work with both light and dark modes
-  const backdropStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-    backgroundColor:
-      theme.palette.mode === "dark"
-        ? alpha(theme.palette.background.paper, 0.7)
-        : alpha(theme.palette.grey[200], 0.85),
-    backdropFilter: "blur(5px)",
-    borderRadius: 3,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-  };
-
   return (
-    <Container>
+    <Container maxWidth="lg">
       {/* Page Header */}
-      <Paper elevation={0} sx={headerStyle}>
-        <PeopleAltIcon sx={iconStyle} />
+      <Paper
+        elevation={1}
+        sx={{
+          mb: 4,
+          p: 3,
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          borderRadius: 2,
+        }}
+      >
+        <PeopleAltIcon
+          sx={{
+            fontSize: 40,
+            color: "primary.main",
+            p: 1,
+            borderRadius: "50%",
+            bgcolor: alpha(theme.palette.primary.main, 0.1),
+          }}
+        />
         <Box>
           <Typography variant="h4" component="h1" gutterBottom fontWeight="500">
             Employee Management
@@ -159,17 +108,12 @@ const EmployeePage = () => {
 
       {/* Notification */}
       <Fade in={notification.show}>
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: 3 }}>
           {notification.show && (
             <Alert
               severity={notification.severity}
               variant="filled"
-              sx={{
-                boxShadow: theme.shadows[3],
-                borderRadius: 2,
-                px: 3,
-                py: 1.5,
-              }}
+              sx={{ borderRadius: 1 }}
             >
               {notification.message}
             </Alert>
@@ -178,45 +122,56 @@ const EmployeePage = () => {
       </Fade>
 
       {/* Main Content */}
-      <Box
-        sx={{
-          maxWidth: "98%",
-          mx: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-        }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {/* Employee List */}
-        <Card elevation={3} sx={{ borderRadius: 3 }}>
-          <CardContent sx={{ p: 0 }}>
-            <Box
-              sx={{
-                p: 3,
-                backgroundColor: theme.palette.background.default,
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                borderBottom: `1px solid ${theme.palette.divider}`,
-              }}
-            >
-              <Typography variant="h6" component="h2" fontWeight="500">
-                Sales Team ({employees.length})
-              </Typography>
-            </Box>
-            <Box sx={{ p: 3, maxHeight: "50vh", overflow: "auto" }}>
-              <EmployeeList
-                employees={employees}
-                onEdit={handleEditClick}
-                onDelete={handleDeleteClick}
-              />
-            </Box>
+        <Card elevation={2} sx={{ borderRadius: 2 }}>
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: "background.default",
+              borderBottom: `1px solid ${theme.palette.divider}`,
+            }}
+          >
+            <Typography variant="h6" component="h2" fontWeight="500">
+              Sales Team ({employees.length})
+            </Typography>
+          </Box>
+          <CardContent sx={{ p: 2, maxHeight: "50vh", overflow: "auto" }}>
+            <EmployeeList
+              employees={employees}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+            />
           </CardContent>
         </Card>
 
-        {/* Employee Form - Fixed height issue */}
-        <Box position="relative" sx={{ height: "auto", minHeight: "560px" }}>
-          <Card elevation={4} sx={formCardStyle}>
-            <Box sx={formHeaderStyle}>
+        {/* Employee Form Section */}
+        <Box sx={{ position: "relative", minHeight: 560 }}>
+          <Card
+            elevation={2}
+            sx={{
+              borderRadius: 2,
+              border: formActive
+                ? `1px solid ${
+                    !editingEmployee ? "success.main" : "primary.main"
+                  }`
+                : `1px solid ${theme.palette.divider}`,
+              height: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: formActive
+                  ? alpha(
+                      !editingEmployee
+                        ? theme.palette.success.main
+                        : theme.palette.primary.main,
+                      0.05
+                    )
+                  : "background.default",
+              }}
+            >
               <Typography
                 variant="h6"
                 fontWeight="500"
@@ -236,10 +191,10 @@ const EmployeePage = () => {
             <Divider />
             <CardContent
               sx={{
-                p: 3,
+                p: 2,
                 opacity: formActive ? 1 : 0,
-                minHeight: "400px", // Increased from 220px
-                maxHeight: "60vh", // Use viewport height for responsiveness
+                minHeight: 400,
+                maxHeight: "60vh",
                 overflow: "auto",
               }}
             >
@@ -251,36 +206,40 @@ const EmployeePage = () => {
             </CardContent>
           </Card>
 
-          {/* Improved Add Employee Overlay */}
+          {/* Add Employee Overlay */}
           {!formActive && (
-            <Backdrop open={true} sx={backdropStyle}>
+            <Backdrop
+              open={true}
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1,
+                bgcolor:
+                  theme.palette.mode === "dark"
+                    ? alpha(theme.palette.background.paper, 0.6)
+                    : alpha(theme.palette.grey[100], 0.8),
+                backdropFilter: "blur(3px)",
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  p: 3,
-                  borderRadius: 3,
-                  backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                  backdropFilter: "blur(10px)",
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                  boxShadow: theme.shadows[4],
-                  maxWidth: "250px",
                   textAlign: "center",
+                  bgcolor: alpha(theme.palette.background.paper, 0.7),
+                  p: 3,
+                  borderRadius: 2,
+                  maxWidth: 240,
                 }}
               >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 500,
-                    mb: 2,
-                    color: theme.palette.text.primary,
-                  }}
-                >
+                <Typography variant="h6" sx={{ mb: 2 }}>
                   Add New Team Member
                 </Typography>
-
                 <Typography
                   variant="body2"
                   color="text.secondary"
@@ -289,21 +248,17 @@ const EmployeePage = () => {
                   Create a new employee profile with shift hours and color
                   coding
                 </Typography>
-
                 <Fab
                   color="primary"
                   onClick={handleAddClick}
-                  size="large"
                   sx={{
-                    boxShadow: theme.shadows[8],
-                    transition: "all 0.3s ease",
+                    transition: "transform 0.2s",
                     "&:hover": {
-                      transform: "scale(1.1)",
-                      boxShadow: theme.shadows[12],
+                      transform: "scale(1.05)",
                     },
                   }}
                 >
-                  <AddIcon sx={{ fontSize: 32 }} />
+                  <AddIcon />
                 </Fab>
               </Box>
             </Backdrop>
