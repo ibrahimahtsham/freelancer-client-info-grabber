@@ -1,5 +1,5 @@
 import { Box, TextField, FormControlLabel, Switch } from "@mui/material";
-import DateRangeControls from "../../../components/DateRangeControls";
+import DateRangeControls from "./DateRangeControls";
 
 const DataFetchControls = ({
   fromDate,
