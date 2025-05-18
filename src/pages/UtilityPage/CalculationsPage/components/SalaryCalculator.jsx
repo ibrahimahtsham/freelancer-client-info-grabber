@@ -15,13 +15,30 @@ import {
   Radio,
   Divider,
 } from "@mui/material";
+import { useEmployees } from "../../../../contexts/EmployeeContext";
+import { to24Hour } from "../../../../utils/dateUtils";
 
 const SalaryCalculator = ({ rows }) => {
+  // Use employee data from context (cookies)
+  const { employees } = useEmployees();
+
   // State for salary calculation parameters
   const [baseRate, setBaseRate] = useState(5); // Base hourly rate in USD
   const [commissionRate, setCommissionRate] = useState(20); // Commission percentage
   const [hoursPerProject, setHoursPerProject] = useState(10); // Average hours per project
   const [selectedPerson, setSelectedPerson] = useState("ibrahim");
+
+  // Find employees from context, or use fallback defaults
+  const employeeMap = {};
+  employees.forEach((emp) => {
+    // Use lowercase name as key for simplicity
+    const key = emp.name.toLowerCase();
+    employeeMap[key] = {
+      ...emp,
+      startHour24: to24Hour(emp.startHour, emp.startAmPm),
+      endHour24: to24Hour(emp.endHour, emp.endAmPm),
+    };
+  });
 
   // Helper function to calculate salary
   const calculateSalary = () => {
@@ -52,23 +69,37 @@ const SalaryCalculator = ({ rows }) => {
       }
     };
 
-    // Check if in shift
-    const isInIbrahimShift = (hour) => {
-      return hour >= 22 || hour < 7; // 10PM - 7AM
-    };
+    // Check if in shift - dynamically based on employee data
+    const isInShift = (hour, employeeKey) => {
+      if (hour === null) return false;
 
-    const isInHafsaShift = (hour) => {
-      return hour >= 12 && hour < 22; // 12PM - 10PM
+      const employee = employeeMap[employeeKey];
+      if (!employee) {
+        // Fallback to hard-coded values if employee not found
+        if (employeeKey === "ibrahim") {
+          return hour >= 22 || hour < 7; // 10PM - 7AM
+        } else if (employeeKey === "hafsa") {
+          return hour >= 12 && hour < 22; // 12PM - 10PM
+        }
+        return false;
+      }
+
+      const start = employee.startHour24;
+      const end = employee.endHour24;
+
+      // Handle shifts that span across midnight
+      if (start > end) {
+        return hour >= start || hour < end;
+      } else {
+        return hour >= start && hour < end;
+      }
     };
 
     // Filter projects by person
     const personProjects = rows.filter((row) => {
       const hour = parseDateTime(row.projectUploadDate);
       if (hour === null) return false;
-
-      return selectedPerson === "ibrahim"
-        ? isInIbrahimShift(hour)
-        : isInHafsaShift(hour);
+      return isInShift(hour, selectedPerson);
     });
 
     // Get awarded projects

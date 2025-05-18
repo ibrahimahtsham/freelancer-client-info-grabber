@@ -22,44 +22,46 @@ const TimeBreakdownsPage = () => {
   const { employees } = useEmployees();
   const [selectedEmployee, setSelectedEmployee] = useState(0);
 
-  // Fallback to default employees if none in context
-  const employeeList =
-    employees.length > 0
-      ? employees
-      : [
-          {
-            id: "1",
-            name: "Ibrahim",
-            color: "#4caf50",
-            startHour: 10,
-            startAmPm: "PM",
-            endHour: 7,
-            endAmPm: "AM",
-          },
-          {
-            id: "2",
-            name: "Hafsa",
-            color: "#e91e63",
-            startHour: 12,
-            startAmPm: "PM",
-            endHour: 10,
-            endAmPm: "PM",
-          },
-        ];
+  // No fallbacks - rely entirely on cookie data
+  const employeeList = employees;
 
-  // Get the current employee details
-  const currentEmployee = employeeList[selectedEmployee];
+  // Get the current employee details - but check if valid index first
+  const validIndex =
+    employeeList.length > 0
+      ? selectedEmployee < employeeList.length
+        ? selectedEmployee
+        : 0
+      : 0;
 
-  // Use the time processing hook with the selected employee's shift
+  // Always call hooks at the top level, unconditionally
   const { filteredProjects, processingState, debugInfo } = useTimeProcessing({
     rows,
     employees: employeeList,
-    selectedEmployeeIndex: selectedEmployee,
+    selectedEmployeeIndex: validIndex,
   });
 
   const handleTabChange = (event, newValue) => {
     setSelectedEmployee(newValue);
   };
+
+  // When no employees are available
+  if (employeeList.length === 0) {
+    return (
+      <Box>
+        <Typography variant="h4" gutterBottom>
+          Time Breakdowns
+        </Typography>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography>
+            No employees found. Please add employees in the Employees page
+            first.
+          </Typography>
+        </Alert>
+      </Box>
+    );
+  }
+
+  const currentEmployee = employeeList[validIndex];
 
   // When no data is available
   if (rows.length === 0) {
@@ -132,7 +134,7 @@ const TimeBreakdownsPage = () => {
       {/* Employee tabs */}
       <Box sx={{ mb: 3 }}>
         <Tabs
-          value={selectedEmployee}
+          value={validIndex}
           onChange={handleTabChange}
           variant="scrollable"
           scrollButtons="auto"
@@ -157,12 +159,13 @@ const TimeBreakdownsPage = () => {
         startAmPm={currentEmployee.startAmPm}
         endHour={currentEmployee.endHour}
         endAmPm={currentEmployee.endAmPm}
-        setStartHour={() => {}} // These are now managed via the Employees page
-        setStartAmPm={() => {}}
-        setEndHour={() => {}}
-        setEndAmPm={() => {}}
-        awardedProjects={filteredProjects[selectedEmployee]?.awarded || []}
-        otherProjects={filteredProjects[selectedEmployee]?.other || []}
+        // Explicitly passing null functions to ensure no time editing is possible
+        setStartHour={null}
+        setStartAmPm={null}
+        setEndHour={null}
+        setEndAmPm={null}
+        awardedProjects={filteredProjects[validIndex]?.awarded || []}
+        otherProjects={filteredProjects[validIndex]?.other || []}
         loading={processingState.isProcessing}
         readOnly={true}
       />

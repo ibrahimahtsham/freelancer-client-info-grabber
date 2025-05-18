@@ -5,6 +5,7 @@ import {
   Box,
   Paper,
   CircularProgress,
+  Chip,
 } from "@mui/material";
 import DataTable from "../../components/DataTable";
 import TimeSelector from "./TimeSelector";
@@ -23,6 +24,7 @@ const ShiftCard = ({
   awardedProjects,
   otherProjects,
   loading,
+  readOnly = false,
 }) => {
   // Convert to display format
   const formatTime = (hour, ampm) => `${hour}${ampm.toLowerCase()}`;
@@ -38,25 +40,51 @@ const ShiftCard = ({
     >
       <CardContent>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
-          {title} Shift ({formatTime(startHour, startAmPm)} -{" "}
-          {formatTime(endHour, endAmPm)})
+          {title} Shift
         </Typography>
 
         <Box sx={{ display: "flex", gap: 3, mb: 3, flexWrap: "wrap" }}>
-          <TimeSelector
-            label="Start Time"
-            hour={startHour}
-            ampm={startAmPm}
-            onHourChange={setStartHour}
-            onAmPmChange={setStartAmPm}
-          />
-          <TimeSelector
-            label="End Time"
-            hour={endHour}
-            ampm={endAmPm}
-            onHourChange={setEndHour}
-            onAmPmChange={setEndAmPm}
-          />
+          {readOnly ? (
+            <>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Start Time
+                </Typography>
+                <Chip
+                  label={formatTime(startHour, startAmPm)}
+                  variant="outlined"
+                  sx={{ mt: 0.5, fontSize: "1rem" }}
+                />
+              </Box>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  End Time
+                </Typography>
+                <Chip
+                  label={formatTime(endHour, endAmPm)}
+                  variant="outlined"
+                  sx={{ mt: 0.5, fontSize: "1rem" }}
+                />
+              </Box>
+            </>
+          ) : (
+            <>
+              <TimeSelector
+                label="Start Time"
+                hour={startHour}
+                ampm={startAmPm}
+                onHourChange={setStartHour}
+                onAmPmChange={setStartAmPm}
+              />
+              <TimeSelector
+                label="End Time"
+                hour={endHour}
+                ampm={endAmPm}
+                onHourChange={setEndHour}
+                onAmPmChange={setEndAmPm}
+              />
+            </>
+          )}
         </Box>
 
         {loading ? (

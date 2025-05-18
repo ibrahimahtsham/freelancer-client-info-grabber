@@ -17,24 +17,49 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useEmployees } from "../../../../contexts/EmployeeContext";
+import { to24Hour } from "../../../../utils/dateUtils";
 
 const TeamComparison = ({ rows }) => {
+  // Get employee data from context (cookies)
+  const { employees } = useEmployees();
+
   // Calculate team stats based on time periods
   const teamStats = useMemo(() => {
     if (!rows || !rows.length) return null;
 
-    // Process based on Ibrahim's shift (10PM-7AM) and Hafsa's shift (12PM-10PM)
-    const ibrahimShift = {
-      start: 22, // 10 PM
-      end: 7, // 7 AM
-      name: "Ibrahim",
-    };
+    // Find Ibrahim and Hafsa in the employees list, or use defaults
+    let ibrahimEmployee = employees.find(
+      (emp) => emp.name.toLowerCase() === "ibrahim"
+    );
+    let hafsaEmployee = employees.find(
+      (emp) => emp.name.toLowerCase() === "hafsa"
+    );
 
-    const hafsaShift = {
-      start: 12, // 12 PM
-      end: 22, // 10 PM
-      name: "Hafsa",
-    };
+    // Process based on employee shifts from context
+    const ibrahimShift = ibrahimEmployee
+      ? {
+          start: to24Hour(ibrahimEmployee.startHour, ibrahimEmployee.startAmPm),
+          end: to24Hour(ibrahimEmployee.endHour, ibrahimEmployee.endAmPm),
+          name: ibrahimEmployee.name,
+        }
+      : {
+          start: 22, // 10 PM (fallback)
+          end: 7, // 7 AM (fallback)
+          name: "Ibrahim",
+        };
+
+    const hafsaShift = hafsaEmployee
+      ? {
+          start: to24Hour(hafsaEmployee.startHour, hafsaEmployee.startAmPm),
+          end: to24Hour(hafsaEmployee.endHour, hafsaEmployee.endAmPm),
+          name: hafsaEmployee.name,
+        }
+      : {
+          start: 12, // 12 PM (fallback)
+          end: 22, // 10 PM (fallback)
+          name: "Hafsa",
+        };
 
     // Helper to parse dates & check if in shift time
     const parseDateTime = (dateString) => {
@@ -152,7 +177,7 @@ const TeamComparison = ({ rows }) => {
       ibrahim: calculate("ibrahim"),
       hafsa: calculate("hafsa"),
     };
-  }, [rows]);
+  }, [rows, employees]);
 
   // If no stats, show message
   if (!teamStats) {
