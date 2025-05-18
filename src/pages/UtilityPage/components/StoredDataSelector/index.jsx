@@ -37,57 +37,48 @@ const StoredDataSelector = () => {
         severity: "info",
       });
 
-      // Try loading the dataset
-      const success = loadDataset(datasetId);
-
-      // If regular load fails, try direct loading
-      if (!success) {
-        try {
-          const datasetJson = localStorage.getItem(datasetId);
-          if (!datasetJson) {
-            setNotification({
-              open: true,
-              message: "Dataset not found. It may have been deleted.",
-              severity: "error",
-            });
-            return;
-          }
-
-          const dataset = JSON.parse(datasetJson);
-          if (!dataset || !Array.isArray(dataset.rows)) {
-            setNotification({
-              open: true,
-              message: "Dataset format is invalid.",
-              severity: "error",
-            });
-            return;
-          }
-
-          // Direct update of rows
-          setRows([...dataset.rows]);
-
+      try {
+        // Get the dataset directly from localStorage to display accurate count
+        const datasetJson = localStorage.getItem(datasetId);
+        if (!datasetJson) {
           setNotification({
             open: true,
-            message: `Loaded ${dataset.rows.length} records`,
-            severity: "success",
-          });
-        } catch (err) {
-          setNotification({
-            open: true,
-            message: "Error loading dataset: " + err.message,
+            message: "Dataset not found. It may have been deleted.",
             severity: "error",
           });
+          return;
         }
-      } else {
-        // Regular load succeeded - show notification after a small delay
-        // to allow state updates to complete
-        setTimeout(() => {
+
+        const dataset = JSON.parse(datasetJson);
+        if (!dataset || !Array.isArray(dataset.rows)) {
           setNotification({
             open: true,
-            message: `Dataset loaded successfully with ${rows.length} records`,
-            severity: "success",
+            message: "Dataset format is invalid.",
+            severity: "error",
           });
-        }, 300);
+          return;
+        }
+
+        // Try loading the dataset through the utility context
+        const success = loadDataset(datasetId);
+
+        // If loading succeeded, show notification with the correct row count from localStorage
+        setNotification({
+          open: true,
+          message: `Dataset loaded successfully with ${dataset.rows.length} records`,
+          severity: "success",
+        });
+
+        // If regular load fails, set rows directly
+        if (!success) {
+          setRows([...dataset.rows]);
+        }
+      } catch (err) {
+        setNotification({
+          open: true,
+          message: "Error loading dataset: " + err.message,
+          severity: "error",
+        });
       }
     } else {
       // Clear rows when no dataset is selected
