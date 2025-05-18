@@ -210,3 +210,11 @@ export function isInShift(hour, startHour, endHour) {
     return hour >= startHour && hour < endHour;
   }
 }
+
+/**
+ * Formats time hours and AM/PM for display
+ * @param {number} hour - The hour value (1-12)
+ * @param {string} ampm - "AM" or "PM"
+ * @returns {string} Formatted time string (e.g., "9:00 AM")
+ */
+export const getTimeDisplay = (hour, ampm) => `${hour}:00 ${ampm}`;
