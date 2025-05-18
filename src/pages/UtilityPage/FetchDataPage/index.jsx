@@ -3,10 +3,10 @@ import { Typography, Box, Snackbar, Alert, Chip } from "@mui/material";
 import { useUtilityData } from "../utils/useUtilityData";
 import { DEFAULT_VALUES } from "../../../constants";
 import { useUtility } from "../UtilityContext/hooks";
-import DataFetchControls from "./DataFetchControls";
-import DataActions from "./DataActions";
-import FetchStatusDisplay from "./FetchStatusDisplay";
-import ResultsArea from "./ResultsArea";
+import DataFetchControls from "./components/DataFetchControls";
+import DataActions from "./components/DataActions";
+import FetchStatusDisplay from "./components/FetchStatusDisplay";
+import ResultsArea from "./components/ResultsArea";
 
 const FetchDataPage = () => {
   const { rows } = useUtility();
