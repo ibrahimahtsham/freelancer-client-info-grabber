@@ -10,7 +10,7 @@ import EmployeeSelector from "./components/EmployeeSelector";
 import SalaryConfigPanel from "./components/SalaryConfigPanel";
 import CommissionPanel from "./components/CommissionPanel";
 import BonusPanel from "./components/BonusPanel";
-import SalaryResults from "./components/SalaryResultslaryResults";
+import SalaryResults from "./components/SalaryResults";
 
 const SalaryCalculator = ({ rows }) => {
   // Get employee data from context
