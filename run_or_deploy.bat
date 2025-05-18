@@ -32,6 +32,9 @@ if errorlevel 1 (
     goto end
 )
 echo Successfully deployed to GitHub Pages!
+echo Opening GitHub Pages site in your default browser...
+timeout /t 5 /nobreak
+start https://ibrahimahtsham.github.io/freelancer-client-info-grabber/
 goto end
 
 :lint
