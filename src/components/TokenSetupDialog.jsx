@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,7 +12,7 @@ import {
   Alert,
   Link,
 } from "@mui/material";
-import { getStoredToken, saveToken } from "../utils/tokenHelper";
+import { saveToken } from "../utils/tokenHelper";
 
 const TokenSetupDialog = ({ open, onClose }) => {
   const [token, setToken] = useState("");
