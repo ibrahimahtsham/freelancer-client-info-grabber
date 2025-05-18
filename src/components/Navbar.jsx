@@ -5,6 +5,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import PersonIcon from "@mui/icons-material/Person";
 import BuildIcon from "@mui/icons-material/Build";
 import { Link as RouterLink, useLocation } from "react-router-dom";
+import TokenManager from "./TokenManager";
 
 const Navbar = ({ mode, toggleMode }) => {
   const location = useLocation();
@@ -59,6 +60,7 @@ const Navbar = ({ mode, toggleMode }) => {
         >
           Employees
         </Button>
+        <TokenManager />
         <IconButton color="inherit" onClick={toggleMode}>
           {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
         </IconButton>

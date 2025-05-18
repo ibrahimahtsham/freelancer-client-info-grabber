@@ -1,7 +1,7 @@
-export const token = import.meta.env.VITE_FREELANCER_TOKEN;
+import { getStoredToken } from "../utils/tokenHelper";
 
-if (!token) {
-  console.error(
-    "API token not found! Make sure to set VITE_FREELANCER_TOKEN in your .env file"
-  );
-}
+export const getToken = () => {
+  return getStoredToken();
+};
+
+export const token = getStoredToken();

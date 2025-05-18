@@ -1,4 +1,4 @@
-import { token } from "./config";
+import { getToken } from "./config";
 
 // Define application-specific error class
 export class ApiError extends Error {
@@ -12,6 +12,9 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest(url, options = {}) {
+  // Get token at request time rather than at import time
+  const token = getToken();
+
   // Create default headers with the token
   const headers = {
     "freelancer-oauth-v1": token,
