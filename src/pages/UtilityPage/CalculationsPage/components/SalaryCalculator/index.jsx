@@ -73,12 +73,20 @@ const SalaryCalculator = ({ rows }) => {
   }
 
   return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: "#f8f9fa" }}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 3,
+        borderRadius: 2,
+        bgcolor: "background.paper", // This will be light in light mode, dark in dark mode
+        // Alternative: bgcolor: theme => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100'
+      }}
+    >
       <Typography
         variant="h5"
         fontWeight="500"
         gutterBottom
-        sx={{ mb: 3, color: "#1976d2" }}
+        sx={{ mb: 3, color: "primary.main" }} // Already theme-aware
       >
         Salary Calculator
       </Typography>
