@@ -1,13 +1,14 @@
 import { useState, useCallback } from "react";
 import { useUtility } from "../UtilityContext/hooks";
 import { fetchThreadsWithProjectAndOwnerInfo } from "../FetchDataPage/apis/fetchThreadsWithProjectAndOwnerInfo";
+import { saveCurrentDataset } from "../UtilityContext/datasetOperations";
 
 /**
  * Custom hook for managing utility data operations
  * Handles fetching data with progress tracking
  */
 export const useUtilityData = () => {
-  // Get utility context data at the top level - only getting setRows since rows isn't used here
+  // Get utility context data
   const { setRows } = useUtility();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -60,12 +61,31 @@ export const useUtilityData = () => {
 
   /**
    * Save the current data
-   * @returns {Promise<void>}
+   * @param {Array<Object>} rows - Data rows to save
+   * @returns {Promise<{success: boolean, datasetId: string|null}>}
    */
-  const saveData = useCallback(async () => {
-    // If you have existing save functionality, implement it here
-    console.log("Save data functionality would be implemented here");
-    return { success: true };
+  const saveData = useCallback(async (rows) => {
+    try {
+      // Generate date range information (using today as default)
+      const today = new Date();
+      const formattedDate = today.toISOString().split("T")[0]; // YYYY-MM-DD
+
+      // Save the dataset using the saveCurrentDataset function
+      const datasetId = saveCurrentDataset(
+        rows,
+        formattedDate,
+        formattedDate,
+        null
+      );
+
+      return {
+        success: !!datasetId,
+        datasetId,
+      };
+    } catch (err) {
+      console.error("Error saving data:", err);
+      throw err;
+    }
   }, []);
 
   /**
