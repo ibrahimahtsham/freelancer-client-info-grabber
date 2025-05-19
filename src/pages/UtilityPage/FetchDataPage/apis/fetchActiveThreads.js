@@ -11,21 +11,37 @@ async function retryFetch(fetchFunction, maxRetries = 3) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       if (attempt > 0) {
+        console.log(
+          `Retry attempt ${attempt + 1} of ${maxRetries}. Waiting ${
+            Math.pow(2, attempt) * 1000
+          }ms...`
+        );
         await delay(Math.pow(2, attempt) * 1000);
       }
-      return await fetchFunction();
+
+      console.log(`Executing fetch attempt ${attempt + 1}`);
+      const result = await fetchFunction();
+      console.log(`Fetch attempt ${attempt + 1} successful`);
+      return result;
     } catch (error) {
       lastError = error;
+      console.warn(`Fetch attempt ${attempt + 1} failed:`, error.message);
 
       if (
         error.message.includes("429") ||
         error.message.includes("rate limit")
       ) {
+        console.log("Rate limit detected, waiting longer...");
         await delay(5000);
+      } else {
+        console.log(
+          `Error type: ${error.name}, Code: ${error.code || "unknown"}`
+        );
       }
     }
   }
 
+  console.error("All retry attempts failed");
   throw lastError || new Error("All retry attempts failed");
 }
 
@@ -63,30 +79,39 @@ export async function fetchActiveThreads(
     url += `&${params.join("&")}`;
   }
 
+  console.log("Fetching active threads with URL:", url);
+  console.log("Date range:", fromDate, "to", toDate, "Limit:", limit);
+
   try {
     // Use retry mechanism for main request
+    console.time("fetchActiveThreads");
     const { data, rateLimits, error } = await retryFetch(() => apiRequest(url));
+    console.timeEnd("fetchActiveThreads");
 
     // Check for API errors
     if (error) {
-      console.error("API error:", error);
+      console.error("API error in fetchActiveThreads:", error);
       throw error;
     }
 
     if (data.status === "error") {
-      console.error("Data status error:", data.message);
+      console.error("Data status error in fetchActiveThreads:", data.message);
       throw new Error(data.message || "Failed to fetch threads");
     }
 
     // Extract threads
     const threads = data?.result?.threads || [];
+    console.log(`Successfully fetched ${threads.length} threads`);
+
+    // Log rate limits
+    console.log("Rate limits:", rateLimits);
 
     return {
       threads,
       rateLimits,
     };
   } catch (error) {
-    console.error("Error fetching threads:", error);
+    console.error("Error in fetchActiveThreads:", error);
     throw error; // Propagate error so it can be handled upstream
   }
 }

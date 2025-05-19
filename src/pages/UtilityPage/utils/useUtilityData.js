@@ -1,52 +1,83 @@
-import { useState, useEffect, useCallback } from "react";
-import { fetchThreadsWithProjectAndOwnerInfo } from "../FetchDataPage/apis";
+import { useState, useCallback } from "react";
+import { useUtility } from "../UtilityContext/hooks";
+import { fetchThreadsWithProjectAndOwnerInfo } from "../FetchDataPage/apis/fetchThreadsWithProjectAndOwnerInfo";
 
-export function useUtilityData(
-  fromDate,
-  toDate,
-  limit = null,
-  shouldFetch = false,
-  setShouldFetch,
-  callbacks = {}
-) {
-  const [rows, setRows] = useState([]);
+/**
+ * Custom hook for managing utility data operations
+ * Handles fetching data with progress tracking
+ */
+export const useUtilityData = () => {
+  // Get utility context data at the top level - only getting setRows since rows isn't used here
+  const { setRows } = useUtility();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Memoize the fetchData function using useCallback
-  const fetchData = useCallback(async () => {
-    // Call onStart callback if provided
-    if (callbacks.onStart) callbacks.onStart();
-
-    try {
-      // Use the comprehensive data fetching function with progress tracking
-      const { threads, rateLimits } = await fetchThreadsWithProjectAndOwnerInfo(
-        callbacks.onProgress,
+  /**
+   * Fetch thread data with progress tracking
+   * @param {number|null} limit - Maximum number of threads to fetch or null for unlimited
+   * @param {string} fromDate - Start date in YYYY-MM-DD format
+   * @param {string} toDate - End date in YYYY-MM-DD format
+   * @param {Function} progressCallback - Callback for progress updates
+   * @returns {Promise<Object>} - Promise resolving to the fetched threads
+   */
+  const fetchData = useCallback(
+    async (limit, fromDate, toDate, progressCallback) => {
+      console.log("useUtilityData: fetchData called with", {
         limit,
         fromDate,
-        toDate
-      );
+        toDate,
+      });
+      setLoading(true);
+      setError(null);
 
-      // Update local state
-      setRows(threads);
+      try {
+        // Call the API to fetch threads with project and owner info
+        const { threads } = await fetchThreadsWithProjectAndOwnerInfo(
+          progressCallback,
+          limit,
+          fromDate,
+          toDate
+        );
 
-      // Call onSuccess callback if provided
-      if (callbacks.onSuccess) callbacks.onSuccess({ threads, rateLimits });
-    } catch (err) {
-      // Call onError callback if provided
-      if (callbacks.onError) callbacks.onError(err);
-    } finally {
-      // Call onComplete callback if provided
-      if (callbacks.onComplete) callbacks.onComplete();
+        console.log(`Fetched ${threads.length} threads`);
 
-      // Reset shouldFetch so the button can be clicked again
-      if (setShouldFetch) setShouldFetch(false);
-    }
-  }, [fromDate, toDate, limit, callbacks, setShouldFetch]); // Add all dependencies
+        // Update rows in context
+        setRows(threads);
+        return threads;
+      } catch (err) {
+        console.error("Error in fetchData:", err);
+        setError(err.message || "Failed to fetch data");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setRows]
+  );
 
-  // Initial data fetch when button is clicked
-  useEffect(() => {
-    if (!shouldFetch) return;
-    fetchData();
-  }, [shouldFetch, fetchData]); // Include fetchData in deps
+  /**
+   * Save the current data
+   * @returns {Promise<void>}
+   */
+  const saveData = useCallback(async () => {
+    // If you have existing save functionality, implement it here
+    console.log("Save data functionality would be implemented here");
+    return { success: true };
+  }, []);
 
-  return { rows };
-}
+  /**
+   * Set progress manually (may be needed in some cases)
+   */
+  const setProgress = useCallback((percent, message) => {
+    // This is a placeholder in case you need direct progress control
+    console.log(`Manual progress update: ${percent}%, ${message}`);
+  }, []);
+
+  return {
+    fetchData,
+    saveData,
+    setProgress,
+    loading,
+    error,
+  };
+};

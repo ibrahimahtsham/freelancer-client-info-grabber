@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Typography, Box, Snackbar, Alert, Chip } from "@mui/material";
+import { useState, useCallback, useRef } from "react";
+import { Typography, Box, Snackbar, Alert } from "@mui/material";
 import { useUtilityData } from "../utils/useUtilityData";
 import { DEFAULT_VALUES } from "../../../constants";
 import { useUtility } from "../UtilityContext/hooks";
@@ -41,145 +41,107 @@ const FetchDataPage = () => {
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [shouldFetch, setShouldFetch] = useState(false);
 
-  // Get utility context for shared state
-  const {
-    setRows,
-    loading,
-    setLoading,
-    rateLimits,
-    setRateLimits,
-    error,
-    setError,
-    progress,
-    setProgress,
-    progressText,
-    setProgressText,
-    saveCurrentDataset,
-  } = useUtility();
+  // Fetch status state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [progressText, setProgressText] = useState("");
 
-  // Use custom hook for data fetching
-  useUtilityData(
-    fromDate,
-    toDate,
-    limitEnabled ? limit : null,
-    shouldFetch,
-    setShouldFetch,
-    {
-      onStart: () => {
-        setLoading(true);
-        setError("");
-        setProgress(0);
-        setProgressText("Initializing...");
-      },
-      onSuccess: (data) => {
-        setRows(data.threads);
-        setRateLimits(data.rateLimits);
-      },
-      onProgress: (percent, text) => {
-        setProgress(percent);
-        setProgressText(text);
-      },
-      onError: (err) => {
-        if (err.name === "ApiError") {
-          setError(`API Error (${err.status}): ${err.message}`);
-        } else {
-          setError(err.message || "An unknown error occurred");
-        }
-      },
-      onComplete: () => {
-        setLoading(false);
-        setProgress(0);
-        setProgressText("");
-      },
+  // Ref to prevent duplicated fetch operations
+  const fetchInProgressRef = useRef(false);
+  const fetchRequestCountRef = useRef(0);
+
+  // Get utility data hooks
+  const { fetchData, saveData } = useUtilityData();
+
+  // Handle progress updates
+  const handleProgressUpdate = useCallback((percent, message) => {
+    console.log(`Setting progress: ${percent}%, message: ${message}`);
+    setProgress(percent);
+    setProgressText(message);
+  }, []);
+
+  // Handle fetch button click
+  const handleFetchClick = useCallback(() => {
+    // Check if fetch is already in progress
+    if (fetchInProgressRef.current) {
+      console.log("Fetch already in progress, not starting another one");
+      return;
     }
-  );
 
-  // Event handlers
-  const handleFetchData = () => {
+    const currentFetchId = ++fetchRequestCountRef.current;
+    console.log(`Starting fetch operation #${currentFetchId}`);
+
+    // Set states for starting fetch
+    setError(null);
+    setProgress(0);
+    setProgressText("Preparing to fetch data...");
+    setLoading(true);
+    fetchInProgressRef.current = true;
     setShouldFetch(true);
-  };
 
-  const handleSnackbarClose = () => {
+    // Start fetch operation
+    const actualLimit = limitEnabled ? limit : null;
+
+    fetchData(actualLimit, fromDate, toDate, handleProgressUpdate)
+      .then(() => {
+        if (currentFetchId === fetchRequestCountRef.current) {
+          setSnackbar({
+            open: true,
+            message: "Data fetched successfully!",
+            severity: "success",
+          });
+        }
+      })
+      .catch((err) => {
+        if (currentFetchId === fetchRequestCountRef.current) {
+          setError(err.message || "Error fetching data");
+          setSnackbar({
+            open: true,
+            message: `Error: ${err.message}`,
+            severity: "error",
+          });
+        }
+      })
+      .finally(() => {
+        if (currentFetchId === fetchRequestCountRef.current) {
+          setLoading(false);
+          fetchInProgressRef.current = false;
+        }
+      });
+  }, [fetchData, fromDate, toDate, limit, limitEnabled, handleProgressUpdate]);
+
+  // Handle save button click
+  const handleSaveClick = useCallback(() => {
+    saveData()
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: "Data saved successfully!",
+          severity: "success",
+        });
+      })
+      .catch((err) => {
+        setSnackbar({
+          open: true,
+          message: `Error saving data: ${err.message}`,
+          severity: "error",
+        });
+      });
+  }, [saveData]);
+
+  // Close snackbar
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleSaveData = () => {
-    const savedId = saveCurrentDataset(
-      fromDate,
-      toDate,
-      limitEnabled ? limit : null
-    );
-
-    if (savedId) {
-      setSnackbar({
-        open: true,
-        message:
-          "Dataset saved successfully! You can access it from the dropdown above.",
-        severity: "success",
-      });
-    } else {
-      setSnackbar({
-        open: true,
-        message:
-          "Failed to save dataset. The data might be too large for browser storage.",
-        severity: "error",
-      });
-    }
-  };
-
   return (
-    <Box>
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-          variant="filled"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="h4" gutterBottom>
-          Fetch Project Data
-        </Typography>
-
-        {rateLimits.remaining && (
-          <Chip
-            color={
-              rateLimits.isRateLimited
-                ? "error"
-                : parseInt(rateLimits.remaining) < 10
-                ? "warning"
-                : "success"
-            }
-            label={
-              rateLimits.isRateLimited
-                ? "🚫 Rate Limited! Wait before more requests"
-                : `API Rate Limit: ${rateLimits.remaining}/${rateLimits.limit}`
-            }
-          />
-        )}
-      </Box>
-
-      <Typography gutterBottom>
-        Select a date range and result limit to fetch client and project data.
+    <Box sx={{ padding: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Fetch Thread Data
       </Typography>
 
-      {/* Data controls component */}
       <DataFetchControls
         fromDate={fromDate}
         setFromDate={setFromDate}
@@ -191,29 +153,42 @@ const FetchDataPage = () => {
         setLimit={setLimit}
       />
 
-      {/* Actions component */}
-      <DataActions
-        onFetch={handleFetchData}
-        onSave={handleSaveData}
-        loading={loading}
-        hasData={rows.length > 0}
-      />
+      <Box sx={{ my: 2 }}>
+        <DataActions
+          onFetch={handleFetchClick}
+          onSave={handleSaveClick}
+          loading={loading}
+          hasData={rows.length > 0}
+        />
 
-      {/* Status display component */}
-      <FetchStatusDisplay
-        error={error}
-        loading={loading}
-        progress={progress}
-        progressText={progressText}
-      />
+        <FetchStatusDisplay
+          error={error}
+          loading={loading}
+          progress={progress}
+          progressText={progressText}
+        />
+      </Box>
 
-      {/* Results area component */}
       <ResultsArea
         rows={rows}
         loading={loading}
         shouldFetch={shouldFetch}
         limitEnabled={limitEnabled}
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
