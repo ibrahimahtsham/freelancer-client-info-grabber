@@ -5,50 +5,54 @@ import { API_ENDPOINTS } from "../../../../constants";
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Retry function with exponential backoff
-async function retryFetch(fetchFunction, maxRetries = 3) {
+async function retryFetch(fetchFunction, logger = console.log, maxRetries = 3) {
   let lastError;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       if (attempt > 0) {
-        console.log(
-          `Retry attempt ${attempt + 1} of ${maxRetries}. Waiting ${
-            Math.pow(2, attempt) * 1000
-          }ms...`
+        const waitTime = Math.pow(2, attempt) * 1000;
+        logger(
+          `Retry attempt ${
+            attempt + 1
+          } of ${maxRetries}. Waiting ${waitTime}ms...`,
+          "warning"
         );
-        await delay(Math.pow(2, attempt) * 1000);
+        await delay(waitTime);
       }
 
-      console.log(`Executing fetch attempt ${attempt + 1}`);
+      logger(`Executing fetch attempt ${attempt + 1}`, "api");
       const result = await fetchFunction();
-      console.log(`Fetch attempt ${attempt + 1} successful`);
+      logger(`Fetch attempt ${attempt + 1} successful`, "success");
       return result;
     } catch (error) {
       lastError = error;
-      console.warn(`Fetch attempt ${attempt + 1} failed:`, error.message);
+      logger(`Fetch attempt ${attempt + 1} failed: ${error.message}`, "error");
 
       if (
         error.message.includes("429") ||
         error.message.includes("rate limit")
       ) {
-        console.log("Rate limit detected, waiting longer...");
+        logger("Rate limit detected, waiting longer...", "warning");
         await delay(5000);
       } else {
-        console.log(
-          `Error type: ${error.name}, Code: ${error.code || "unknown"}`
+        logger(
+          `Error type: ${error.name}, Code: ${error.code || "unknown"}`,
+          "error"
         );
       }
     }
   }
 
-  console.error("All retry attempts failed");
+  logger("All retry attempts failed", "error");
   throw lastError || new Error("All retry attempts failed");
 }
 
 export async function fetchActiveThreads(
   fromDate = null,
   toDate = null,
-  limit = null
+  limit = null,
+  logger = console.log
 ) {
   // Start with base URL and required folder parameter
   let url = `${API_ENDPOINTS.THREADS}?folder=active`;
@@ -79,39 +83,48 @@ export async function fetchActiveThreads(
     url += `&${params.join("&")}`;
   }
 
-  console.log("Fetching active threads with URL:", url);
-  console.log("Date range:", fromDate, "to", toDate, "Limit:", limit);
+  logger("Fetching active threads with URL: " + url, "api");
+  logger(
+    "Date range: " + fromDate + " to " + toDate + " Limit: " + limit,
+    "info"
+  );
 
   try {
     // Use retry mechanism for main request
     console.time("fetchActiveThreads");
-    const { data, rateLimits, error } = await retryFetch(() => apiRequest(url));
+    const { data, rateLimits, error } = await retryFetch(
+      () => apiRequest(url),
+      logger
+    );
     console.timeEnd("fetchActiveThreads");
 
     // Check for API errors
     if (error) {
-      console.error("API error in fetchActiveThreads:", error);
+      logger("API error in fetchActiveThreads: " + error, "error");
       throw error;
     }
 
     if (data.status === "error") {
-      console.error("Data status error in fetchActiveThreads:", data.message);
+      logger(
+        "Data status error in fetchActiveThreads: " + data.message,
+        "error"
+      );
       throw new Error(data.message || "Failed to fetch threads");
     }
 
     // Extract threads
     const threads = data?.result?.threads || [];
-    console.log(`Successfully fetched ${threads.length} threads`);
+    logger(`Successfully fetched ${threads.length} threads`, "success");
 
     // Log rate limits
-    console.log("Rate limits:", rateLimits);
+    logger("Rate limits: " + JSON.stringify(rateLimits), "info");
 
     return {
       threads,
       rateLimits,
     };
   } catch (error) {
-    console.error("Error in fetchActiveThreads:", error);
+    logger("Error in fetchActiveThreads: " + error, "error");
     throw error; // Propagate error so it can be handled upstream
   }
 }

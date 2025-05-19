@@ -18,15 +18,17 @@ export const useUtilityData = () => {
    * @param {string} fromDate - Start date in YYYY-MM-DD format
    * @param {string} toDate - End date in YYYY-MM-DD format
    * @param {Function} progressCallback - Callback for progress updates
+   * @param {Function} logger - Optional logger function for detailed logging
    * @returns {Promise<Object>} - Promise resolving to the fetched threads
    */
   const fetchData = useCallback(
-    async (limit, fromDate, toDate, progressCallback) => {
-      console.log("useUtilityData: fetchData called with", {
-        limit,
-        fromDate,
-        toDate,
-      });
+    async (limit, fromDate, toDate, progressCallback, logger = console.log) => {
+      logger(
+        "useUtilityData: fetchData called with " +
+          JSON.stringify({ limit, fromDate, toDate }),
+        "api"
+      );
+
       setLoading(true);
       setError(null);
 
@@ -36,16 +38,17 @@ export const useUtilityData = () => {
           progressCallback,
           limit,
           fromDate,
-          toDate
+          toDate,
+          logger
         );
 
-        console.log(`Fetched ${threads.length} threads`);
+        logger(`Fetched ${threads.length} threads`, "success");
 
         // Update rows in context
         setRows(threads);
         return threads;
       } catch (err) {
-        console.error("Error in fetchData:", err);
+        logger("Error in fetchData: " + err.message, "error");
         setError(err.message || "Failed to fetch data");
         throw err;
       } finally {

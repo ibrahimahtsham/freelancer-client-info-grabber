@@ -17,54 +17,51 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
   progressCallback = null,
   maxThreads = null,
   fromDate = null,
-  toDate = null
+  toDate = null,
+  logger = console.log
 ) {
   // Prevent concurrent or recursive executions
   if (isFetchingThreads) {
-    console.warn(
-      "Fetch operation already in progress, skipping duplicate call"
-    );
+    logger("Fetch operation already in progress, skipping duplicate call", "warning");
     return { threads: [], rateLimits: {} };
   }
 
   try {
     isFetchingThreads = true;
-    console.log("Starting fetchThreadsWithProjectAndOwnerInfo", {
-      maxThreads,
-      fromDate,
-      toDate,
-    });
+    logger("Starting fetchThreadsWithProjectAndOwnerInfo " +
+      JSON.stringify({ maxThreads, fromDate, toDate }), "api");
 
     // First, fetch all active threads
-    console.log("Fetching active threads...");
+    logger("Fetching active threads...", "api");
     const { threads, rateLimits } = await fetchActiveThreads(
       fromDate,
       toDate,
-      maxThreads
+      maxThreads,
+      logger
     );
-    console.log(`Fetched ${threads.length} active threads`);
+    logger(`Fetched ${threads.length} active threads`, "info");
 
     if (!threads.length) {
-      console.log("No threads found, returning early");
+      logger("No threads found, returning early", "warning");
       return { threads: [], rateLimits };
     }
 
     // Get user ID once for all calls
-    console.log("Fetching user ID...");
+    logger("Fetching user ID...", "api");
     let myUserId;
     try {
       myUserId = await fetchMyUserId();
-      console.log("User ID:", myUserId);
+      logger("User ID: " + myUserId, "info");
     } catch (error) {
-      console.warn("Error fetching user ID:", error.message);
+      logger("Error fetching user ID: " + error.message, "error");
       // Fallback to default if there's an error
       myUserId = DEFAULT_VALUES.MY_USER_ID;
-      console.log("Using default user ID:", myUserId);
+      logger("Using default user ID: " + myUserId, "warning");
     }
 
     // Process each thread to get complete information
     const enrichedThreads = [];
-    console.log(`Starting to process ${threads.length} threads...`);
+    logger(`Starting to process ${threads.length} threads...`, "info");
 
     // Keep track of rate limit retries
     let rateLimitRetryCount = 0;
@@ -77,16 +74,12 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
       // Update progress if callback provided
       if (progressCallback) {
         const percent = Math.round((i / threads.length) * 100);
-        const progressMessage = `Processing thread ${i + 1} of ${
-          threads.length
-        }`;
-        console.log(`Progress update: ${percent}%, ${progressMessage}`);
+        const progressMessage = `Processing thread ${i + 1} of ${threads.length}`;
+        logger(`Progress update: ${percent}%, ${progressMessage}`, "progress");
         progressCallback(percent, progressMessage);
       }
 
-      console.log(
-        `Processing thread ${i + 1}/${threads.length}, ID: ${thread.id}`
-      );
+      logger(`Processing thread ${i + 1}/${threads.length}, ID: ${thread.id}`, "info");
       const projectId = thread.thread?.context?.id;
 
       const enrichedThread = {
@@ -113,7 +106,7 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
 
       // Only fetch additional info if we have a project ID
       if (projectId) {
-        console.log(`Fetching additional info for project ID: ${projectId}`);
+        logger(`Fetching additional info for project ID: ${projectId}`, "api");
         try {
           // Add rate limit protection with backoff
           await delay(i * 300); // Stagger requests to avoid rate limits
@@ -127,7 +120,7 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
               err.message?.includes("429") ||
               err.message?.includes("rate limit")
             ) {
-              console.log("Rate limit hit, waiting before retrying...");
+              logger("Rate limit hit, waiting before retrying...", "warning");
               await delay(2000 + rateLimitRetryCount * 1000);
               rateLimitRetryCount++;
 
@@ -136,7 +129,7 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
                 try {
                   info = await fetchClientInfo(projectId);
                 } catch (retryErr) {
-                  console.warn("Retry failed:", retryErr.message);
+                  logger("Retry failed: " + retryErr.message, "error");
                 }
               }
             }
@@ -190,7 +183,7 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
 
           // Rest of the API calls - add delay between each to prevent rate limits
           try {
-            console.log(`Fetching bid info for project ${projectId}...`);
+            logger(`Fetching bid info for project ${projectId}...`, "api");
             await delay(300);
             const myBid = await fetchMyBidForProject(projectId, myUserId);
             if (myBid) {
@@ -209,12 +202,13 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
                 : "N/A";
             }
           } catch (err) {
-            console.warn(`Error fetching bid info: ${err.message}`);
+            logger(`Error fetching bid info: ${err.message}`, "error");
           }
 
           try {
-            console.log(
-              `Fetching milestone payments for project ${projectId}...`
+            logger(
+              `Fetching milestone payments for project ${projectId}...`,
+              "api"
             );
             await delay(300);
             const { totalPaid } = await fetchPaidMilestonesForProject(
@@ -224,12 +218,13 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
             enrichedThread.totalPaidMilestones =
               totalPaid > 0 ? `$${totalPaid}` : "N/A";
           } catch (err) {
-            console.warn(`Error fetching milestone info: ${err.message}`);
+            logger(`Error fetching milestone info: ${err.message}`, "error");
           }
 
           try {
-            console.log(
-              `Fetching first message date for thread ${thread.id}...`
+            logger(
+              `Fetching first message date for thread ${thread.id}...`,
+              "api"
             );
             await delay(300);
             if (thread.id) {
@@ -241,17 +236,18 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
               }
             }
           } catch (err) {
-            console.warn(`Error fetching message date: ${err.message}`);
+            logger(`Error fetching message date: ${err.message}`, "error");
           }
         } catch (err) {
-          console.warn(`Error processing thread ${thread.id}:`, err.message);
+          logger(`Error processing thread ${thread.id}: ${err.message}`, "error");
         }
       }
 
       enrichedThreads.push(enrichedThread);
       const threadProcessTime = Date.now() - threadStartTime;
-      console.log(
-        `Completed processing thread ${i + 1} in ${threadProcessTime}ms`
+      logger(
+        `Completed processing thread ${i + 1} in ${threadProcessTime}ms`,
+        "info"
       );
 
       // Add delay between processing threads to avoid rate limits
@@ -262,11 +258,11 @@ export async function fetchThreadsWithProjectAndOwnerInfo(
 
     // Final progress update
     if (progressCallback) {
-      console.log("Processing complete, final progress update: 100%");
+      logger("Processing complete, final progress update: 100%", "progress");
       progressCallback(100, "Processing complete");
     }
 
-    console.log(`Finished processing all ${threads.length} threads`);
+    logger(`Finished processing all ${threads.length} threads`, "info");
     return { threads: enrichedThreads, rateLimits };
   } finally {
     // Always reset the flag when done, even if there was an error
