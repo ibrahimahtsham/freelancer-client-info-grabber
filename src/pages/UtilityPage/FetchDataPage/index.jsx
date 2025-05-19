@@ -327,22 +327,20 @@ const FetchDataPage = () => {
       </Box>
 
       <Collapse in={showLogs}>
-        <Paper
-          elevation={3}
-          sx={{
-            p: 2,
-            mb: 3,
-            maxHeight: "300px",
-            overflow: "auto",
-            border: "1px solid #e0e0e0",
-            backgroundColor: "#f8f9fa",
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 2, 
+            mb: 3, 
+            maxHeight: '300px', 
+            overflow: 'auto',
+            border: '1px solid',
+            borderColor: 'divider', // Theme-aware border color
           }}
         >
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Typography variant="subtitle2">Operation Logs</Typography>
-            <Button size="small" onClick={clearLogs}>
-              Clear
-            </Button>
+            <Button size="small" onClick={clearLogs}>Clear</Button>
           </Box>
           <LogViewer logs={logs} />
           <div ref={logsEndRef} />

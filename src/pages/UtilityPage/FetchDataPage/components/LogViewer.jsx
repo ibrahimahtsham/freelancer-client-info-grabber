@@ -1,6 +1,9 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 
 const LogViewer = ({ logs }) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === "dark";
+
   if (!logs || logs.length === 0) {
     return (
       <Typography
@@ -14,21 +17,30 @@ const LogViewer = ({ logs }) => {
     );
   }
 
-  // Define colors for different log types
+  // Define colors for different log types that work in both light and dark modes
   const getLogStyle = (type) => {
     switch (type) {
       case "error":
-        return { color: "#d32f2f", fontWeight: "bold" };
+        return {
+          color: isDarkMode ? "#f44336" : "#d32f2f",
+          fontWeight: "bold",
+        };
       case "warning":
-        return { color: "#f57c00" };
+        return { color: isDarkMode ? "#ffb74d" : "#f57c00" };
       case "success":
-        return { color: "#388e3c", fontWeight: "bold" };
+        return {
+          color: isDarkMode ? "#4caf50" : "#388e3c",
+          fontWeight: "bold",
+        };
       case "progress":
-        return { color: "#1976d2" };
+        return { color: isDarkMode ? "#64b5f6" : "#1976d2" };
       case "api":
-        return { color: "#7b1fa2", fontStyle: "italic" };
+        return {
+          color: isDarkMode ? "#ba68c8" : "#7b1fa2",
+          fontStyle: "italic",
+        };
       default:
-        return { color: "#616161" };
+        return { color: isDarkMode ? "#e0e0e0" : "#616161" };
     }
   };
 
@@ -38,7 +50,11 @@ const LogViewer = ({ logs }) => {
         <Box key={index} sx={{ mb: 0.5, display: "flex" }}>
           <Typography
             component="span"
-            sx={{ color: "#9e9e9e", mr: 1, minWidth: "70px" }}
+            sx={{
+              color: isDarkMode ? "#9e9e9e" : "#757575",
+              mr: 1,
+              minWidth: "70px",
+            }}
           >
             [{log.timestamp}]
           </Typography>
