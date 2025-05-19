@@ -1,7 +1,7 @@
 fix ui for add new employee screen
 fix rate limited not showing time remaining, see if there is any lirary that will let me read api headers
+salary needs to take in acount the date of payment + if someone helped with chat
 
 search threads by project creation date (seems hard)
 optimize tabs switching
-remove .env from all commits
 integrate bid timings calculations too
