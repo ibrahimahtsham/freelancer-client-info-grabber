@@ -5,52 +5,48 @@
 
 /**
  * Parse date time string to extract hour in 24-hour format
- * @param {string} dateString - Format: DD-MM-YYYY HH:MM:SS AM/PM
+ * @param {string} dateTimeStr - Format: DD-MM-YYYY HH:MM:SS AM/PM
  * @returns {number|null} Hour in 24-hour format or null if parsing failed
  */
-export const parseProjectDateTime = (dateString) => {
-  if (!dateString || dateString === "N/A") return null;
-
+export function parseProjectDateTime(dateTimeStr) {
   try {
-    // Parse DD-MM-YYYY HH:MM:SS AM/PM format
-    const parts = dateString.split(" ");
-    if (parts.length < 3) return null;
-
-    const timePart = parts[1];
-    const ampmPart = parts[2];
-
-    // Parse time
-    const [hours] = timePart.split(":").map(Number);
+    // Extract time components from the dateTimeStr (e.g., "21-04-2025 10:31:05 pm")
+    const timePart = dateTimeStr.split(" ")[1]; // "10:31:05"
+    const amPm = dateTimeStr.split(" ")[2]; // "pm" or "am"
+    const hourStr = timePart.split(":")[0]; // "10"
+    const hour = parseInt(hourStr, 10);
 
     // Convert to 24-hour format
-    let hour24 = hours;
-    if (ampmPart === "PM" && hours < 12) hour24 += 12;
-    else if (ampmPart === "AM" && hours === 12) hour24 = 0;
-
-    return hour24;
-  } catch (e) {
-    console.warn("Failed to parse date time:", dateString, e);
+    if (amPm && amPm.toLowerCase() === "pm" && hour < 12) {
+      return hour + 12; // 10pm = 22
+    } else if (amPm && amPm.toLowerCase() === "am" && hour === 12) {
+      return 0; // 12am = 0
+    } else {
+      return hour;
+    }
+  } catch (error) {
+    console.error("Failed to parse date time:", dateTimeStr, error);
     return null;
   }
-};
+}
 
 /**
  * Check if a time falls within an employee's shift
  * @param {number} hour - Hour in 24-hour format
- * @param {number} shiftStart - Shift start hour in 24-hour format
- * @param {number} shiftEnd - Shift end hour in 24-hour format
+ * @param {number} startHour - Shift start hour in 24-hour format
+ * @param {number} endHour - Shift end hour in 24-hour format
  * @returns {boolean} True if hour is within shift
  */
-export const isInShift = (hour, shiftStart, shiftEnd) => {
-  if (hour === null) return false;
-
-  // Handle shifts that span across midnight
-  if (shiftStart > shiftEnd) {
-    return hour >= shiftStart || hour < shiftEnd;
-  } else {
-    return hour >= shiftStart && hour < shiftEnd;
+export function isInShift(hour, startHour, endHour) {
+  // For overnight shifts (e.g., 22-7)
+  if (startHour > endHour) {
+    return hour >= startHour || hour < endHour;
   }
-};
+  // For normal shifts (e.g., 9-17)
+  else {
+    return hour >= startHour && hour < endHour;
+  }
+}
 
 /**
  * Filter projects by employee shift

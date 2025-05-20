@@ -5,3 +5,4 @@ salary needs to take in acount the date of payment + if someone helped with chat
 search threads by project creation date (seems hard)
 optimize tabs switching
 integrate bid timings calculations too
+make it so datasets instantly are acessible without refreshing page after saving
