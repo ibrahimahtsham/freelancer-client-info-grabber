@@ -1,229 +1,193 @@
-# Freelancer API - Documentation
+reelancer API - Documentation
+Interested Outputs & How To Get Them
+Project Data
+id: number (Already getting from bid.project_id)
+link: string - Construct using "freelancer.com/projects/[project_id]" or with seo_url "freelancer.com/projects/[seo_url]"
+time_of_upload: number - GET /projects/0.1/projects/?projects[]=[project_id] with field "time_submitted"
+awarded: boolean - Can use bid.award_status="awarded" as indicator or check selected_bids in projects endpoint
+skills: array - GET /projects/0.1/projects/?projects[]=[project_id]&job_details=true with "jobs" field
+type: string - GET /projects/0.1/projects/?projects[]=[project_id] with field "hireme" (true = recruiter)
+budget_range: object - GET /projects/0.1/projects/ with fields "minimum_budget" and "maximum_budget"
+bid_statistics: object - GET /projects/0.1/projects/ with field "bid_stats" for average bid amount and count
+project_duration: number - From project details "timeframe" field for expected duration
+hourly_project_info: object - For hourly projects, contains "commitment.hours_per_week" and other data
+language_requirements: array - Language skills required for the project
+Thread Data
+id: number - GET /messages/0.1/threads/?contexts[]=[project_id]&context_type=project
+link: string - Construct using "freelancer.com/messages/thread/[thread_id]"
+time_first_message: number - From threads endpoint with last_message=true or GET /messages/0.1/messages/?thread_ids[]=[thread_id]&limit=1
+time_taken_from_bid: number - Calculate (time_first_message - bid.time_submitted)
+type: string - From threads endpoint with field "thread_type"
+client_response_time: number - Calculate time between your message and client's first response
+message_frequency: number - Calculate average messages per day during active periods
+interview_questions: array - Pattern-match for common interview questions in first messages
+negotiation_points: array - Identify messages containing price/scope negotiation
+Client Data
+name: string - GET /users/0.1/users/[bid.project_owner_id] with field "display_name" OR from projects with user_details=true
+link: string - Construct using "freelancer.com/u/[client.username]"
+id: number - (Already getting from bid.project_owner_id)
+ratings: object - GET /users/0.1/users/[id]?user_details=true&user_reputation=true with field "reputation"
+registration_date: number - GET /users/0.1/users/ with field "registration_date" to assess account age
+total_spent: number - From employer_reputation with field "entire_history.earnings"
+project_count: number - Calculate from employer_reputation with field "entire_history.complete"
+reviews_received: number - From employer_reputation with field "entire_history.reviews"
+payment_verification: boolean - GET /users/0.1/users/ with field "status.payment_verified"
+country: string - From location field to analyze geographic patterns
+hire_rate: number - Calculate percentage of posted projects that resulted in hires
+average_rating_given: number - Historical average ratings given to freelancers
+Bid Data
+date: number - (Already getting from bid.time_submitted)
+time_to_bid: number - Calculate (bid.time_submitted - project.time_submitted)
+price: number - (Already getting from bid.amount)
+payment: number - (Already getting from bid.paid_amount) or GET /projects/0.1/milestones/?bids[]=[bid_id]
+viewed: boolean - May require custom tracking or not available via API
+rating: number - (Already getting from bid.score)
+placement: number - Not directly available, may need to compare multiple bids or check project bid_stats
+awarded: boolean - (Already getting from bid.award_status)
+bid_to_award_time: number - For awarded bids, calculate (bid.time_awarded - bid.time_submitted)
+competing_bids_count: number - From project bid_stats.bid_count
+price_competitiveness: number - Calculate your bid amount relative to project average
+milestone_structure: array - From milestones endpoint, analyze payment schedule patterns
+completion_time: number - For completed projects, actual delivery time vs estimated
+hourly_rate: number - For hourly projects, calculate effective rate and hours worked
+Earnings Analysis
+average_project_value: number - Calculate average earnings per completed project
+hourly_effective_rate: number - Calculate actual earnings divided by hours worked
+earnings_by_skill: object - Group projects by primary skills to identify most profitable areas
+seasonal_trends: object - Analyze earnings patterns by month/quarter
+client_retention: number - Calculate percentage of repeat clients
+earnings_growth: number - Compare earnings across equal time periods
+time_to_payment: number - Average days between milestone completion and payment
+project_profit_margin: number - Compare final payment to estimated cost/time
+long_term_client_value: number - Calculate total earnings from repeat clients
+Complete API Documentation
+Entity: Bid
+ENDPOINT: GET /projects/0.1/bids/ PARAMETERS:
 
-## Interested Outputs & How To Get Them
+from_time: [number] - Unix timestamp for start of time period (Example: 1620000000)
+to_time: [number] - Unix timestamp for end of time period (Example: 1622000000)
+bidders[]: [array[number]] - Filter by bidder IDs (your user ID) (Example: [12345678])
+project_details: [boolean] - Set true to get project information (Example: true)
+user_details: [boolean] - Set true to get client information (Example: true)
+award_statuses[]: [array[string]] - Filter by award status (Example: ["awarded", "pending"])
+limit: [number] - Maximum results to return (pagination) (Example: 50)
+offset: [number] - Number of results to skip (pagination) (Example: 0)
+OUTPUTS: id: number - Unique bid identifier (Example: 123456789) bidder_id: number - Your user ID (Example: 12345678) project_id: number - ID of the project bid on (Example: 39331419) project_owner_id: number - ID of the client (Example: 87654321) amount: number - Bid amount (Example: 250.00) period: number - Project period in days (Example: 7) description: string - Bid proposal text (Example: "I can deliver this project within...") time_submitted: number - Unix timestamp when bid was made (Example: 1620123456) time_awarded: number - Unix timestamp when bid was awarded (Example: 1620234567, null if not awarded) award_status: string - Status of bid (awarded, rejected, revoked, pending, canceled) paid_status: string - Payment status (unpaid, partly_paid, fully_paid) complete_status: string - Completion status (pending, incomplete, complete) frontend_bid_status: string - UI status (active, in_progress, complete) shortlisted: boolean - If bid was shortlisted (Example: true, false) score: number - Bid score/ranking (Example: 0.85 - higher is better) hidden: boolean - If bid is hidden from public view (Example: false) paid_amount: number - Amount paid so far (Example: 100.00)
 
-### Project Data
-- id: number (Already getting from bid.project_id)
-- link: string - Construct using "freelancer.com/projects/[project_id]" or with seo_url "freelancer.com/projects/[seo_url]"
-- time_of_upload: number - GET /projects/0.1/projects/?projects[]=[project_id] with field "time_submitted"
-- awarded: boolean - Can use bid.award_status="awarded" as indicator or check selected_bids in projects endpoint
-- skills: array - GET /projects/0.1/projects/?projects[]=[project_id]&job_details=true with "jobs" field
-- type: string - GET /projects/0.1/projects/?projects[]=[project_id] with field "hireme" (true = recruiter)
+Entity: Project
+ENDPOINT: GET /projects/0.1/projects/ PARAMETERS:
 
-### Thread Data
-- id: number - GET /threads/0.1/threads/?project_ids[]=[project_id]
-- link: string - Construct using "freelancer.com/messages/thread/[thread_id]"
-- time_first_message: number - GET /messages/0.1/messages/?thread_ids[]=[thread_id]&limit=1&offset=0 and sort by oldest
-- time_taken_from_bid: number - Calculate (time_first_message - bid.time_submitted)
-- type: string - From threads endpoint with field "thread_type"
+projects[]: [array[number]] - Filter by specific project IDs (Example: [39331419])
+owners[]: [array[number]] - Filter by project owner IDs (Example: [87654321])
+job_details: [boolean] - Include job/skill details (Example: true)
+user_details: [boolean] - Include client details (Example: true)
+selected_bids: [boolean] - Include awarded or pending bids (Example: true)
+OUTPUTS: id: number - Project identifier (Example: 39331419) owner_id: number - Client ID (Already getting from bid.project_owner_id) title: string - Project title (Example: "Build a Website") seo_url: string - SEO friendly URL (Example: "build-website-12345") time_submitted: number - Unix timestamp of project creation (Example: 1620000000) time_updated: number - Unix timestamp of last update (Example: 1620010000) type: string - Project payment type (Example: "fixed" or "hourly") status: string - Current status (Example: "active", "frozen", "closed") hireme: boolean - If this is a recruiter project (Example: true/false) jobs: array - List of skill objects (When job_details=true) (Example: [{"id": 3, "name": "PHP"}])
 
-### Client Data
-- name: string - GET /users/0.1/users/[bid.project_owner_id] with field "display_name" OR from projects with user_details=true
-- link: string - Construct using "freelancer.com/u/[client.username]"
-- id: number - (Already getting from bid.project_owner_id)
-- ratings: object - GET /users/0.1/users/[id]?user_details=true&user_reputation=true with field "reputation"
+Entity: Thread
+ENDPOINT: GET /messages/0.1/threads/ PARAMETERS:
 
-### Bid Data
-- date: number - (Already getting from bid.time_submitted)
-- time_to_bid: number - Calculate (bid.time_submitted - project.time_submitted)
-- price: number - (Already getting from bid.amount)
-- payment: number - (Already getting from bid.paid_amount) or GET /projects/0.1/milestones/?bids[]=[bid_id] with sum of amounts where status="cleared"
-- viewed: boolean - May require custom tracking or not available via API
-- rating: number - (Already getting from bid.score)
-- placement: number - Not directly available, may need to compare multiple bids or check project bid_stats
-- awarded: boolean - (Already getting from bid.award_status)
+contexts[]: [array[number]] - Filter by context IDs (Example: [39331419])
+context_type: [string] - Filter by context type (Example: "project")
+last_message: [boolean] - Include last message in response (Example: true)
+context_details: [boolean] - Include context information (Example: true)
+OUTPUTS: id: number - Thread identifier (Example: 987654321) thread_type: string - Type of thread (private_chat, primary, support_chat, group, admin_preferred_chat) time_created: number - Unix timestamp of thread creation (Example: 1620100000) context: object - Context details (Example: {"id": 39331419, "type": "project"}) members: array - User IDs participating (Example: [12345678, 87654321]) message: object - Last message if requested (time_created, message content, etc.)
 
-## Complete API Documentation 
+Entity: Message
+ENDPOINT: GET /messages/0.1/messages/ PARAMETERS:
 
-## Entity: Bid
-ENDPOINT: GET /projects/0.1/bids/
-PARAMETERS:
-  - from_time: [number] - Unix timestamp for start of time period (Example: 1620000000)
-  - to_time: [number] - Unix timestamp for end of time period (Example: 1622000000)
-  - bidders[]: [array[number]] - Filter by bidder IDs (your user ID) (Example: [12345678])
-  - project_details: [boolean] - Set true to get project information (Example: true)
-  - user_details: [boolean] - Set true to get client information (Example: true)
-  - award_statuses[]: [array[string]] - Filter by award status (Example: ["awarded", "pending"])
-  - limit: [number] - Maximum results to return (pagination) (Example: 50)
-  - offset: [number] - Number of results to skip (pagination) (Example: 0)
+threads[]: [array[number]] - Filter by thread IDs (Example: [987654321])
+limit: [number] - Maximum messages to return (Example: 1)
+OUTPUTS: id: number - Unique message identifier (Example: 12345678) from_user: number - Sender's user ID (Example: 87654321) thread_id: number - Thread this message belongs to (Example: 987654321) time_created: number - Unix timestamp of message creation (Example: 1620100500) message: string - Message content (Example: "Thanks for your bid...") message_source: string - Origin of message (bid, inbox, chat_box, hireme, etc.)
 
-OUTPUTS:
-  id: number - Unique bid identifier (Example: 123456789)
-  bidder_id: number - Your user ID (Example: 12345678)
-  project_id: number - ID of the project bid on (Example: 39331419)
-  project_owner_id: number - ID of the client (Example: 87654321)
-  amount: number - Bid amount (Example: 250.00)
-  period: number - Project period in days (Example: 7)
-  description: string - Bid proposal text (Example: "I can deliver this project within...")
-  time_submitted: number - Unix timestamp when bid was made (Example: 1620123456)
-  time_awarded: number - Unix timestamp when bid was awarded (Example: 1620234567, null if not awarded)
-  award_status: string - Status of bid:
-    - "awarded" - You won the project
-    - "rejected" - Client rejected your bid
-    - "revoked" - Client revoked award
-    - "pending" - No decision yet
-    - "canceled" - Project was canceled
-  paid_status: string - Payment status:
-    - "unpaid" - No payment made yet
-    - "partly_paid" - Some milestone payments made
-    - "fully_paid" - All payments completed
-  complete_status: string - Completion status:
-    - "pending" - Work not started
-    - "incomplete" - Work in progress
-    - "complete" - Work completed
-  frontend_bid_status: string - UI status:
-    - "active" - Bid placed but not awarded
-    - "in_progress" - Awarded and being worked on
-    - "complete" - Project completed
-  shortlisted: boolean - If bid was shortlisted (Example: true, false)
-  score: number - Bid score/ranking (Example: 0.85 - higher is better)
-  hidden: boolean - If bid is hidden from public view (Example: false)
-  paid_amount: number - Amount paid so far (Example: 100.00)
+Entity: User/Client
+ENDPOINT: GET /users/0.1/users/ PARAMETERS:
 
-## Entity: Project
-ENDPOINT: GET /projects/0.1/projects/
-PARAMETERS:
-  - projects[]: [array[number]] - Filter by specific project IDs (Example: [39331419])
-  - owners[]: [array[number]] - Filter by project owner IDs (Example: [87654321])
-  - bidders[]: [array[number]] - Filter by projects bid on by specific users (Example: [12345678])
-  - from_time: [number] - Projects updated after this time (Example: 1620000000)
-  - to_time: [number] - Projects updated before this time (Example: 1622000000)
-  - frontend_project_statuses[]: [array[string]] - Filter by status (Example: ["open", "work_in_progress"])
-  - job_details: [boolean] - Include job/skill details (Example: true)
-  - full_description: [boolean] - Include complete project description (Example: true)
-  - user_details: [boolean] - Include client details (Example: true)
-  - selected_bids: [boolean] - Include awarded or pending bids (Example: true)
-  
-OUTPUTS:
-  id: number - Project identifier (Example: 39331419)
-  owner_id: number - Client ID (Already getting from bid.project_owner_id)
-  title: string - Project title (Example: "Build a Website")
-  seo_url: string - SEO friendly URL (Example: "build-website-12345")
-  time_submitted: number - Unix timestamp of project creation (Example: 1620000000)
-  time_updated: number - Unix timestamp of last update (Example: 1620010000)
-  type: string - Project payment type (Example: "fixed" or "hourly")
-  status: string - Current status (Example: "active", "frozen", "closed")
-  frontend_project_status: string - UI status (Example: "open", "work_in_progress", "complete", "pending", "draft")
-  hireme: boolean - If this is a recruiter project (Example: true/false)
-  currency: object - Currency info (Example: {"id": 1, "code": "USD", "sign": "$"})
-  budget: object - Budget details (Example: {"minimum": 100, "maximum": 500})
-  bid_stats: object - Statistics about bids (Example: {"bid_count": 23, "bid_avg": 350.75})
-  jobs: array - List of skill objects (When job_details=true) (Example: [{"id": 3, "name": "PHP"}])
-  upgrades: object - Project upgrades (Example: {"featured": true, "urgent": false, "NDA": false})
-  local: boolean - If project is local/in-person (Example: true/false)
-  
-## Entity: Thread
-ENDPOINT: GET /threads/0.1/threads/
-PARAMETERS:
-  - project_ids[]: [array[number]] - Filter by project IDs (Example: [39331419])
-  - thread_types[]: [array[string]] - Filter by thread types (Example: ["project"])
-  - contexts[]: [array[string]] - Filter by contexts (Example: ["project"])
-  - participants[]: [array[number]] - Filter by participant user IDs (Example: [12345678])
-  
-OUTPUTS:
-  id: number - Thread identifier (Example: 987654321)
-  thread_type: string - Type of thread (Example: "project", "support_chat")
-  time_created: number - Unix timestamp of thread creation (Example: 1620100000)
-  context_type: string - Context type (Example: "project")
-  context: object - Context details including project_id (Example: {"id": 39331419, "type": "project"})
-  participants: array - User IDs participating (Example: [12345678, 87654321])
-  read: boolean - If thread has been read (Example: true/false)
-  archived: boolean - If thread is archived (Example: true/false)
-  
-## Entity: Client
-ENDPOINT: GET /users/0.1/users/[id]
-PARAMETERS:
-  - user_details: [boolean] - Include detailed user info (Example: true)
-  - user_reputation: [boolean] - Include reputation data (Example: true)
-  - user_display_info: [boolean] - Include display information (Example: true)
-  
-OUTPUTS:
-  id: number - Unique user ID (Example: 87654321)
-  username: string - Username (Example: "techsolutions")
-  display_name: string - Display name (Example: "TechSolutions Inc.")
-  public_name: string - Public display name (Example: "TechSolutions Inc.")
-  registration_date: number - Unix timestamp of registration (Example: 1600000000)
-  limited_account: boolean - If account has limitations (Example: false)
-  location: object - Location info (Example: {"country": {"name": "United States"}})
-  avatar_cdn: string - URL to user avatar (Example: "cdn3.f-cdn.com/user/avatar/12345.jpg")
-  reputation: object - Rating information (Example: {"overall": 4.8, "reviews": 35, "on_time": 4.7})
-  employer_reputation: object - Employer side ratings (Example: {"overall": 4.9})
-  status: object - User status info (Example: {"payment_verified": true, "email_verified": true})
+users[]: [array[number]] - List of user IDs to retrieve (Example: [87654321, 12345678])
+usernames[]: [array[string]] - List of usernames to retrieve (Example: ["techsolutions", "devmaster"])
+display_info: [boolean] - Include display names (Example: true)
+reputation: [boolean] - Include freelancer reputation (Example: true)
+employer_reputation: [boolean] - Include client/employer reputation (Example: true)
+location_details: [boolean] - Include country and location info (Example: true)
+profile_description: [boolean] - Include profile bio (Example: true)
+status: [boolean] - Include verification statuses (Example: true)
+jobs: [boolean] - Include skills/expertise (Example: true)
+OUTPUTS: id: number - Unique user ID (Example: 87654321) username: string - Username (Example: "techsolutions") display_name: string - Display name (Example: "TechSolutions Inc.") registration_date: number - Unix timestamp of account creation (Example: 1600000000) role: string - User role ("freelancer", "employer", or null) chosen_role: string - Selected account type ("freelancer", "employer", "both") location: object - Country and city information (Example: {"country": {"name": "Australia"}}) avatar_cdn: string - Profile image URL (Example: "cdn3.f-cdn.com/user/avatar/12345.jpg") status: object - Verification details (Example: {"payment_verified": true, "identity_verified": false}) reputation: object - Detailed rating data with time periods (Example: {"entire_history": {"overall": 4.8}})
 
-## Entity: Milestone
-ENDPOINT: GET /projects/0.1/milestones/
-PARAMETERS:
-  - projects[]: [array[number]] - Filter by project IDs (Example: [39331419])
-  - project_owners[]: [array[number]] - Filter by employer user IDs (Example: [87654321])
-  - bidders[]: [array[number]] - Filter by freelancer user IDs (Example: [12345678])
-  - bids[]: [array[number]] - Filter by bid IDs (Example: [123456789])
-  - statuses[]: [array[string]] - Filter by milestone statuses (Example: ["cleared", "pending"])
-  - sort_field: [string] - Field to sort by (Example: "time_created")
-  - sort_direction: [string] - Direction to sort (Example: "desc")
+Entity: Milestone
+ENDPOINT: GET /projects/0.1/milestones/ PARAMETERS:
 
-OUTPUTS:
-  transaction_id: number - Unique milestone identifier (Example: 987654)
-  project_owner_id: number - Client ID (Example: 87654321)
-  bidder_id: number - Freelancer ID (Example: 12345678)
-  amount: number - Milestone payment amount (Example: 250.00)
-  reason: string - Purpose of the milestone:
-    - "full_payment" - Complete project payment
-    - "partial_payment" - Partial project payment
-    - "task_description" - Specific deliverable
-    - "other" - Custom reason
-  other_reason: string - Custom reason text if reason is "other" (Example: "Logo design phase 1")
-  project_id: number - Associated project ID (Example: 39331419)
-  bid_id: number - Associated bid ID (Example: 123456789)
-  currency: object - Currency information (Example: {"id": 1, "code": "USD", "sign": "$"})
-  is_from_prepaid: boolean - Whether milestone is from prepaid funds (Example: true/false)
-  status: string - Current milestone status:
-    - "cleared" - Payment released to freelancer
-    - "disputed" - Payment under dispute
-    - "requested_release" - Freelancer requested release
-    - "pending" - Awaiting completion/release
-    - "frozen" - Payment temporarily frozen
-    - "canceled" - Milestone canceled
-  dispute_id: number - ID of dispute if status is "disputed" (Example: 54321, null if not disputed)
-  cancellation_requested: boolean - Whether cancellation was requested (Example: true/false)
-  time_created: number - Unix timestamp of milestone creation (Example: 1620500000)
+bids[]: [array[number]] - Filter by bid IDs (Example: [123456789])
+projects[]: [array[number]] - Filter by project IDs (Example: [39331419])
+statuses[]: [array[string]] - Filter by milestone statuses (Example: ["cleared", "pending"])
+OUTPUTS: transaction_id: number - Unique milestone identifier (Example: 987654) amount: number - Milestone payment amount (Example: 250.00) reason: string - Purpose of the milestone (full_payment, partial_payment, task_description, other) status: string - Current milestone status (cleared, disputed, requested_release, pending, frozen, canceled) time_created: number - Unix timestamp of milestone creation (Example: 1620500000)
 
-## Efficient Data Gathering Strategy
+Entity: Freelancer Directory
+ENDPOINT: GET /users/0.1/users/directory/ PARAMETERS:
 
-1. **Initial Bid Retrieval**:
-   - GET /projects/0.1/bids/?bidders[]=[your_id]&from_time=[month_start]&to_time=[month_end]&limit=100
-   - Extract project_ids and project_owner_ids
+query: [string] - Search text for username, name, description, or skills (Example: "web developer")
+skills[]: [array[number]] - Filter by specific skill IDs (Example: [3, 7, 12])
+countries[]: [array[string]] - Filter by specific countries (Example: ["Philippines", "Australia"])
+hourly_rate_min: [number] - Minimum hourly rate (Example: 10)
+hourly_rate_max: [number] - Maximum hourly rate (Example: 50)
+ratings: [decimal] - Minimum rating score (Example: 4.5)
+review_count_min: [number] - Minimum number of reviews (Example: 5)
+online_only: [boolean] - Only show online freelancers (Example: true)
+reputation: [boolean] - Include reputation data (Example: true)
+jobs: [boolean] - Include freelancer skills/jobs (Example: true)
+limit: [number] - Maximum results per page (Example: 20)
+offset: [number] - Pagination offset (Example: 0)
+OUTPUTS: id: number - Freelancer user ID (Example: 12345678) username: string - Freelancer username (Example: "developer123") display_name: string - Public display name (Example: "John Developer") tagline: string - Short profile headline (Example: "Expert Web Developer") hourly_rate: number - Freelancer's hourly rate (Example: 25.00) registration_date: number - Unix timestamp of registration (Example: 1600000000) location: object - Location information (Example: {"country": {"name": "Philippines"}}) reputation: object - Rating information by time period (Example: {"entire_history": {"overall": 4.8}}) jobs: array - Skills/expertise (Example: [{"id": 3, "name": "PHP"}]) status: object - Verification statuses (Example: {"payment_verified": true}) profile_description: string - Bio content (Example: "I am a full-stack developer...") avatar_cdn: string - URL to profile picture (Example: "cdn3.f-cdn.com/user/avatar/12345.jpg") responsiveness: number - Response score (Example: 0.95)
 
-2. **Batch Project Details**:
-   - GET /projects/0.1/projects/?projects[]=[id1,id2,id3]&job_details=true&user_details=true
-   - This gets skills, time_submitted, hireme status, and can include client details
+Efficient Data Gathering Strategy
+Initial Bid Retrieval:
 
-3. **Batch Thread Lookup**:
-   - GET /threads/0.1/threads/?project_ids[]=[id1,id2,id3]
-   - Then for each thread: GET /messages/0.1/messages/?thread_ids[]=[thread_id]&limit=1&offset=0
+GET /projects/0.1/bids/?bidders[]=[your_id]&from_time=[month_start]&to_time=[month_end]&project_details=true&user_details=true
+Get bid details, project IDs, basic project info, basic client details
+Batch Project Details (if needed):
 
-4. **Optional Client Details** (if not already obtained from projects):
-   - GET /users/0.1/users/[client_id]?user_reputation=true
+GET /projects/0.1/projects/?projects[]=[id1,id2,id3]&job_details=true&selected_bids=true
+Get complete project details, skills, time_submitted
+Optimized Thread & Message Lookup:
 
-5. **Payment Tracking**:
-   - GET /projects/0.1/milestones/?bids[]=[bid_id] 
-   - OR for batch retrieval: GET /projects/0.1/milestones/?projects[]=[id1,id2,id3]
-   - This allows tracking of payment status for awarded projects
+GET /messages/0.1/threads/?contexts[]=[project_ids_from_bids]&context_type=project&last_message=true&context_details=true
+Get thread IDs, types, creation times, context info, and last message directly
+Calculate time_taken_from_bid directly if last_message is available
+Get First Messages (only if not retrieved in step 3):
 
-## Relationships
-Project <-> Client: project.owner_id = client.id
-Project <-> Bid: bid.project_id = project.id
-Thread <-> Project: thread.context.id = project.id (when context_type is "project")
-Thread <-> Bid: Need to match thread.context.id with bid.project_id
-Milestone <-> Bid: milestone.bid_id = bid.id
-Milestone <-> Project: milestone.project_id = project.id
-Milestone <-> Client: milestone.project_owner_id = client.id
+GET /messages/0.1/messages/?threads[]=[id1,id2,...]&limit=1
+Get first message timestamps and content
+Payment Details:
 
-## Notes
-- Authentication required for all endpoints (OAuth token with appropriate scopes)
-- Rate limiting headers: X-RateLimit-Remaining, X-RateLimit-Reset
-- Batch API calls where possible by including multiple IDs in the same request
-- The projects endpoint with selected_bids=true lets you check awarded status
-- Use job_details=true to get skills without additional API calls
-- Project frontend_status provides a user-friendly status for display
-- Timestamps are Unix format (seconds since epoch) - ensure consistent handling
-- Consider caching project and client data to minimize API usage
+GET /projects/0.1/milestones/?bids[]=[awarded_bid_ids]
+Get payment status and transaction history
+Missing Client Details:
+
+GET /users/0.1/users/?users[]=[id1,id2,id3]&reputation=true&employer_reputation=true&display_info=true&status=true
+Get complete client profiles for multiple users in a single request
+Efficiently retrieve reputation data, display names and verification status
+Market Rate Analysis:
+
+GET /users/0.1/users/directory/?skills[]=[your_main_skills]&limit=20
+Analyze competitor rates, average rates by skill and location
+Compare your pricing against market ranges for similar skill sets
+Relationships
+Project <-> Client: project.owner_id = client.id Project <-> Bid: bid.project_id = project.id Thread <-> Project: thread.context.id = project.id (when context_type is "project") Thread <-> Bid: Need to match thread.context.id with bid.project_id Milestone <-> Bid: milestone.bid_id = bid.id Milestone <-> Project: milestone.project_id = project.id
+
+Trend Analysis Ideas
+Geographic Rate Mapping: Cross-reference client countries with project rates
+Skill Value Analysis: Compare earnings across different skill combinations
+Client Quality Scoring: Create a composite score based on payment verification, reviews, and response times
+Seasonal Patterns: Track project volumes and rates by month/quarter
+Conversion Analytics: Calculate percentage of viewed proposals that lead to interviews
+Optimal Price Point: Find the sweet spot between competitive rates and maximum earnings
+Response Time Impact: Measure correlation between your response speed and win rate
+Long-term Client Value: Calculate lifetime value of repeat clients versus one-time projects
+Notes
+Authentication required for all endpoints (OAuth token with appropriate scopes)
+Rate limiting headers: X-RateLimit-Remaining, X-RateLimit-Reset
+Batch API calls where possible by including multiple IDs in the same request
+Use project_details=true on bids endpoint to minimize API calls
+Use last_message=true on threads endpoint to avoid separate message calls
+Timestamps are Unix format (seconds since epoch)
+Consider caching project and client data to minimize API usage
