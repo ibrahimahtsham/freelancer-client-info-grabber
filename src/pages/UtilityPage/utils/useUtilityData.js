@@ -207,9 +207,10 @@ export const useUtilityData = () => {
   /**
    * Save the current data
    * @param {Array<Object>} rows - Data rows to save
+   * @param {Function} saveToDatabase - Function to save data to the database
    * @returns {Promise<{success: boolean, datasetId: string|null}>}
    */
-  const saveData = useCallback(async (rows) => {
+  const saveData = useCallback(async (rows, saveToDatabase) => {
     try {
       // Get current date range
       const now = new Date();
@@ -226,14 +227,10 @@ export const useUtilityData = () => {
       const fromDateStr = fromDate.toISOString().slice(0, 10);
       const toDateStr = toDate.toISOString().slice(0, 10);
 
-      // Save using the utility context
-      const datasetId = useUtility().saveCurrentDataset(
-        fromDateStr,
-        toDateStr,
-        rows.length
-      );
+      // Save using the provided saveToDatabase function
+      await saveToDatabase(rows);
 
-      return { success: !!datasetId, datasetId };
+      return { success: true, datasetId: null };
     } catch (err) {
       console.error("Error saving data:", err);
       return { success: false, datasetId: null };

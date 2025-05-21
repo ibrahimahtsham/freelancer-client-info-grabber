@@ -1,344 +1,256 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
-  Box,
-  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
+  Paper,
   TableSortLabel,
+  TablePagination,
+  Box,
   Typography,
   Chip,
   Tooltip,
   Link,
-  CircularProgress,
 } from "@mui/material";
-import { formatEpochToPakistanTime } from "../../../utils/dateUtils";
-import StarIcon from "@mui/icons-material/Star";
-import VerifiedIcon from "@mui/icons-material/Verified";
+import { formatDate } from "../../../utils/dateUtils";
+import ColumnSelector from "./ColumnSelector";
 
-// Helper functions
-function getComparator(order, orderBy) {
-  return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-function descendingComparator(a, b, propertyPath) {
-  // Handle nested properties using path
-  const getNestedValue = (obj, path) => {
-    const props = path.split(".");
-    let value = obj;
-    for (const prop of props) {
-      value = value?.[prop] ?? null;
-    }
-    return value;
-  };
-
-  const valA = getNestedValue(a, propertyPath);
-  const valB = getNestedValue(b, propertyPath);
-
-  // Handle null/undefined values
-  if (valB === null || valB === undefined) return -1;
-  if (valA === null || valA === undefined) return 1;
-
-  if (typeof valA === "string" && typeof valB === "string") {
-    return valB.localeCompare(valA);
-  }
-
-  if (valB < valA) return -1;
-  if (valB > valA) return 1;
-  return 0;
-}
-
-// Define all needed columns
-const columns = [
-  { id: "bid_id", label: "Bid ID", sortable: true },
-  {
-    id: "project_title",
-    label: "Project",
-    sortable: true,
-    render: (row) => (
-      <Tooltip title="View project details">
-        <Link href={row.project_url} target="_blank" rel="noopener">
-          {row.project_title || "N/A"}
-        </Link>
-      </Tooltip>
-    ),
-  },
-  {
-    id: "client_name",
-    label: "Client",
-    sortable: true,
-    render: (row) => (
-      <Tooltip title={`View client profile: ${row.client_name}`}>
-        <Link href={row.client_url} target="_blank" rel="noopener">
-          {row.client_name || "N/A"}
-        </Link>
-      </Tooltip>
-    ),
-  },
+// Define all your columns here
+const ALL_COLUMNS = [
+  { id: "bid_id", label: "Bid ID", width: 80 },
+  { id: "project_title", label: "Project Title", width: 200 },
+  { id: "client_name", label: "Client", width: 120 },
   {
     id: "bid_amount",
-    label: "Bid",
-    sortable: true,
-    render: (row) => `$${row.bid_amount?.toFixed(2) || "0.00"}`,
+    label: "Bid Amount",
+    width: 100,
+    format: (value) => {
+      if (value === null || value === undefined) return "$0.00";
+      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
+      return `$${value.toFixed(2)}`;
+    },
   },
   {
     id: "bid_time",
-    label: "Bid Time",
-    sortable: true,
-    render: (row) => formatEpochToPakistanTime(row.bid_time),
-  },
-  {
-    id: "award_status",
-    label: "Status",
-    sortable: true,
-    render: (row) => {
-      let color;
-      switch (row.award_status) {
-        case "awarded":
-          color = "success";
-          break;
-        case "pending":
-          color = "info";
-          break;
-        case "rejected":
-          color = "error";
-          break;
-        default:
-          color = "default";
+    label: "Bid Date",
+    width: 120,
+    format: (value) => {
+      if (!value) return "N/A";
+      try {
+        // If it's a number (timestamp in seconds), convert to milliseconds
+        if (typeof value === "number") {
+          return formatDate(new Date(value * 1000));
+        }
+        // If it's already a Date object
+        if (value instanceof Date) {
+          return formatDate(value);
+        }
+        // If it's a string, try to parse it
+        return formatDate(new Date(value));
+      } catch (error) {
+        console.warn("Failed to format date:", value, error);
+        return "Invalid date";
       }
-      return (
-        <Chip size="small" label={row.award_status || "N/A"} color={color} />
-      );
     },
   },
+  { id: "award_status", label: "Status", width: 100 },
   {
     id: "paid_amount",
     label: "Paid",
-    sortable: true,
-    render: (row) => `$${row.paid_amount?.toFixed(2) || "0.00"}`,
+    width: 100,
+    format: (value) => {
+      if (value === null || value === undefined) return "$0.00";
+      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
+      return `$${value.toFixed(2)}`;
+    },
   },
-  // Project-specific fields
-  {
-    id: "project_type",
-    label: "Type",
-    sortable: true,
-    render: (row) =>
-      row.project_type === "hourly" ? (
-        <Chip size="small" label="Hourly" color="primary" />
-      ) : (
-        <Chip size="small" label="Fixed" color="secondary" />
-      ),
-  },
+  { id: "project_type", label: "Type", width: 80 },
   {
     id: "skills",
     label: "Skills",
-    sortable: false,
-    render: (row) => (
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {(row.skills || []).slice(0, 3).map((skill, idx) => (
-          <Chip key={idx} size="small" label={skill} variant="outlined" />
-        ))}
-        {(row.skills || []).length > 3 && (
-          <Tooltip title={(row.skills || []).slice(3).join(", ")}>
-            <Chip size="small" label={`+${row.skills.length - 3}`} />
-          </Tooltip>
-        )}
-      </Box>
-    ),
-  },
-  {
-    id: "budget_range",
-    label: "Budget",
-    sortable: true,
-    render: (row) => {
-      if (!row.min_budget && !row.max_budget) return "N/A";
-      if (row.min_budget && row.max_budget) {
-        return `$${row.min_budget}-$${row.max_budget}`;
-      }
-      return `$${row.min_budget || row.max_budget}`;
+    width: 200,
+    format: (value) => {
+      if (!value) return "";
+      if (!Array.isArray(value)) return String(value);
+      return value.join(", ");
     },
   },
-  {
-    id: "total_bids",
-    label: "Bids",
-    sortable: true,
-    render: (row) => row.total_bids || "N/A",
-  },
+  { id: "total_bids", label: "Total Bids", width: 100 },
   {
     id: "received_response",
     label: "Response",
-    sortable: true,
-    render: (row) => {
-      const received = row.received_response;
-      return received ? (
-        <Chip size="small" label="Received" color="success" />
-      ) : (
-        <Chip size="small" label="No Response" color="default" />
-      );
-    },
+    width: 100,
+    format: (value) => (value === true ? "Yes" : "No"),
   },
   {
     id: "response_time",
     label: "Response Time",
-    sortable: true,
-    render: (row) => {
-      if (!row.response_time) return "N/A";
-
-      // Format response time (in seconds) to readable format
-      const hours = Math.floor(row.response_time / 3600);
-      const minutes = Math.floor((row.response_time % 3600) / 60);
-
-      if (hours > 24) {
-        const days = Math.floor(hours / 24);
-        return `${days}d ${hours % 24}h`;
-      }
-
-      return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+    width: 120,
+    format: (value) => {
+      if (!value) return "N/A";
+      const hours = Math.floor(value / 3600);
+      const days = Math.floor(hours / 24);
+      return days > 0 ? `${days}d ${hours % 24}h` : `${hours}h`;
     },
   },
-  // Client fields
-  {
-    id: "client_country",
-    label: "Country",
-    sortable: true,
-    render: (row) => row.client_country || "Unknown",
-  },
-  {
-    id: "client_rating",
-    label: "Rating",
-    sortable: true,
-    render: (row) => {
-      if (!row.client_rating) return "N/A";
-      return (
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Typography>{row.client_rating.toFixed(1)}</Typography>
-          <StarIcon sx={{ color: "gold", fontSize: "1rem", ml: 0.5 }} />
-        </Box>
-      );
-    },
-  },
+  { id: "client_country", label: "Country", width: 120 },
+  { id: "client_rating", label: "Rating", width: 80 },
   {
     id: "client_payment_verified",
     label: "Verified",
-    sortable: true,
-    render: (row) =>
-      row.client_payment_verified ? (
-        <Chip
-          size="small"
-          icon={<VerifiedIcon />}
-          label="Verified"
-          color="success"
-        />
-      ) : (
-        <Chip size="small" label="Not Verified" color="default" />
-      ),
+    width: 80,
+    format: (value) => (value ? "Yes" : "No"),
   },
+  // Add more columns as needed
 ];
 
-const DataTable = ({ rows = [], loading = false }) => {
+// Allow users to select which columns to display
+const DEFAULT_VISIBLE_COLUMNS = [
+  "bid_id",
+  "project_title",
+  "client_name",
+  "bid_amount",
+  "bid_time",
+  "award_status",
+  "paid_amount",
+  "project_type",
+  "skills",
+  "total_bids",
+  "received_response",
+  "response_time",
+  "client_country",
+  "client_rating",
+  "client_payment_verified",
+];
+
+const DataTable = ({ data = [], title, loading }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [order, setOrder] = useState("desc");
   const [orderBy, setOrderBy] = useState("bid_time");
+  const [order, setOrder] = useState("desc");
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
 
-  // Handle sort request
+  const handleColumnChange = (newColumns) => {
+    setVisibleColumns(newColumns);
+  };
+
+  // Handle sorting
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
-  // Handle page changes
+  // Sort and paginate data
+  const sortedData = useMemo(() => {
+    const compare = (a, b) => {
+      if (a[orderBy] < b[orderBy]) return order === "asc" ? -1 : 1;
+      if (a[orderBy] > b[orderBy]) return order === "asc" ? 1 : -1;
+      return 0;
+    };
+
+    return [...data].sort(compare);
+  }, [data, order, orderBy]);
+
+  const paginatedData = sortedData.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  // Handle rows per page changes
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-  // Memoize sorting and pagination to avoid unnecessary re-renders
-  const sortedRows = useMemo(() => {
-    if (!rows.length) return [];
-
-    return [...rows]
-      .sort(getComparator(order, orderBy))
-      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  }, [rows, order, orderBy, page, rowsPerPage]);
-
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (!rows.length) {
-    return (
-      <Box sx={{ py: 4, textAlign: "center" }}>
-        <Typography variant="body1" color="text.secondary">
-          No data available
-        </Typography>
-      </Box>
-    );
-  }
+  // Get columns that are currently visible
+  const columns = ALL_COLUMNS.filter((col) => visibleColumns.includes(col.id));
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
-      <TableContainer sx={{ maxHeight: 650 }}>
-        <Table stickyHeader size="small">
+      <Box
+        p={2}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Typography variant="h6" component="div">
+          {title}
+        </Typography>
+        <Box display="flex" alignItems="center" gap={2}>
+          <ColumnSelector
+            availableColumns={ALL_COLUMNS}
+            visibleColumns={visibleColumns}
+            onChange={handleColumnChange}
+          />
+          <Typography variant="body2" color="text.secondary">
+            {data.length} items
+          </Typography>
+        </Box>
+      </Box>
+
+      <TableContainer sx={{ maxHeight: "calc(100vh - 300px)" }}>
+        <Table stickyHeader aria-label="data table" size="small">
           <TableHead>
             <TableRow>
               {columns.map((column) => (
                 <TableCell
                   key={column.id}
+                  width={column.width}
                   sortDirection={orderBy === column.id ? order : false}
                 >
-                  {column.sortable ? (
-                    <TableSortLabel
-                      active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : "asc"}
-                      onClick={() => handleRequestSort(column.id)}
-                    >
-                      {column.label}
-                    </TableSortLabel>
-                  ) : (
-                    column.label
-                  )}
+                  <TableSortLabel
+                    active={orderBy === column.id}
+                    direction={orderBy === column.id ? order : "asc"}
+                    onClick={() => handleRequestSort(column.id)}
+                  >
+                    {column.label}
+                  </TableSortLabel>
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedRows.map((row, index) => (
-              <TableRow hover key={row.bid_id || index}>
-                {columns.map((column) => (
-                  <TableCell key={column.id}>
-                    {column.render
-                      ? column.render(row)
-                      : row[column.id] !== undefined
-                      ? String(row[column.id])
-                      : "N/A"}
-                  </TableCell>
-                ))}
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center">
+                  Loading data...
+                </TableCell>
               </TableRow>
-            ))}
+            ) : paginatedData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center">
+                  No data to display
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedData.map((row) => (
+                <TableRow hover key={row.bid_id}>
+                  {columns.map((column) => {
+                    const value = row[column.id];
+                    return (
+                      <TableCell key={column.id}>
+                        {column.format ? column.format(value) : value}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
       <TablePagination
         rowsPerPageOptions={[10, 25, 50, 100]}
         component="div"
-        count={rows.length}
+        count={data.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

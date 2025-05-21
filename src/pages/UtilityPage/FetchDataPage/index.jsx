@@ -26,6 +26,7 @@ import LogViewer from "./components/LogViewer";
 import APICallsMonitor from "./components/APICallsMonitor";
 import { getApiCallsStats, resetApiCallsStats } from "./apis";
 import { formatDate } from "../../../utils/dateUtils";
+import DataTable from "../components/DataTable";
 
 const FetchDataPage = () => {
   const { rows } = useUtility();
@@ -453,12 +454,18 @@ const FetchDataPage = () => {
         </Paper>
       </Collapse>
 
-      <ResultsArea
-        rows={rows}
-        loading={loading}
-        shouldFetch={shouldFetch}
-        limitEnabled={limitEnabled}
-      />
+      {/* DataTable with conditional rendering */}
+      {rows && rows.length > 0 ? (
+        <DataTable data={rows} title="Bid Analysis" loading={loading} />
+      ) : (
+        <Paper sx={{ p: 3, textAlign: "center" }}>
+          {loading ? (
+            <Typography>Loading data...</Typography>
+          ) : (
+            <Typography>No data available. Please fetch data first.</Typography>
+          )}
+        </Paper>
+      )}
 
       <Snackbar
         open={snackbar.open}

@@ -62,27 +62,48 @@ export function to24Hour(hour, ampm) {
   return hour === 12 ? 12 : hour + 12;
 }
 
-export function formatDate(dateInput) {
-  if (!dateInput) return "";
-
-  // If it's already a date string, parse it
-  let date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-
-  // If input is a timestamp in seconds, convert to milliseconds
-  if (typeof dateInput === "number" && dateInput < 10000000000) {
-    date = new Date(dateInput * 1000);
+/**
+ * Format a date object or timestamp into a user-friendly string
+ * @param {Date|number} date - Date object or timestamp
+ * @param {Object} options - Formatting options
+ * @returns {string} Formatted date string
+ */
+export function formatDate(date, options = {}) {
+  try {
+    // If date is null or undefined
+    if (!date) return "N/A";
+    
+    // If it's a number, assume it's a timestamp in milliseconds
+    if (typeof date === 'number') {
+      date = new Date(date);
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof date === 'string') {
+      date = new Date(date);
+    }
+    
+    // Check if the date is valid
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      console.warn("Invalid date:", date);
+      return "Invalid date";
+    }
+    
+    // Default options
+    const defaultOptions = {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    };
+    
+    // Use Intl.DateTimeFormat for consistent formatting
+    return new Intl.DateTimeFormat('en-AU', {
+      ...defaultOptions,
+      ...options
+    }).format(date);
+  } catch (error) {
+    console.error("Date formatting error:", error);
+    return "Error";
   }
-
-  // Check if date is valid
-  if (isNaN(date.getTime())) return "Invalid Date";
-
-  // Format as day/month/year format
-  return date.toLocaleDateString("en-PK", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "Asia/Karachi",
-  });
 }
 
 export function formatHour(hour) {
