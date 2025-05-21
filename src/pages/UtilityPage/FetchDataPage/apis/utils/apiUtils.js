@@ -237,13 +237,7 @@ export async function processApiResponse(
  * @returns {Promise<any>} - Result of the function
  */
 export async function withRetry(fn, options = {}) {
-  const {
-    maxRetries = 3,
-    baseDelay = 1000,
-    maxDelay = 10000,
-    logger = console.log,
-    retryableStatuses = [429, 500, 502, 503, 504],
-  } = options;
+  const { maxRetries = 3, baseDelay = 1000, maxDelay = 10000 } = options;
 
   let lastError = null;
 
@@ -339,22 +333,24 @@ export async function batchItems(items, processFn, batchSize = 10) {
  */
 export function formatQueryParams(params) {
   const queryParts = [];
-  
+
   for (const [key, value] of Object.entries(params)) {
     if (Array.isArray(value)) {
       // Handle arrays correctly - use multiple parameters with same name
       for (const item of value) {
         // Key already has [] at the end, don't add it again
-        if (key.endsWith('[]')) {
+        if (key.endsWith("[]")) {
           queryParts.push(`${key}=${encodeURIComponent(item)}`);
         } else {
           queryParts.push(`${key}[]=${encodeURIComponent(item)}`);
         }
       }
     } else if (value !== null && value !== undefined) {
-      queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+      queryParts.push(
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+      );
     }
   }
-  
-  return queryParts.join('&');
+
+  return queryParts.join("&");
 }

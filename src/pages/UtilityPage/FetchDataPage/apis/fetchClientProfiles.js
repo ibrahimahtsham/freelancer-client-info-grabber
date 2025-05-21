@@ -1,10 +1,9 @@
-import { API_ENDPOINTS } from "../../../../constants";
 import {
   monitoredApiRequest,
-  retryApiCall,
   batchItems,
   needsBatching,
   delay,
+  formatQueryParams,
 } from "./utils/apiUtils";
 import { enrichWithClientData } from "./utils/dataTransformers";
 
@@ -53,9 +52,9 @@ export async function fetchClientProfiles(
         const params = {};
 
         // Add each user ID separately
-        batch.forEach(id => {
-          params['users[]'] = params['users[]'] || [];
-          params['users[]'].push(id);
+        batch.forEach((id) => {
+          params["users[]"] = params["users[]"] || [];
+          params["users[]"].push(id);
         });
 
         // Add other parameters
@@ -72,29 +71,42 @@ export async function fetchClientProfiles(
         // Make API request for this batch
         const response = await monitoredApiRequest(endpoint, {}, log);
 
-        if (response.data && response.data.result && response.data.result.users) {
+        if (
+          response.data &&
+          response.data.result &&
+          response.data.result.users
+        ) {
           const users = response.data.result.users;
-          
+
           // Add each user to the result map
-          Object.keys(users).forEach(userId => {
+          Object.keys(users).forEach((userId) => {
             clientProfiles[userId] = users[userId];
           });
         }
       } catch (batchError) {
-        log(`Error processing client batch ${i+1}: ${batchError.message}`, "error");
+        log(
+          `Error processing client batch ${i + 1}: ${batchError.message}`,
+          "error"
+        );
         // Continue with next batch even if this one fails
       }
 
       // Update processed count and progress
       processedCount += batch.length;
-      const progressPercent = 85 + Math.floor((processedCount / clientIds.length) * 10);
+      const progressPercent =
+        85 + Math.floor((processedCount / clientIds.length) * 10);
       progressCallback(
         progressPercent,
         `Processed profiles for ${processedCount}/${clientIds.length} clients`
       );
     }
 
-    log(`Fetched detailed profiles for ${Object.keys(clientProfiles).length} clients`, "success");
+    log(
+      `Fetched detailed profiles for ${
+        Object.keys(clientProfiles).length
+      } clients`,
+      "success"
+    );
     return clientProfiles;
   } catch (error) {
     log(`Error fetching client profiles: ${error.message}`, "error");

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -11,8 +11,6 @@ import {
   TablePagination,
   Box,
   Typography,
-  Chip,
-  Tooltip,
   Link,
 } from "@mui/material";
 import { formatDate } from "../../../utils/dateUtils";
@@ -50,7 +48,7 @@ const ALL_COLUMNS = [
           return formatDate(value);
         }
         return formatDate(new Date(value));
-      } catch (error) {
+      } catch {
         return "Invalid date";
       }
     },
@@ -122,7 +120,7 @@ const ALL_COLUMNS = [
           return formatDate(value);
         }
         return formatDate(new Date(value));
-      } catch (error) {
+      } catch {
         return "Invalid date";
       }
     },
@@ -275,7 +273,7 @@ const ALL_COLUMNS = [
           return formatDate(value);
         }
         return formatDate(new Date(value));
-      } catch (error) {
+      } catch {
         return "Invalid date";
       }
     },

@@ -212,21 +212,6 @@ export const useUtilityData = () => {
    */
   const saveData = useCallback(async (rows, saveToDatabase) => {
     try {
-      // Get current date range
-      const now = new Date();
-      const fromDate =
-        rows.length > 0
-          ? new Date(Math.min(...rows.map((r) => r.bid_time * 1000)))
-          : now;
-      const toDate =
-        rows.length > 0
-          ? new Date(Math.max(...rows.map((r) => r.bid_time * 1000)))
-          : now;
-
-      // Format dates for storage
-      const fromDateStr = fromDate.toISOString().slice(0, 10);
-      const toDateStr = toDate.toISOString().slice(0, 10);
-
       // Save using the provided saveToDatabase function
       await saveToDatabase(rows);
 

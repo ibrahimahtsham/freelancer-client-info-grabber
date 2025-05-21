@@ -1,9 +1,9 @@
 import { API_ENDPOINTS } from "../../../../constants";
 import {
   monitoredApiRequest,
-  retryApiCall,
   batchItems,
   needsBatching,
+  formatQueryParams,
   delay,
 } from "./utils/apiUtils";
 import { enrichWithMilestoneData } from "./utils/dataTransformers";
@@ -33,34 +33,42 @@ export async function fetchPaymentDetails(
     // For each bid, fetch its milestones
     for (let i = 0; i < bidIds.length; i++) {
       const bidId = bidIds[i];
-      
+
       try {
         // Make API request to get milestones for this bid
         const params = {};
-        params['bids[]'] = [bidId]; // Use correct parameter name with []
+        params["bids[]"] = [bidId]; // Use correct parameter name with []
 
         const queryString = formatQueryParams(params);
         const endpoint = `projects/0.1/milestones/?${queryString}`;
         const response = await monitoredApiRequest(endpoint, {}, log);
 
-        if (response.data && response.data.result && response.data.result.milestones) {
+        if (
+          response.data &&
+          response.data.result &&
+          response.data.result.milestones
+        ) {
           const bidMilestones = response.data.result.milestones;
-          
+
           // Add bid ID to each milestone for reference
-          bidMilestones.forEach(milestone => {
+          bidMilestones.forEach((milestone) => {
             milestone.bid_id = bidId;
             milestones.push(milestone);
           });
         }
       } catch (milestoneError) {
-        log(`Error fetching milestones for bid ${bidId}: ${milestoneError.message}`, "error");
+        log(
+          `Error fetching milestones for bid ${bidId}: ${milestoneError.message}`,
+          "error"
+        );
         // Continue with next bid even if this one fails
       }
 
       // Update processed count and progress
       processedCount++;
-      const progressPercent = 70 + Math.floor((processedCount / bidIds.length) * 15);
-      
+      const progressPercent =
+        70 + Math.floor((processedCount / bidIds.length) * 15);
+
       if (i % 5 === 0 || i === bidIds.length - 1) {
         progressCallback(
           progressPercent,
@@ -69,7 +77,10 @@ export async function fetchPaymentDetails(
       }
     }
 
-    log(`Fetched ${milestones.length} payment records across ${processedCount} bids`, "success");
+    log(
+      `Fetched ${milestones.length} payment records across ${processedCount} bids`,
+      "success"
+    );
     return milestones;
   } catch (error) {
     log(`Error fetching payment details: ${error.message}`, "error");

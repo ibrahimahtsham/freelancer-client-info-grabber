@@ -306,23 +306,6 @@ export function transformDataToRows({
 }
 
 /**
- * Format project budget for display
- * @param {Object} budget - Budget object from API
- * @returns {string} Formatted budget string
- */
-function formatBudget(budget) {
-  if (!budget) return "N/A";
-
-  if (budget.minimum && budget.maximum) {
-    return `$${budget.minimum}-$${budget.maximum}`;
-  } else if (budget.amount) {
-    return `$${budget.amount}`;
-  }
-
-  return "N/A";
-}
-
-/**
  * Format epoch timestamp to locale string
  * @param {number} timestamp - Unix timestamp in seconds
  * @returns {string} Formatted date string

@@ -1,27 +1,11 @@
-import { API_ENDPOINTS } from "../../../../constants";
 import {
   monitoredApiRequest,
-  retryApiCall,
   batchItems,
   needsBatching,
   delay,
   formatQueryParams,
 } from "./utils/apiUtils";
 import { enrichWithProjectDetails } from "./utils/dataTransformers";
-
-/**
- * Helper function to process projects in batches to avoid request size limitations
- * @param {Array<number>} projectIds - Array of project IDs
- * @param {number} batchSize - How many IDs to process in each batch
- * @returns {Array<Array<number>>} Array of ID batches
- */
-function batchProjectIds(projectIds, batchSize = 10) {
-  const batches = [];
-  for (let i = 0; i < projectIds.length; i += batchSize) {
-    batches.push(projectIds.slice(i, i + batchSize));
-  }
-  return batches;
-}
 
 /**
  * Fetch detailed project information for multiple projects

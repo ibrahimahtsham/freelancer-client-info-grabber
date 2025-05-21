@@ -7,9 +7,7 @@ import {
   Button,
   Paper,
   Collapse,
-  IconButton,
   Chip,
-  Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
@@ -70,7 +68,6 @@ const FetchDataPage = () => {
   const [limitEnabled, setLimitEnabled] = useState(false);
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [fetchType, setFetchType] = useState("complete");
-  const [shouldFetch, setShouldFetch] = useState(false);
 
   // Fetch status state
   const [loading, setLoading] = useState(false);
@@ -209,7 +206,6 @@ const FetchDataPage = () => {
     setProgressText("Preparing to fetch data...");
     setLoading(true);
     fetchInProgressRef.current = true;
-    setShouldFetch(true);
 
     // Auto expand logs when fetch starts
     setShowLogs(true);

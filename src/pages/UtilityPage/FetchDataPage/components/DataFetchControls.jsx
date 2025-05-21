@@ -58,9 +58,6 @@ const DataFetchControls = ({
   fetchType,
   setFetchType,
 }) => {
-  const selectedFetchType =
-    FETCH_TYPES.find((type) => type.value === fetchType) || FETCH_TYPES[0];
-
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Grid container spacing={3}>

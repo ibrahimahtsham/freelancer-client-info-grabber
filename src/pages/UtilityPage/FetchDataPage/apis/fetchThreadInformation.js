@@ -1,7 +1,6 @@
 import { API_ENDPOINTS } from "../../../../constants";
 import {
   monitoredApiRequest,
-  retryApiCall,
   batchItems,
   needsBatching,
   delay,
@@ -33,31 +32,39 @@ export async function fetchThreadInformation(
     // For each project, fetch its threads
     for (let i = 0; i < projectIds.length; i++) {
       const projectId = projectIds[i];
-      
+
       try {
         // Make API request to get threads for this project
         const endpoint = `${API_ENDPOINTS.THREADS}?contexts[]=${projectId}&context_type=project`;
         const response = await monitoredApiRequest(endpoint, {}, log);
 
-        if (response.data && response.data.result && response.data.result.threads) {
+        if (
+          response.data &&
+          response.data.result &&
+          response.data.result.threads
+        ) {
           const projectThreads = response.data.result.threads;
-          
+
           // Add thread IDs to result array
-          projectThreads.forEach(thread => {
+          projectThreads.forEach((thread) => {
             // Add project ID to the thread object for reference
             thread.projectId = projectId;
             threads.push(thread);
           });
         }
       } catch (threadError) {
-        log(`Error fetching threads for project ${projectId}: ${threadError.message}`, "error");
+        log(
+          `Error fetching threads for project ${projectId}: ${threadError.message}`,
+          "error"
+        );
         // Continue with next project even if this one fails
       }
 
       // Update processed count and progress
       processedCount++;
-      const progressPercent = 50 + Math.floor((processedCount / projectIds.length) * 20);
-      
+      const progressPercent =
+        50 + Math.floor((processedCount / projectIds.length) * 20);
+
       if (i % 5 === 0 || i === projectIds.length - 1) {
         progressCallback(
           progressPercent,
@@ -66,7 +73,10 @@ export async function fetchThreadInformation(
       }
     }
 
-    log(`Fetched ${threads.length} conversation threads across ${processedCount} projects`, "success");
+    log(
+      `Fetched ${threads.length} conversation threads across ${processedCount} projects`,
+      "success"
+    );
     return threads;
   } catch (error) {
     log(`Error fetching thread information: ${error.message}`, "error");
