@@ -5,7 +5,7 @@ import {
   fetchBidsWithProjectInfo,
   fetchMissingProjectDetails,
   fetchThreadInformation,
-  fetchPaymentDetails,
+  fetchAllPaymentDetails, // Make sure to import this
   fetchClientProfiles,
   resetApiCallsStats,
   transformDataToRows,
@@ -133,27 +133,20 @@ export const useUtilityData = () => {
         }
 
         // Step 4: Fetch payment details for awarded bids if needed
-        let milestones = [];
+        let enrichedBids = [...bids]; // Start with a copy of the original bids
         if (fetchType === "complete") {
-          const awardedBidIds = bids
-            .filter((bid) => bid.award_status === "awarded")
-            .map((bid) => bid.id);
+          progressCallback(70, `Fetching payment details for awarded bids...`);
 
-          if (awardedBidIds.length) {
-            progressCallback(
-              70,
-              `Fetching payment details for ${awardedBidIds.length} awarded bids...`
-            );
-            milestones = await fetchPaymentDetails(
-              awardedBidIds,
-              progressCallback,
-              logger
-            );
-            logger(
-              `Fetched ${milestones.length} milestone/payment records`,
-              "info"
-            );
-          }
+          const paymentResult = await fetchAllPaymentDetails(
+            enrichedBids,
+            progressCallback,
+            logger
+          );
+
+          // Use the enriched bids that already have milestones attached
+          enrichedBids = paymentResult.data;
+
+          logger(`Fetched payment details for bids`, "info");
         }
 
         // Step 5: Fetch detailed client information if needed
@@ -178,14 +171,14 @@ export const useUtilityData = () => {
           );
         }
 
-        // Transform collected data into rows
+        // Transform collected data into rows - THIS PART WAS DUPLICATED IN THE ORIGINAL CODE
         progressCallback(95, "Processing and transforming data...");
         const rows = transformDataToRows({
-          bids,
+          bids: enrichedBids, // Use the enriched bids that have milestones attached
           projects: { ...projects, ...detailedProjects },
           users: { ...users, ...clientProfiles },
           threads,
-          milestones,
+          // Don't pass milestones separately - they're already in the bids
         });
 
         // Update context with the processed data
@@ -211,50 +204,57 @@ export const useUtilityData = () => {
    * @param {String} datasetName - Optional custom name for the dataset
    * @returns {Promise<{success: boolean, datasetId: string|null}>}
    */
-  const saveData = useCallback(async (rows, filters = {}, datasetName = null) => {
-    try {
-      if (!rows || rows.length === 0) {
-        throw new Error("No data to save");
-      }
-
-      // Generate a unique ID for this dataset
-      const datasetId = `dataset_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      
-      // Create dataset object with metadata
-      const dataset = {
-        id: datasetId,
-        name: datasetName || `Dataset ${new Date().toLocaleDateString()}`,
-        metadata: {
-          ...filters,
-          rowCount: rows.length,
-          savedAt: new Date().toISOString(),
-          lastModified: new Date().toISOString()
-        },
-        rows: rows,
-      };
-
-      // Save to localStorage
-      localStorage.setItem(datasetId, JSON.stringify(dataset));
-      
-      // Update the dataset list
-      const datasetList = JSON.parse(localStorage.getItem('datasetList') || '[]');
-      
-      datasetList.push({
-        id: datasetId,
-        name: dataset.name,
-        metadata: {
-          savedAt: dataset.metadata.savedAt,
-          rowCount: rows.length
+  const saveData = useCallback(
+    async (rows, filters = {}, datasetName = null) => {
+      try {
+        if (!rows || rows.length === 0) {
+          throw new Error("No data to save");
         }
-      });
-      localStorage.setItem('datasetList', JSON.stringify(datasetList));
 
-      return { success: true, datasetId };
-    } catch (err) {
-      console.error("Error saving data:", err);
-      return { success: false, datasetId: null };
-    }
-  }, []);
+        // Generate a unique ID for this dataset
+        const datasetId = `dataset_${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(2, 9)}`;
+
+        // Create dataset object with metadata
+        const dataset = {
+          id: datasetId,
+          name: datasetName || `Dataset ${new Date().toLocaleDateString()}`,
+          metadata: {
+            ...filters,
+            rowCount: rows.length,
+            savedAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+          },
+          rows: rows,
+        };
+
+        // Save to localStorage
+        localStorage.setItem(datasetId, JSON.stringify(dataset));
+
+        // Update the dataset list
+        const datasetList = JSON.parse(
+          localStorage.getItem("datasetList") || "[]"
+        );
+
+        datasetList.push({
+          id: datasetId,
+          name: dataset.name,
+          metadata: {
+            savedAt: dataset.metadata.savedAt,
+            rowCount: rows.length,
+          },
+        });
+        localStorage.setItem("datasetList", JSON.stringify(datasetList));
+
+        return { success: true, datasetId };
+      } catch (err) {
+        console.error("Error saving data:", err);
+        return { success: false, datasetId: null };
+      }
+    },
+    []
+  );
 
   /**
    * Set progress manually (may be needed in some cases)

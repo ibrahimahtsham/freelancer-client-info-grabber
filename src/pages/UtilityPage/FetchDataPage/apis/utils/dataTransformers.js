@@ -164,10 +164,13 @@ export function enrichWithMilestoneData(bids, milestoneData) {
 
   return bids.map((bid) => {
     const bidMilestones = milestonesPerBid[bid.bid_id] || [];
-    const totalAmount = bidMilestones.reduce(
-      (sum, m) => sum + (parseFloat(m.amount) || 0),
-      0
-    );
+    let totalAmount = 0;
+
+    // Use a safer approach than reduce
+    for (let i = 0; i < bidMilestones.length; i++) {
+      const m = bidMilestones[i];
+      totalAmount += parseFloat(m.amount) || 0;
+    }
 
     return {
       ...bid,
@@ -222,6 +225,12 @@ export function transformDataToRows({
   threads = [],
   milestones = [],
 }) {
+  console.log("DEBUG milestones input:", {
+    isArray: Array.isArray(milestones),
+    type: typeof milestones,
+    length: milestones?.length || "undefined",
+  });
+
   // Create maps for efficient lookups
   const threadsByProject = threads.reduce((acc, thread) => {
     // Handle nested thread structure
@@ -232,20 +241,33 @@ export function transformDataToRows({
     return acc;
   }, {});
 
-  const milestonesByBid = milestones.reduce((acc, milestone) => {
-    if (!acc[milestone.bid_id]) {
-      acc[milestone.bid_id] = [];
+  // FIX: Replace milestones.reduce with safer implementation
+  const milestonesByBid = {};
+  if (Array.isArray(milestones)) {
+    for (let i = 0; i < milestones.length; i++) {
+      const milestone = milestones[i];
+      if (!milestone || !milestone.bid_id) continue;
+
+      // Handle both potential property names: bid_id from API and bid.id from transformed data
+      const bidId = milestone.bid_id;
+      if (!milestonesByBid[bidId]) {
+        milestonesByBid[bidId] = [];
+      }
+      milestonesByBid[bidId].push(milestone);
     }
-    acc[milestone.bid_id].push(milestone);
-    return acc;
-  }, {});
+  } else {
+    console.log("Warning: milestones is not an array in transformDataToRows");
+  }
 
   // Transform bids into rows with ALL requested fields
   return bids.map((bid) => {
     const project = projects[bid.project_id] || {};
     const client = users[bid.project_owner_id] || {};
     const thread = threadsByProject[bid.project_id];
-    const bidMilestones = milestonesByBid[bid.id] || [];
+
+    // FIX: Handle the case where bid.id might be used instead of bid.bid_id
+    const bidId = bid.bid_id || bid.id;
+    const bidMilestones = milestonesByBid[bidId] || [];
 
     // Calculate response time if there's a thread
     const responseTime = thread
@@ -253,16 +275,26 @@ export function transformDataToRows({
         bid.time_submitted
       : null;
 
-    // Calculate total milestone amount
-    const totalMilestoneAmount = bidMilestones.reduce(
-      (sum, milestone) => sum + (milestone.amount || 0),
-      0
-    );
+    // FIX: Safely calculate total milestone amount without using reduce
+    let totalMilestoneAmount = 0;
+    if (Array.isArray(bidMilestones)) {
+      for (let i = 0; i < bidMilestones.length; i++) {
+        const milestone = bidMilestones[i];
+        if (!milestone) continue;
+
+        const amount =
+          typeof milestone.amount === "number"
+            ? milestone.amount
+            : parseFloat(milestone.amount) || 0;
+
+        totalMilestoneAmount += amount;
+      }
+    }
 
     // Extract all required fields
     return {
       // Bid data
-      bid_id: bid.id,
+      bid_id: bidId,
       project_id: bid.project_id,
       project_title: project.title || `Project #${bid.project_id}`,
       project_url: `https://www.freelancer.com/projects/${bid.project_id}`,
@@ -302,11 +334,13 @@ export function transformDataToRows({
       first_message_time: thread?.thread?.time_created || thread?.time_created,
 
       // Milestone data
-      milestones: bidMilestones.map((m) => ({
-        amount: m.amount,
-        time_created: m.time_created,
-        status: m.status,
-      })),
+      milestones: Array.isArray(bidMilestones)
+        ? bidMilestones.map((m) => ({
+            amount: m.amount,
+            time_created: m.time_created,
+            status: m.status,
+          }))
+        : [],
       total_milestone_amount: totalMilestoneAmount,
 
       // Additional calculated fields
