@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Tooltip } from "@mui/material";
 import { getFormattedTimestamp } from "../utils";
 
 const QuickAccessButtons = ({ datasets, onDatasetSelect }) => {
@@ -18,16 +18,21 @@ const QuickAccessButtons = ({ datasets, onDatasetSelect }) => {
         }}
       >
         {datasets.slice(0, 5).map((dataset) => (
-          <Button
-            key={dataset.id}
-            variant="outlined"
-            size="small"
-            onClick={() => onDatasetSelect(dataset.id)}
-          >
-            {getFormattedTimestamp(dataset.metadata.savedAt).slice(0, 10)}
-            {" • "}
-            {dataset.metadata.rowCount} records
-          </Button>
+          <Tooltip key={dataset.id} title={dataset.name || "Unnamed Dataset"}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => onDatasetSelect(dataset.id)}
+            >
+              {dataset.name
+                ? `${dataset.name.substring(0, 10)}${
+                    dataset.name.length > 10 ? "..." : ""
+                  }`
+                : getFormattedTimestamp(dataset.metadata.savedAt).slice(0, 10)}
+              {" • "}
+              {dataset.metadata.rowCount} records
+            </Button>
+          </Tooltip>
         ))}
       </Box>
     </Box>

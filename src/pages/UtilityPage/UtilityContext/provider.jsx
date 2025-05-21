@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react"; // Added useCallback
 import { UtilityContext } from "./context"; // Import from the new file
 import {
   loadAvailableDatasets,
@@ -34,6 +34,13 @@ export function UtilityProvider({ children }) {
     setStoredDatasets(datasets);
   }, []);
 
+  // Add refreshStoredDatasets function
+  const refreshStoredDatasets = useCallback(() => {
+    // This reloads the dataset list from localStorage
+    const datasets = loadAvailableDatasets();
+    setStoredDatasets(datasets);
+  }, []);
+
   // Shared context state and handlers
   const value = {
     // State
@@ -55,12 +62,20 @@ export function UtilityProvider({ children }) {
     setProgress,
     setProgressText,
 
+    // Added refreshStoredDatasets to the context
+    refreshStoredDatasets,
+
     // Dataset operations
-    saveCurrentDataset: (fromDate, toDate, limit) => {
-      const datasetId = saveCurrentDataset(rows, fromDate, toDate, limit);
+    saveCurrentDataset: (fromDate, toDate, limit, datasetName) => {
+      const datasetId = saveCurrentDataset(
+        rows,
+        fromDate,
+        toDate,
+        limit,
+        datasetName
+      );
       if (datasetId) {
-        const datasets = loadAvailableDatasets();
-        setStoredDatasets(datasets);
+        refreshStoredDatasets(); // Use the new function here instead
       }
       return datasetId;
     },
@@ -105,8 +120,7 @@ export function UtilityProvider({ children }) {
 
     deleteDataset: (datasetId) => {
       deleteDataset(datasetId);
-      const datasets = loadAvailableDatasets();
-      setStoredDatasets(datasets);
+      refreshStoredDatasets(); // Use the new function here
 
       if (selectedDatasetId === datasetId) {
         setSelectedDatasetId(null);
@@ -115,8 +129,7 @@ export function UtilityProvider({ children }) {
     },
 
     loadAvailableDatasets: () => {
-      const datasets = loadAvailableDatasets();
-      setStoredDatasets(datasets);
+      refreshStoredDatasets(); // Use the new function here
     },
   };
 

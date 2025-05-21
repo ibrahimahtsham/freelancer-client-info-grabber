@@ -238,11 +238,14 @@ export const useUtilityData = () => {
       
       // Update the dataset list
       const datasetList = JSON.parse(localStorage.getItem('datasetList') || '[]');
+      
       datasetList.push({
         id: datasetId,
         name: dataset.name,
-        savedAt: dataset.metadata.savedAt,
-        rowCount: rows.length
+        metadata: {
+          savedAt: dataset.metadata.savedAt,
+          rowCount: rows.length
+        }
       });
       localStorage.setItem('datasetList', JSON.stringify(datasetList));
 

@@ -1,15 +1,10 @@
 @workspace
 
-can you help me see the error and properly implement the dataset saving functionality in a way where it will save the dataset with it being saved with including the filters that were applied to get that dataset and the time it was saved, i also want to add a functionality to give a dataset a name which i can edit as well, these will all be stored in cookies as they used to already
+the data set is being saved but can it be made in a way that as soon it is saved i can access it through quick access and stored datasets dropdown, because right now untill i dont refresh the page they dont appear on there, also the name of the dataset is not being used in the dropdown or the quick access bar
 
-Error saving data: TypeError: saveToDatabase is not a function
-    saveData useUtilityData.js:216
-    handleSaveClick index.jsx:288
-    React 13
-    <anonymous> main.jsx:12
-useUtilityData.js:220:14
+can you provide me with the modifications that need to be made in order to implement this
 
-
+can you do in a way where it wont include any unused variables
 
 
 

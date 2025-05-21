@@ -28,7 +28,7 @@ import DataTable from "../components/DataTable";
 import DatasetNameDialog from "../components/DatasetNameDialog";
 
 const FetchDataPage = () => {
-  const { rows } = useUtility();
+  const { rows, refreshStoredDatasets } = useUtility();
 
   // Snackbar notifications
   const [snackbar, setSnackbar] = useState({
@@ -306,6 +306,9 @@ const FetchDataPage = () => {
     saveData(rows, filters, datasetName || null)
       .then(({ success, datasetId }) => {
         if (success) {
+          // Refresh the stored datasets list in context
+          refreshStoredDatasets && refreshStoredDatasets();
+          
           setSnackbar({
             open: true,
             message: `Data saved successfully as dataset: ${
@@ -336,6 +339,7 @@ const FetchDataPage = () => {
     limitEnabled,
     limit,
     fetchType,
+    refreshStoredDatasets
   ]);
 
   // Close snackbar
