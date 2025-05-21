@@ -56,24 +56,14 @@ export function isInTimeRange(dateInput, startHour, endHour) {
   return false;
 }
 
-export function formatHour(hour) {
-  const date = new Date();
-  date.setHours(hour, 0, 0, 0);
-  return date.toLocaleString("en-PK", {
-    hour: "numeric",
-    hour12: true,
-    timeZone: "Asia/Karachi",
-  });
-}
-
+// Add these fixed functions with proper returns
 export function to24Hour(hour, ampm) {
   if (ampm === "AM") return hour === 12 ? 0 : hour;
   return hour === 12 ? 12 : hour + 12;
 }
 
-// New function for standardized date formatting
 export function formatDate(dateInput) {
-  if (!dateInput) return "N/A";
+  if (!dateInput) return "";
 
   // If it's already a date string, parse it
   let date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
@@ -87,15 +77,25 @@ export function formatDate(dateInput) {
   if (isNaN(date.getTime())) return "Invalid Date";
 
   // Format as day/month/year format
-  return date.toLocaleDateString("en-GB", {
+  return date.toLocaleDateString("en-PK", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    timeZone: "Asia/Karachi",
   });
 }
 
-// Add or update this function
+export function formatHour(hour) {
+  const date = new Date();
+  date.setHours(hour, 0, 0, 0);
+  return date.toLocaleString("en-PK", {
+    hour: "numeric",
+    hour12: true,
+    timeZone: "Asia/Karachi",
+  });
+}
 
+// New function for standardized date formatting
 export function formatDateTime(dateInput) {
   if (!dateInput) return "N/A";
 

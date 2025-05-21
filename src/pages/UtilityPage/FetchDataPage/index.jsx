@@ -9,10 +9,12 @@ import {
   Collapse,
   IconButton,
   Chip,
+  Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoIcon from "@mui/icons-material/Info";
+import DatasetIcon from "@mui/icons-material/Dataset";
 import { useUtilityData } from "../utils/useUtilityData";
 import { DEFAULT_VALUES } from "../../../constants";
 import { useUtility } from "../UtilityContext/hooks";
@@ -21,6 +23,9 @@ import DataActions from "./components/DataActions";
 import FetchStatusDisplay from "./components/FetchStatusDisplay";
 import ResultsArea from "./components/ResultsArea";
 import LogViewer from "./components/LogViewer";
+import APICallsMonitor from "./components/APICallsMonitor";
+import { getApiCallsStats, resetApiCallsStats } from "./apis";
+import { formatDate } from "../../../utils/dateUtils";
 
 const FetchDataPage = () => {
   const { rows } = useUtility();
@@ -43,16 +48,12 @@ const FetchDataPage = () => {
   const [logs, setLogs] = useState([]);
   const [showLogs, setShowLogs] = useState(false);
 
+  // API calls monitoring
+  const [apiCalls, setApiCalls] = useState({ total: 0, endpoints: {} });
+  const [showApiStats, setShowApiStats] = useState(false);
+
   // Ref for auto scrolling log container
   const logsEndRef = useRef(null);
-
-  // Date formatting helper
-  const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
 
   // Get first days of current and previous months
   const firstDayOfCurrentMonth = new Date();
@@ -67,6 +68,7 @@ const FetchDataPage = () => {
   const [toDate, setToDate] = useState(formatDate(firstDayOfCurrentMonth));
   const [limitEnabled, setLimitEnabled] = useState(false);
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
+  const [fetchType, setFetchType] = useState("complete");
   const [shouldFetch, setShouldFetch] = useState(false);
 
   // Fetch status state
@@ -82,15 +84,55 @@ const FetchDataPage = () => {
   // Get utility data hooks
   const { fetchData, saveData } = useUtilityData();
 
-  // Function to add logs
+  // Update API calls stats periodically while fetching
+  useEffect(() => {
+    let interval;
+
+    if (loading) {
+      // Update API stats every 2 seconds during fetch
+      interval = setInterval(() => {
+        try {
+          const stats = getApiCallsStats();
+          setApiCalls(stats);
+        } catch (e) {
+          console.error("Failed to update API stats:", e);
+        }
+      }, 2000);
+
+      // Show API stats when loading starts
+      setShowApiStats(true);
+    } else if (interval) {
+      clearInterval(interval);
+
+      // Get final API stats when loading finishes
+      try {
+        const stats = getApiCallsStats();
+        setApiCalls(stats);
+      } catch (e) {
+        console.error("Failed to get final API stats:", e);
+      }
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading]);
+
+  // Function to add logs with timestamp in epoch format
   const addLog = useCallback((message, type = "info") => {
-    const timestamp = new Date().toLocaleTimeString();
+    const timestamp = Date.now(); // Use epoch timestamp
     setLogs((prevLogs) => [...prevLogs, { message, timestamp, type }]);
   }, []);
 
   // Clear logs
   const clearLogs = useCallback(() => {
     setLogs([]);
+  }, []);
+
+  // Reset API stats
+  const resetApiStats = useCallback(() => {
+    resetApiCallsStats();
+    setApiCalls({ total: 0, endpoints: {} });
   }, []);
 
   // Auto scroll logs to bottom
@@ -152,8 +194,9 @@ const FetchDataPage = () => {
       return;
     }
 
-    // Clear previous logs and start timer
+    // Clear previous logs, reset API stats, and start timer
     clearLogs();
+    resetApiStats();
     setTimer({ isRunning: true, startTime: Date.now(), duration: 0 });
 
     const currentFetchId = ++fetchRequestCountRef.current;
@@ -174,17 +217,26 @@ const FetchDataPage = () => {
     const actualLimit = limitEnabled ? limit : null;
 
     addLog(
-      `Fetching with params: limit=${actualLimit}, fromDate=${fromDate}, toDate=${toDate}`,
+      `Fetching data from ${fromDate} to ${toDate} with ${
+        actualLimit ? actualLimit : "no"
+      } limit and type: ${fetchType}`,
       "info"
     );
 
-    fetchData(actualLimit, fromDate, toDate, handleProgressUpdate, logger)
-      .then((threads) => {
+    fetchData(
+      actualLimit,
+      fromDate,
+      toDate,
+      fetchType,
+      handleProgressUpdate,
+      logger
+    )
+      .then((data) => {
         if (currentFetchId === fetchRequestCountRef.current) {
-          addLog(`Successfully fetched ${threads.length} threads`, "success");
+          addLog(`Successfully fetched ${data.length} rows of data`, "success");
           setSnackbar({
             open: true,
-            message: "Data fetched successfully!",
+            message: `Data fetched successfully! (${data.length} rows)`,
             severity: "success",
           });
         }
@@ -207,6 +259,15 @@ const FetchDataPage = () => {
           setTimer((prev) => ({ ...prev, isRunning: false }));
           addLog("Fetch operation completed", "success");
 
+          // Get final API stats
+          try {
+            const stats = getApiCallsStats();
+            setApiCalls(stats);
+            addLog(`Total API calls: ${stats.total}`, "info");
+          } catch (e) {
+            console.error("Failed to get final API stats:", e);
+          }
+
           setLoading(false);
           fetchInProgressRef.current = false;
         }
@@ -217,8 +278,10 @@ const FetchDataPage = () => {
     toDate,
     limit,
     limitEnabled,
+    fetchType,
     handleProgressUpdate,
     clearLogs,
+    resetApiStats,
     addLog,
     logger,
   ]);
@@ -226,12 +289,16 @@ const FetchDataPage = () => {
   // Handle save button click
   const handleSaveClick = useCallback(() => {
     saveData(rows)
-      .then(() => {
-        setSnackbar({
-          open: true,
-          message: "Data saved successfully!",
-          severity: "success",
-        });
+      .then(({ success, datasetId }) => {
+        if (success) {
+          setSnackbar({
+            open: true,
+            message: `Data saved successfully as dataset: ${datasetId}`,
+            severity: "success",
+          });
+        } else {
+          throw new Error("Failed to save dataset");
+        }
       })
       .catch((err) => {
         setSnackbar({
@@ -253,10 +320,15 @@ const FetchDataPage = () => {
     setShowLogs((prev) => !prev);
   };
 
+  // Toggle API stats visibility
+  const toggleApiStats = () => {
+    setShowApiStats((prev) => !prev);
+  };
+
   return (
     <Box sx={{ padding: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Fetch Thread Data
+        Fetch Freelancer Data
       </Typography>
 
       <DataFetchControls
@@ -268,6 +340,8 @@ const FetchDataPage = () => {
         setLimitEnabled={setLimitEnabled}
         limit={limit}
         setLimit={setLimit}
+        fetchType={fetchType}
+        setFetchType={setFetchType}
       />
 
       <Box sx={{ my: 2 }}>
@@ -306,16 +380,30 @@ const FetchDataPage = () => {
             )}
           </Box>
 
-          <Button
-            variant="outlined"
-            size="small"
-            color="info"
-            startIcon={<InfoIcon />}
-            endIcon={showLogs ? <CloseIcon /> : <ExpandMoreIcon />}
-            onClick={toggleLogs}
-          >
-            {showLogs ? "Hide Logs" : "Show Logs"}
-          </Button>
+          <Box>
+            <Button
+              variant="outlined"
+              size="small"
+              color="secondary"
+              startIcon={<DatasetIcon />}
+              endIcon={showApiStats ? <CloseIcon /> : <ExpandMoreIcon />}
+              onClick={toggleApiStats}
+              sx={{ mr: 1 }}
+            >
+              {showApiStats ? "Hide API Stats" : "API Stats"}
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="small"
+              color="info"
+              startIcon={<InfoIcon />}
+              endIcon={showLogs ? <CloseIcon /> : <ExpandMoreIcon />}
+              onClick={toggleLogs}
+            >
+              {showLogs ? "Hide Logs" : "Show Logs"}
+            </Button>
+          </Box>
         </Box>
 
         <FetchStatusDisplay
@@ -326,6 +414,22 @@ const FetchDataPage = () => {
         />
       </Box>
 
+      {/* API Calls Monitor */}
+      <Collapse in={showApiStats}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 2,
+            mb: 3,
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+        >
+          <APICallsMonitor stats={apiCalls} onReset={resetApiStats} />
+        </Paper>
+      </Collapse>
+
+      {/* Log Viewer */}
       <Collapse in={showLogs}>
         <Paper
           elevation={3}
@@ -335,7 +439,7 @@ const FetchDataPage = () => {
             maxHeight: "300px",
             overflow: "auto",
             border: "1px solid",
-            borderColor: "divider", // Theme-aware border color
+            borderColor: "divider",
           }}
         >
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
