@@ -114,3 +114,47 @@ export function deleteDataset(datasetId) {
     return false;
   }
 }
+
+/**
+ * Get list of all saved datasets
+ * @returns {Array} - Array of dataset metadata objects
+ */
+export function getDatasetList() {
+  try {
+    return JSON.parse(localStorage.getItem("datasetList") || "[]");
+  } catch (err) {
+    console.error("Error loading dataset list:", err);
+    return [];
+  }
+}
+
+/**
+ * Update a dataset's name
+ * @param {string} datasetId - ID of the dataset to rename
+ * @param {string} newName - New name for the dataset
+ * @returns {boolean} - Success status
+ */
+export function renameDataset(datasetId, newName) {
+  try {
+    // Update in the list
+    const datasetList = getDatasetList();
+    const datasetIndex = datasetList.findIndex((ds) => ds.id === datasetId);
+    if (datasetIndex >= 0) {
+      datasetList[datasetIndex].name = newName;
+      localStorage.setItem("datasetList", JSON.stringify(datasetList));
+    }
+
+    // Update in the actual dataset
+    const dataset = JSON.parse(localStorage.getItem(datasetId));
+    if (dataset) {
+      dataset.name = newName;
+      dataset.metadata.lastModified = new Date().toISOString();
+      localStorage.setItem(datasetId, JSON.stringify(dataset));
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error("Error renaming dataset:", err);
+    return false;
+  }
+}

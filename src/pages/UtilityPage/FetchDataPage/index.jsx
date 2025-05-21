@@ -25,6 +25,7 @@ import APICallsMonitor from "./components/APICallsMonitor";
 import { getApiCallsStats, resetApiCallsStats } from "./apis";
 import { formatDate } from "../../../utils/dateUtils";
 import DataTable from "../components/DataTable";
+import DatasetNameDialog from "../components/DatasetNameDialog";
 
 const FetchDataPage = () => {
   const { rows } = useUtility();
@@ -283,16 +284,37 @@ const FetchDataPage = () => {
     logger,
   ]);
 
+  // Add this new state for the name dialog
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [datasetName, setDatasetName] = useState("");
+
   // Handle save button click
   const handleSaveClick = useCallback(() => {
-    saveData(rows)
+    // Open dialog to get dataset name
+    setNameDialogOpen(true);
+  }, []);
+
+  // Add this function to handle the actual saving after getting the name
+  const handleSaveWithName = useCallback(() => {
+    const filters = {
+      fromDate,
+      toDate,
+      limit: limitEnabled ? limit : "No limit",
+      fetchType,
+    };
+
+    saveData(rows, filters, datasetName || null)
       .then(({ success, datasetId }) => {
         if (success) {
           setSnackbar({
             open: true,
-            message: `Data saved successfully as dataset: ${datasetId}`,
+            message: `Data saved successfully as dataset: ${
+              datasetName || datasetId
+            }`,
             severity: "success",
           });
+          setNameDialogOpen(false);
+          setDatasetName("");
         } else {
           throw new Error("Failed to save dataset");
         }
@@ -304,7 +326,17 @@ const FetchDataPage = () => {
           severity: "error",
         });
       });
-  }, [saveData, rows]);
+  }, [
+    rows,
+    saveData,
+    setSnackbar,
+    datasetName,
+    fromDate,
+    toDate,
+    limitEnabled,
+    limit,
+    fetchType,
+  ]);
 
   // Close snackbar
   const handleSnackbarClose = (event, reason) => {
@@ -476,6 +508,14 @@ const FetchDataPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <DatasetNameDialog
+        open={nameDialogOpen}
+        onClose={() => setNameDialogOpen(false)}
+        name={datasetName}
+        setName={setDatasetName}
+        onSave={handleSaveWithName}
+      />
     </Box>
   );
 };

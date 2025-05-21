@@ -1,0 +1,34 @@
+@workspace
+
+can you help me see the error and properly implement the dataset saving functionality in a way where it will save the dataset with it being saved with including the filters that were applied to get that dataset and the time it was saved, i also want to add a functionality to give a dataset a name which i can edit as well, these will all be stored in cookies as they used to already
+
+Error saving data: TypeError: saveToDatabase is not a function
+    saveData useUtilityData.js:216
+    handleSaveClick index.jsx:288
+    React 13
+    <anonymous> main.jsx:12
+useUtilityData.js:220:14
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+saved errors:
+
+21/05/2025, 6:05:56 pm
+    Error fetching milestones for bid 450365607: bidMilestones.forEach is not a function
+
+used frequently:
+
+    can you do in a way where it wont include any unused variables
