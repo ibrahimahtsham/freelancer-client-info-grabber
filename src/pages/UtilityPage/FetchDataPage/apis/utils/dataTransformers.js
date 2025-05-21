@@ -224,8 +224,10 @@ export function transformDataToRows({
 }) {
   // Create maps for efficient lookups
   const threadsByProject = threads.reduce((acc, thread) => {
-    if (thread.context && thread.context.type === "project") {
-      acc[thread.context.id] = thread;
+    // Handle nested thread structure
+    const contextObj = thread.thread?.context || thread.context;
+    if (contextObj && contextObj.type === "project") {
+      acc[contextObj.id] = thread;
     }
     return acc;
   }, {});
@@ -247,7 +249,8 @@ export function transformDataToRows({
 
     // Calculate response time if there's a thread
     const responseTime = thread
-      ? thread.time_created - bid.time_submitted
+      ? (thread.thread?.time_created || thread.time_created) -
+        bid.time_submitted
       : null;
 
     // Calculate total milestone amount
