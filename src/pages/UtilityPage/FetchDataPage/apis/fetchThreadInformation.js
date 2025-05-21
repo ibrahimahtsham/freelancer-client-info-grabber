@@ -45,6 +45,14 @@ export async function fetchThreadInformation(
         ) {
           const projectThreads = response.data.result.threads;
 
+          // Add debugging for the specific project ID you mentioned
+          if (projectId === 39331419) {
+            console.log(
+              "Thread data for project 39331419:",
+              JSON.stringify(projectThreads, null, 2)
+            );
+          }
+
           // Add thread IDs to result array
           projectThreads.forEach((thread) => {
             // Add project ID to the thread object for reference

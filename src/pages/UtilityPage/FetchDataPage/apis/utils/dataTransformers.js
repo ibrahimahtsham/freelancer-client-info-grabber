@@ -89,17 +89,20 @@ export function enrichWithProjectDetails(bids, projectDetails) {
  * @returns {Array} Enriched bid data
  */
 export function enrichWithThreadInfo(bids, threadData) {
-  if (!threadData?.result?.threads) {
+  if (!threadData?.result?.threads && !Array.isArray(threadData)) {
     return bids;
   }
 
-  const threads = threadData.result.threads;
+  // Handle either direct array or nested .result.threads
+  const threads = threadData?.result?.threads || threadData;
 
   // Create a map of project_id to thread for faster lookups
   const projectThreadMap = {};
   threads.forEach((thread) => {
-    if (thread.context?.type === "project" && thread.context?.id) {
-      projectThreadMap[thread.context.id] = thread;
+    const contextObj = thread.thread?.context || thread.context;
+    const projectId = contextObj?.id;
+    if (contextObj?.type === "project" && projectId) {
+      projectThreadMap[projectId] = thread;
     }
   });
 
@@ -108,17 +111,31 @@ export function enrichWithThreadInfo(bids, threadData) {
 
     if (!thread) return bid;
 
+    // Get time_created from the correct location
+    const timeCreated = thread.thread?.time_created || thread.time_created;
+
     // Calculate response time in seconds if we have both times
     let responseTime = null;
-    if (thread.time_created && bid.bid_time) {
-      responseTime = thread.time_created - bid.bid_time;
+    if (timeCreated && bid.bid_time) {
+      responseTime = timeCreated - bid.bid_time;
+    }
+
+    if (bid.project_id === 39331419) {
+      console.log("Found project 39331419", {
+        thread: thread,
+        threadObject: thread.thread || thread,
+        threadCreated: timeCreated,
+        formattedTime: timeCreated
+          ? new Date(timeCreated * 1000).toLocaleString()
+          : "N/A",
+      });
     }
 
     return {
       ...bid,
       received_response: Boolean(thread),
       response_time: responseTime,
-      first_message_time: thread.time_created || null,
+      first_message_time: timeCreated,
     };
   });
 }
@@ -279,7 +296,7 @@ export function transformDataToRows({
       // Thread/message data
       received_response: !!thread,
       response_time: responseTime,
-      first_message_time: thread?.time_created,
+      first_message_time: thread?.thread?.time_created || thread?.time_created,
 
       // Milestone data
       milestones: bidMilestones.map((m) => ({
