@@ -21,8 +21,54 @@ import ColumnSelector from "./ColumnSelector";
 // Define all your columns here
 const ALL_COLUMNS = [
   { id: "bid_id", label: "Bid ID", width: 80 },
+  { id: "project_id", label: "Project ID", width: 80 },
   { id: "project_title", label: "Project Title", width: 200 },
+  {
+    id: "project_url",
+    label: "Project URL",
+    width: 120,
+    format: (value) => {
+      if (!value) return "N/A";
+      return (
+        <Link href={value} target="_blank" rel="noopener noreferrer">
+          View Project
+        </Link>
+      );
+    },
+  },
+  {
+    id: "project_created",
+    label: "Project Created",
+    width: 120,
+    format: (value) => {
+      if (!value) return "N/A";
+      try {
+        if (typeof value === "number") {
+          return formatDate(new Date(value * 1000));
+        }
+        if (value instanceof Date) {
+          return formatDate(value);
+        }
+        return formatDate(new Date(value));
+      } catch (error) {
+        return "Invalid date";
+      }
+    },
+  },
   { id: "client_name", label: "Client", width: 120 },
+  {
+    id: "client_url",
+    label: "Client URL",
+    width: 100,
+    format: (value) => {
+      if (!value) return "N/A";
+      return (
+        <Link href={value} target="_blank" rel="noopener noreferrer">
+          View Profile
+        </Link>
+      );
+    },
+  },
   {
     id: "bid_amount",
     label: "Bid Amount",
@@ -40,15 +86,12 @@ const ALL_COLUMNS = [
     format: (value) => {
       if (!value) return "N/A";
       try {
-        // If it's a number (timestamp in seconds), convert to milliseconds
         if (typeof value === "number") {
           return formatDate(new Date(value * 1000));
         }
-        // If it's already a Date object
         if (value instanceof Date) {
           return formatDate(value);
         }
-        // If it's a string, try to parse it
         return formatDate(new Date(value));
       } catch (error) {
         console.warn("Failed to format date:", value, error);
@@ -56,7 +99,34 @@ const ALL_COLUMNS = [
       }
     },
   },
-  { id: "award_status", label: "Status", width: 100 },
+  {
+    id: "award_status",
+    label: "Status",
+    width: 100,
+    format: (value) => {
+      if (!value) return "N/A";
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    },
+  },
+  {
+    id: "awarded_time",
+    label: "Awarded Time",
+    width: 120,
+    format: (value) => {
+      if (!value) return "N/A";
+      try {
+        if (typeof value === "number") {
+          return formatDate(new Date(value * 1000));
+        }
+        if (value instanceof Date) {
+          return formatDate(value);
+        }
+        return formatDate(new Date(value));
+      } catch (error) {
+        return "Invalid date";
+      }
+    },
+  },
   {
     id: "paid_amount",
     label: "Paid",
@@ -67,7 +137,45 @@ const ALL_COLUMNS = [
       return `$${value.toFixed(2)}`;
     },
   },
+  { id: "client_id", label: "Client ID", width: 80 },
   { id: "project_type", label: "Type", width: 80 },
+  {
+    id: "recruiter_project",
+    label: "Hireme",
+    width: 80,
+    format: (value) => (value ? "Yes" : "No"),
+  },
+  {
+    id: "min_budget",
+    label: "Min Budget",
+    width: 100,
+    format: (value) => {
+      if (value === null || value === undefined) return "$0.00";
+      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
+      return `$${value.toFixed(2)}`;
+    },
+  },
+  {
+    id: "max_budget",
+    label: "Max Budget",
+    width: 100,
+    format: (value) => {
+      if (value === null || value === undefined) return "$0.00";
+      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
+      return `$${value.toFixed(2)}`;
+    },
+  },
+  { id: "total_bids", label: "Total Bids", width: 100 },
+  {
+    id: "avg_bid",
+    label: "Avg Bid",
+    width: 100,
+    format: (value) => {
+      if (value === null || value === undefined) return "$0.00";
+      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
+      return `$${value.toFixed(2)}`;
+    },
+  },
   {
     id: "skills",
     label: "Skills",
@@ -78,52 +186,167 @@ const ALL_COLUMNS = [
       return value.join(", ");
     },
   },
-  { id: "total_bids", label: "Total Bids", width: 100 },
+  {
+    id: "bid_proposal_link",
+    label: "Proposal",
+    width: 100,
+    format: (value) => {
+      if (!value) return "N/A";
+      return (
+        <Link href={value} target="_blank" rel="noopener noreferrer">
+          View Proposal
+        </Link>
+      );
+    },
+  },
   {
     id: "received_response",
     label: "Response",
     width: 100,
-    format: (value) => (value === true ? "Yes" : "No"),
+    format: (value, row) => {
+      // Consider awarded status as a response
+      if (value === true || (row && row.award_status === "awarded")) {
+        return "Yes";
+      }
+      return "No";
+    },
   },
   {
     id: "response_time",
     label: "Response Time",
     width: 120,
+    format: (value, row) => {
+      // Helper function to format seconds into readable time
+      const formatTimeFromSeconds = (seconds) => {
+        if (seconds <= 0) return "0m";
+
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+
+        if (days > 0) {
+          return `${days}d ${hours}h ${minutes}m`;
+        } else if (hours > 0) {
+          return `${hours}h ${minutes}m`;
+        } else {
+          return `${minutes}m`;
+        }
+      };
+
+      // If explicitly has a value, use it
+      if (value) {
+        return formatTimeFromSeconds(value);
+      }
+
+      // If awarded but no response time, calculate from awarded_time and bid_time if available
+      if (row && row.award_status === "awarded") {
+        if (row.awarded_time && row.bid_time) {
+          const awardedTime =
+            typeof row.awarded_time === "number"
+              ? row.awarded_time
+              : new Date(row.awarded_time).getTime() / 1000;
+          const bidTime =
+            typeof row.bid_time === "number"
+              ? row.bid_time
+              : new Date(row.bid_time).getTime() / 1000;
+
+          const diffSeconds = awardedTime - bidTime;
+          if (diffSeconds > 0) {
+            return formatTimeFromSeconds(diffSeconds);
+          }
+        }
+        return "Awarded"; // If we can't calculate but it's awarded
+      }
+
+      return "N/A";
+    },
+  },
+  {
+    id: "first_message_time",
+    label: "First Message",
+    width: 120,
     format: (value) => {
       if (!value) return "N/A";
-      const hours = Math.floor(value / 3600);
-      const days = Math.floor(hours / 24);
-      return days > 0 ? `${days}d ${hours % 24}h` : `${hours}h`;
+      try {
+        if (typeof value === "number") {
+          return formatDate(new Date(value * 1000));
+        }
+        if (value instanceof Date) {
+          return formatDate(value);
+        }
+        return formatDate(new Date(value));
+      } catch (error) {
+        return "Invalid date";
+      }
     },
   },
   { id: "client_country", label: "Country", width: 120 },
-  { id: "client_rating", label: "Rating", width: 80 },
+  {
+    id: "client_rating",
+    label: "Rating",
+    width: 80,
+    format: (value) => {
+      if (value === null || value === undefined) return "N/A";
+      return Number(value).toFixed(1);
+    },
+  },
   {
     id: "client_payment_verified",
     label: "Verified",
     width: 80,
     format: (value) => (value ? "Yes" : "No"),
   },
-  // Add more columns as needed
+  {
+    id: "milestones",
+    label: "Milestones",
+    width: 150,
+    format: (value) => {
+      if (!value || !Array.isArray(value) || value.length === 0) return "None";
+      return `${value.length} milestone(s)`;
+    },
+  },
+  {
+    id: "total_milestone_amount",
+    label: "Milestone Total",
+    width: 120,
+    format: (value) => {
+      if (value === null || value === undefined) return "$0.00";
+      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
+      return `$${value.toFixed(2)}`;
+    },
+  },
 ];
 
-// Allow users to select which columns to display
+// Updated to include all columns from the requirements
 const DEFAULT_VISIBLE_COLUMNS = [
   "bid_id",
+  "project_id",
   "project_title",
+  "project_url",
+  "project_created",
   "client_name",
+  "client_url",
   "bid_amount",
   "bid_time",
   "award_status",
+  "awarded_time",
   "paid_amount",
   "project_type",
-  "skills",
+  "recruiter_project",
+  "min_budget",
+  "max_budget",
   "total_bids",
+  "avg_bid",
+  "skills",
+  "bid_proposal_link",
   "received_response",
   "response_time",
+  "first_message_time",
   "client_country",
   "client_rating",
   "client_payment_verified",
+  "milestones",
+  "total_milestone_amount",
 ];
 
 const DataTable = ({ data = [], title, loading }) => {
@@ -236,7 +459,7 @@ const DataTable = ({ data = [], title, loading }) => {
                     const value = row[column.id];
                     return (
                       <TableCell key={column.id}>
-                        {column.format ? column.format(value) : value}
+                        {column.format ? column.format(value, row) : value}
                       </TableCell>
                     );
                   })}
