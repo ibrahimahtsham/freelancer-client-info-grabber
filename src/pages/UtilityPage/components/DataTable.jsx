@@ -12,7 +12,14 @@ import {
   Box,
   Typography,
   Link,
+  Collapse,
+  IconButton,
+  Chip,
+  Grid,
+  Divider,
 } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { formatDate } from "../../../utils/dateUtils";
 import ColumnSelector from "./ColumnSelector";
 
@@ -316,6 +323,25 @@ const ALL_COLUMNS = [
       return `$${value.toFixed(2)}`;
     },
   },
+  {
+    id: "milestone_payments",
+    label: "Milestone Payments",
+    width: 180,
+    format: (value) => {
+      // If no milestone payments or empty array
+      if (!value || !Array.isArray(value) || value.length === 0) {
+        return "No payments";
+      }
+
+      // Calculate the total amount
+      const total = value.reduce(
+        (sum, m) => sum + parseFloat(m.amount || 0),
+        0
+      );
+
+      return `${value.length} payments - $${total.toFixed(2)}`;
+    },
+  },
 ];
 
 // Updated to include all columns from the requirements
@@ -348,6 +374,7 @@ const DEFAULT_VISIBLE_COLUMNS = [
   "client_payment_verified",
   "milestones",
   "total_milestone_amount",
+  "milestone_payments",
 ];
 
 const DataTable = ({ data = [], title, loading }) => {
@@ -356,6 +383,7 @@ const DataTable = ({ data = [], title, loading }) => {
   const [orderBy, setOrderBy] = useState("bid_time");
   const [order, setOrder] = useState("desc");
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
+  const [expandedRow, setExpandedRow] = useState(null);
 
   const handleColumnChange = (newColumns) => {
     setVisibleColumns(newColumns);
@@ -423,6 +451,7 @@ const DataTable = ({ data = [], title, loading }) => {
         <Table stickyHeader aria-label="data table" size="small">
           <TableHead>
             <TableRow>
+              <TableCell width={50} />
               {columns.map((column) => (
                 <TableCell
                   key={column.id}
@@ -443,28 +472,139 @@ const DataTable = ({ data = [], title, loading }) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center">
+                <TableCell colSpan={columns.length + 1} align="center">
                   Loading data...
                 </TableCell>
               </TableRow>
             ) : paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center">
+                <TableCell colSpan={columns.length + 1} align="center">
                   No data to display
                 </TableCell>
               </TableRow>
             ) : (
               paginatedData.map((row) => (
-                <TableRow hover key={row.bid_id}>
-                  {columns.map((column) => {
-                    const value = row[column.id];
-                    return (
-                      <TableCell key={column.id}>
-                        {column.format ? column.format(value, row) : value}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
+                <>
+                  <TableRow
+                    hover
+                    key={row.bid_id}
+                    sx={{ "& > *": { borderBottom: "unset" } }}
+                  >
+                    <TableCell>
+                      {row.milestone_payments &&
+                      row.milestone_payments.length > 0 ? (
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            setExpandedRow(
+                              expandedRow === row.bid_id ? null : row.bid_id
+                            )
+                          }
+                        >
+                          {expandedRow === row.bid_id ? (
+                            <KeyboardArrowUpIcon />
+                          ) : (
+                            <KeyboardArrowDownIcon />
+                          )}
+                        </IconButton>
+                      ) : null}
+                    </TableCell>
+                    {columns.map((column) => {
+                      const value = row[column.id];
+                      return (
+                        <TableCell key={column.id}>
+                          {column.format ? column.format(value, row) : value}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell
+                      style={{ paddingBottom: 0, paddingTop: 0 }}
+                      colSpan={columns.length + 1}
+                    >
+                      <Collapse
+                        in={expandedRow === row.bid_id}
+                        timeout="auto"
+                        unmountOnExit
+                      >
+                        <Box sx={{ margin: 2 }}>
+                          <Typography variant="h6" gutterBottom component="div">
+                            Milestone Payments
+                          </Typography>
+
+                          <Grid container spacing={2}>
+                            {row.milestone_payments &&
+                              row.milestone_payments.map((payment, index) => (
+                                <Grid item xs={12} md={6} lg={4} key={index}>
+                                  <Box
+                                    sx={{
+                                      border: "1px solid",
+                                      borderColor: "divider",
+                                      borderRadius: 1,
+                                      p: 2,
+                                      mb: 1,
+                                      bgcolor:
+                                        payment.status === "cleared"
+                                          ? "success.50"
+                                          : "grey.50",
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="subtitle1"
+                                      sx={{ fontWeight: "bold" }}
+                                    >
+                                      ${parseFloat(payment.amount).toFixed(2)}
+                                    </Typography>
+
+                                    <Box
+                                      display="flex"
+                                      justifyContent="space-between"
+                                      alignItems="center"
+                                    >
+                                      <Typography variant="body2">
+                                        {payment.formatted_date ||
+                                          formatDate(
+                                            new Date(payment.date * 1000)
+                                          )}
+                                      </Typography>
+                                      <Chip
+                                        size="small"
+                                        label={payment.status}
+                                        color={
+                                          payment.status === "cleared"
+                                            ? "success"
+                                            : "default"
+                                        }
+                                      />
+                                    </Box>
+
+                                    {payment.reason && (
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        mt={1}
+                                      >
+                                        {payment.reason}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                </Grid>
+                              ))}
+                          </Grid>
+
+                          {(!row.milestone_payments ||
+                            row.milestone_payments.length === 0) && (
+                            <Typography variant="body2" color="text.secondary">
+                              No milestone payments found for this bid.
+                            </Typography>
+                          )}
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </>
               ))
             )}
           </TableBody>

@@ -375,14 +375,28 @@ export function transformDataToRows({
       first_message_time: thread?.thread?.time_created || thread?.time_created,
 
       // Milestone data
-      milestones: Array.isArray(bidMilestones)
+      milestone_count: Array.isArray(bidMilestones) ? bidMilestones.length : 0,
+      total_milestone_amount: totalMilestoneAmount,
+      milestone_payments: Array.isArray(bidMilestones)
         ? bidMilestones.map((m) => ({
             amount: m.amount,
-            time_created: m.time_created,
+            date: m.time_created,
+            formatted_date: formatTimestamp(m.time_created),
+            reason: m.other_reason || m.reason || "",
             status: m.status,
           }))
         : [],
-      total_milestone_amount: totalMilestoneAmount,
+      milestone_summary:
+        Array.isArray(bidMilestones) && bidMilestones.length > 0
+          ? bidMilestones
+              .map(
+                (m) =>
+                  `$${parseFloat(m.amount).toFixed(2)} (${
+                    formatTimestamp(m.time_created).split(",")[0]
+                  })`
+              )
+              .join(", ")
+          : "No milestones",
 
       // Additional calculated fields
       time_to_bid: project.time_submitted
