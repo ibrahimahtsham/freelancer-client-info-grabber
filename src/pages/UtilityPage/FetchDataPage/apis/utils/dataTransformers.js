@@ -120,17 +120,6 @@ export function enrichWithThreadInfo(bids, threadData) {
       responseTime = timeCreated - bid.bid_time;
     }
 
-    if (bid.project_id === 39331419) {
-      console.log("Found project 39331419", {
-        thread: thread,
-        threadObject: thread.thread || thread,
-        threadCreated: timeCreated,
-        formattedTime: timeCreated
-          ? new Date(timeCreated * 1000).toLocaleString()
-          : "N/A",
-      });
-    }
-
     return {
       ...bid,
       received_response: Boolean(thread),
@@ -225,12 +214,6 @@ export function transformDataToRows({
   threads = [],
   milestones = [],
 }) {
-  console.log("DEBUG milestones input:", {
-    isArray: Array.isArray(milestones),
-    type: typeof milestones,
-    length: milestones?.length || "undefined",
-  });
-
   // Create maps for efficient lookups
   const threadsByProject = threads.reduce((acc, thread) => {
     // Handle nested thread structure
@@ -255,8 +238,6 @@ export function transformDataToRows({
       }
       milestonesByBid[bidId].push(milestone);
     }
-  } else {
-    console.log("Warning: milestones is not an array in transformDataToRows");
   }
 
   // Transform bids into rows with ALL requested fields
@@ -321,10 +302,10 @@ export function transformDataToRows({
       // Project data
       project_type: project.type === "hourly" ? "hourly" : "fixed",
       recruiter_project: project.hireme || false,
-      min_budget: project.minimum_budget,
-      max_budget: project.maximum_budget,
+      min_budget: project.minimum_budget || project.budget?.minimum || null,
+      max_budget: project.maximum_budget || project.budget?.maximum || null,
       total_bids: project.bid_stats?.bid_count,
-      avg_bid: project.bid_stats?.avg_bid,
+      avg_bid: project.bid_stats?.bid_avg || project.bid_stats?.avg_bid || null,
       skills: project.jobs ? project.jobs.map((job) => job.name) : [],
       bid_proposal_link: `https://www.freelancer.com/projects/${bid.project_id}/proposals`,
 
@@ -352,8 +333,11 @@ export function transformDataToRows({
           ? bid.time_awarded - bid.time_submitted
           : null,
       price_competitiveness:
-        project.bid_stats?.avg_bid && bid.amount
-          ? (bid.amount / project.bid_stats.avg_bid).toFixed(2)
+        (project.bid_stats?.bid_avg || project.bid_stats?.avg_bid) && bid.amount
+          ? (
+              bid.amount /
+              (project.bid_stats?.bid_avg || project.bid_stats?.avg_bid)
+            ).toFixed(2)
           : null,
     };
   });

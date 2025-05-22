@@ -1,21 +1,33 @@
-fix ui for add new employee screen
-fix rate limited not showing time remaining, see if there is any lirary that will let me read api headers
-salary needs to take in acount the date of payment + if someone helped with chat
-auto select past whole month as range to 
-get rid of milestones and milestones total as they seem to be unnecessary/irrelevant
-data table sorting and filtering
-avg bid data not comming through
+Immediate:
+
 max and min budget not comming through
+avg bid data not comming through
 hireme column name change to recruiter
 type change to payment type
 date of payment needs to be gotten
+get rid of milestones and milestones total as they seem to be unnecessary/irrelevant
+data table sorting and filtering
 
-search threads by project creation date (seems hard)
+
+
+
+Do later:
+
+fix ui for add new employee screen
+fix rate limited not showing time remaining, see if there is any lirary that will let me read api headers
+auto select past whole month as range to 
+salary needs to take in acount the date of payment + if someone helped with chat
+remove logs for project id: 39331419
+bid id: 449468208
+
+
+
+
+
+QOL:
+
 optimize tabs switching
 update progress bar with stages, record time for each stage
 integrate bid timings calculations too
 make it so datasets instantly are acessible without refreshing page after saving, also they should have proper names rn the dates are not accurately represented of the filter that was applied to get the dataset
 make it so after putting api token it welcomes you as your username and shows it on the navbar
-
-remove logs for project id: 39331419
-bid id: 449468208
