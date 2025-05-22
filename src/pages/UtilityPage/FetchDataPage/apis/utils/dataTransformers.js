@@ -214,27 +214,6 @@ export function transformDataToRows({
   threads = [],
   milestones = [],
 }) {
-  // PROJECT DEBUG: Check if we have our target project in the input
-  const targetBids = bids.filter((bid) => bid.project_id === 31584431);
-  if (targetBids.length > 0) {
-    console.log(
-      `DEBUG - transformDataToRows: Found ${targetBids.length} bids for project 31584431`
-    );
-
-    // Check if we have milestone data for these bids
-    targetBids.forEach((bid) => {
-      const bidId = bid.bid_id || bid.id;
-      console.log(
-        `DEBUG - Bid ${bidId} for project 31584431 has ${
-          (bid.milestones || []).length
-        } milestones`
-      );
-      console.log(
-        `DEBUG - Milestone data: ${JSON.stringify(bid.milestones || [])}`
-      );
-    });
-  }
-
   // Create maps for efficient lookups
   const threadsByProject = threads.reduce((acc, thread) => {
     // Handle nested thread structure
@@ -263,37 +242,6 @@ export function transformDataToRows({
 
   // Transform bids into rows with ALL requested fields
   return bids.map((bid) => {
-    // PROJECT DEBUG: Focus on our target project
-    if (bid.project_id === 31584431) {
-      console.log(
-        `DEBUG - transformDataToRows: Processing row for project 31584431`
-      );
-
-      // Log data sources
-      const project = projects[bid.project_id] || {};
-      const bidId = bid.bid_id || bid.id;
-      const bidMilestones = bid.milestones || milestonesByBid[bidId] || [];
-
-      console.log(
-        `DEBUG - Project 31584431 details present: ${
-          Object.keys(project).length > 0
-        }`
-      );
-      console.log(
-        `DEBUG - Bid ID: ${bidId}, Has milestones attached: ${
-          (bid.milestones || []).length > 0
-        }`
-      );
-      console.log(
-        `DEBUG - Milestones from milestonesByBid: ${
-          (milestonesByBid[bidId] || []).length
-        }`
-      );
-      console.log(
-        `DEBUG - Final milestone count being used: ${bidMilestones.length}`
-      );
-    }
-
     const project = projects[bid.project_id] || {};
     const client = users[bid.project_owner_id] || {};
     const thread = threadsByProject[bid.project_id];
@@ -323,13 +271,6 @@ export function transformDataToRows({
 
         totalMilestoneAmount += amount;
       }
-    }
-
-    // After calculating totalMilestoneAmount for our target project
-    if (bid.project_id === 31584431) {
-      console.log(
-        `DEBUG - Final milestone amount for project 31584431: ${totalMilestoneAmount}`
-      );
     }
 
     // Extract all required fields

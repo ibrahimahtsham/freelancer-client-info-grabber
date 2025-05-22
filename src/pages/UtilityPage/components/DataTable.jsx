@@ -17,9 +17,18 @@ import {
   Chip,
   Grid,
   Divider,
+  InputAdornment,
+  TextField,
+  ButtonGroup,
+  Button,
+  Tooltip,
+  alpha,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { formatDate } from "../../../utils/dateUtils";
 import ColumnSelector from "./ColumnSelector";
 
@@ -106,11 +115,28 @@ const ALL_COLUMNS = [
   },
   {
     id: "award_status",
-    label: "Status",
-    width: 100,
+    label: "Award Status",
+    width: 120,
     format: (value) => {
-      if (!value) return "N/A";
-      return value.charAt(0).toUpperCase() + value.slice(1);
+      if (!value) return <Chip size="small" label="Unknown" color="default" />;
+
+      const status = value.toLowerCase();
+      let chipProps = {
+        label: value.charAt(0).toUpperCase() + value.slice(1),
+        size: "small",
+      };
+
+      if (status === "awarded") {
+        chipProps.color = "success";
+      } else if (status === "pending") {
+        chipProps.color = "warning";
+      } else if (status === "rejected") {
+        chipProps.color = "error";
+      } else {
+        chipProps.color = "default";
+      }
+
+      return <Chip {...chipProps} />;
     },
   },
   {
@@ -136,19 +162,60 @@ const ALL_COLUMNS = [
     id: "paid_amount",
     label: "Paid",
     width: 100,
-    format: (value) => {
+    format: (value, row) => {
       if (value === null || value === undefined) return "$0.00";
-      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
-      return `$${value.toFixed(2)}`;
+
+      const amount = typeof value !== "number" ? parseFloat(value) || 0 : value;
+      const formattedValue = `$${amount.toFixed(2)}`;
+
+      // Color code based on amount relative to bid amount
+      let color = "inherit";
+      if (row.bid_amount) {
+        const ratio = amount / row.bid_amount;
+        if (ratio >= 1) {
+          color = "success.main"; // Full payment
+        } else if (ratio >= 0.5) {
+          color = "success.light"; // Significant payment
+        } else if (ratio > 0) {
+          color = "warning.main"; // Partial payment
+        }
+      }
+
+      return (
+        <Typography sx={{ color, fontWeight: 500 }}>
+          {formattedValue}
+        </Typography>
+      );
     },
   },
   { id: "client_id", label: "Client ID", width: 80 },
-  { id: "project_type", label: "Type", width: 80 },
+  {
+    id: "project_type",
+    label: "Project Type",
+    width: 100,
+    format: (value) => {
+      if (!value) return "Unknown";
+      const type = value.toLowerCase();
+      return (
+        <Chip
+          size="small"
+          label={type.charAt(0).toUpperCase() + type.slice(1)}
+          color={type === "hourly" ? "primary" : "secondary"}
+        />
+      );
+    },
+  },
   {
     id: "recruiter_project",
-    label: "Hireme",
-    width: 80,
-    format: (value) => (value ? "Yes" : "No"),
+    label: "Recruiter",
+    width: 120,
+    format: (value) => (
+      <Chip
+        size="small"
+        label={value ? "Recruiter" : "Non-Recruiter"}
+        color={value ? "info" : "default"}
+      />
+    ),
   },
   {
     id: "min_budget",
@@ -188,7 +255,32 @@ const ALL_COLUMNS = [
     format: (value) => {
       if (!value) return "";
       if (!Array.isArray(value)) return String(value);
-      return value.join(", ");
+
+      if (value.length <= 3) {
+        return value.map((skill, i) => (
+          <Chip key={i} label={skill} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
+        ));
+      }
+
+      return (
+        <Tooltip title={value.join(", ")}>
+          <Box>
+            {value.slice(0, 2).map((skill, i) => (
+              <Chip
+                key={i}
+                label={skill}
+                size="small"
+                sx={{ mr: 0.5, mb: 0.5 }}
+              />
+            ))}
+            <Chip
+              label={`+${value.length - 2}`}
+              size="small"
+              variant="outlined"
+            />
+          </Box>
+        </Tooltip>
+      );
     },
   },
   {
@@ -209,11 +301,15 @@ const ALL_COLUMNS = [
     label: "Response",
     width: 100,
     format: (value, row) => {
-      // Consider awarded status as a response
-      if (value === true || (row && row.award_status === "awarded")) {
-        return "Yes";
-      }
-      return "No";
+      const hasResponse =
+        value === true || (row && row.award_status === "awarded");
+      return (
+        <Chip
+          size="small"
+          label={hasResponse ? "Yes" : "No"}
+          color={hasResponse ? "success" : "default"}
+        />
+      );
     },
   },
   {
@@ -243,7 +339,21 @@ const ALL_COLUMNS = [
 
       // If explicitly has a value, use it
       if (value) {
-        return formatTimeFromSeconds(value);
+        // Color code based on response time
+        let color = "inherit";
+        if (value < 3600) {
+          // Less than 1 hour
+          color = "success.main";
+        } else if (value < 86400) {
+          // Less than 1 day
+          color = "info.main";
+        } else {
+          color = "warning.main";
+        }
+
+        return (
+          <Typography sx={{ color }}>{formatTimeFromSeconds(value)}</Typography>
+        );
       }
 
       // If awarded but no response time, calculate from awarded_time and bid_time if available
@@ -295,33 +405,39 @@ const ALL_COLUMNS = [
     width: 80,
     format: (value) => {
       if (value === null || value === undefined) return "N/A";
-      return Number(value).toFixed(1);
+
+      const rating = Number(value);
+
+      // Color-code based on rating
+      let color = "inherit";
+      if (rating >= 4.5) {
+        color = "success.main";
+      } else if (rating >= 3.5) {
+        color = "info.main";
+      } else if (rating >= 2.5) {
+        color = "warning.main";
+      } else if (rating > 0) {
+        color = "error.main";
+      }
+
+      return (
+        <Typography sx={{ color, fontWeight: 500 }}>
+          {rating.toFixed(1)}
+        </Typography>
+      );
     },
   },
   {
     id: "client_payment_verified",
     label: "Verified",
     width: 80,
-    format: (value) => (value ? "Yes" : "No"),
-  },
-  {
-    id: "milestones",
-    label: "Milestones",
-    width: 150,
-    format: (value) => {
-      if (!value || !Array.isArray(value) || value.length === 0) return "None";
-      return `${value.length} milestone(s)`;
-    },
-  },
-  {
-    id: "total_milestone_amount",
-    label: "Milestone Total",
-    width: 120,
-    format: (value) => {
-      if (value === null || value === undefined) return "$0.00";
-      if (typeof value !== "number") return `$${parseFloat(value) || 0}.00`;
-      return `$${value.toFixed(2)}`;
-    },
+    format: (value) => (
+      <Chip
+        size="small"
+        label={value ? "Yes" : "No"}
+        color={value ? "success" : "default"}
+      />
+    ),
   },
   {
     id: "milestone_payments",
@@ -339,41 +455,34 @@ const ALL_COLUMNS = [
         0
       );
 
-      return `${value.length} payments - $${total.toFixed(2)}`;
+      return (
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Typography sx={{ fontWeight: 500 }}>
+            {`${value.length} payments - $${total.toFixed(2)}`}
+          </Typography>
+          <KeyboardArrowDownIcon
+            fontSize="small"
+            sx={{ ml: 1, opacity: 0.6 }}
+          />
+        </Box>
+      );
     },
   },
 ];
 
-// Updated to include all columns from the requirements
+// Default visible columns
 const DEFAULT_VISIBLE_COLUMNS = [
-  "bid_id",
-  "project_id",
   "project_title",
-  "project_url",
-  "project_created",
   "client_name",
-  "client_url",
   "bid_amount",
   "bid_time",
   "award_status",
-  "awarded_time",
   "paid_amount",
   "project_type",
   "recruiter_project",
-  "min_budget",
-  "max_budget",
-  "total_bids",
-  "avg_bid",
-  "skills",
-  "bid_proposal_link",
-  "received_response",
   "response_time",
-  "first_message_time",
-  "client_country",
   "client_rating",
   "client_payment_verified",
-  "milestones",
-  "total_milestone_amount",
   "milestone_payments",
 ];
 
@@ -384,6 +493,9 @@ const DataTable = ({ data = [], title, loading }) => {
   const [order, setOrder] = useState("desc");
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
 
   const handleColumnChange = (newColumns) => {
     setVisibleColumns(newColumns);
@@ -396,6 +508,46 @@ const DataTable = ({ data = [], title, loading }) => {
     setOrderBy(property);
   };
 
+  // Filter for search
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      // Handle search
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const searchFields = [
+          "project_title",
+          "client_name",
+          "bid_id",
+          "project_id",
+        ];
+
+        const matchesSearch = searchFields.some((field) => {
+          const value = row[field];
+          return value && String(value).toLowerCase().includes(searchLower);
+        });
+
+        if (!matchesSearch) return false;
+      }
+
+      // Handle status filter
+      if (filterStatus !== "all") {
+        const status = row.award_status?.toLowerCase() || "";
+        if (filterStatus === "awarded" && status !== "awarded") return false;
+        if (filterStatus === "pending" && status !== "pending") return false;
+        if (filterStatus === "rejected" && status !== "rejected") return false;
+      }
+
+      // Handle project type filter
+      if (filterType !== "all") {
+        const type = row.project_type?.toLowerCase() || "";
+        if (filterType === "hourly" && type !== "hourly") return false;
+        if (filterType === "fixed" && type !== "fixed") return false;
+      }
+
+      return true;
+    });
+  }, [data, searchTerm, filterStatus, filterType]);
+
   // Sort and paginate data
   const sortedData = useMemo(() => {
     const compare = (a, b) => {
@@ -404,8 +556,8 @@ const DataTable = ({ data = [], title, loading }) => {
       return 0;
     };
 
-    return [...data].sort(compare);
-  }, [data, order, orderBy]);
+    return [...filteredData].sort(compare);
+  }, [filteredData, order, orderBy]);
 
   const paginatedData = sortedData.slice(
     page * rowsPerPage,
@@ -421,33 +573,189 @@ const DataTable = ({ data = [], title, loading }) => {
     setPage(0);
   };
 
+  // Download data as CSV
+  const downloadCSV = () => {
+    // Get visible columns
+    const visibleColumnsData = ALL_COLUMNS.filter((col) =>
+      visibleColumns.includes(col.id)
+    );
+
+    // Create header row
+    let csv =
+      visibleColumnsData.map((col) => `"${col.label}"`).join(",") + "\n";
+
+    // Add data rows
+    sortedData.forEach((row) => {
+      const rowData = visibleColumnsData
+        .map((col) => {
+          let value = row[col.id];
+
+          // For special fields that have formatting, extract the raw value
+          if (col.id === "milestone_payments") {
+            if (Array.isArray(value) && value.length > 0) {
+              const total = value.reduce(
+                (sum, m) => sum + parseFloat(m.amount || 0),
+                0
+              );
+              value = `${value.length} payments - $${total.toFixed(2)}`;
+            } else {
+              value = "No payments";
+            }
+          }
+
+          // Convert arrays to comma-separated strings
+          if (Array.isArray(value)) {
+            value = value.join(", ");
+          }
+
+          // Format dates
+          if (col.id.includes("time") && typeof value === "number") {
+            try {
+              value = formatDate(new Date(value * 1000));
+            } catch {
+              // Keep as is if formatting fails
+            }
+          }
+
+          // Prepare value for CSV (wrap in quotes, escape quotes within)
+          return `"${String(value || "").replace(/"/g, '""')}"`;
+        })
+        .join(",");
+
+      csv += rowData + "\n";
+    });
+
+    // Create download link
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `${title || "data"}_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Get columns that are currently visible
   const columns = ALL_COLUMNS.filter((col) => visibleColumns.includes(col.id));
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
-      <Box
-        p={2}
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <Typography variant="h6" component="div">
-          {title}
-        </Typography>
-        <Box display="flex" alignItems="center" gap={2}>
-          <ColumnSelector
-            availableColumns={ALL_COLUMNS}
-            visibleColumns={visibleColumns}
-            onChange={handleColumnChange}
-          />
-          <Typography variant="body2" color="text.secondary">
-            {data.length} items
+      <Box p={2} display="flex" flexDirection="column" gap={2}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" component="div">
+            {title}
           </Typography>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Typography variant="body2" color="text.secondary">
+              {filteredData.length} items{" "}
+              {filteredData.length !== data.length &&
+                `(filtered from ${data.length})`}
+            </Typography>
+            <ColumnSelector
+              availableColumns={ALL_COLUMNS}
+              visibleColumns={visibleColumns}
+              onChange={handleColumnChange}
+            />
+            <Tooltip title="Download CSV">
+              <IconButton onClick={downloadCSV}>
+                <FileDownloadIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+
+        {/* Search and Filters */}
+        <Box display="flex" gap={2} flexWrap="wrap">
+          <TextField
+            placeholder="Search by title, client name, or ID..."
+            size="small"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(0); // Reset to first page on search
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ minWidth: 300, flexGrow: 1 }}
+          />
+
+          <Box display="flex" gap={1}>
+            <Box>
+              <Typography variant="caption" sx={{ display: "block", ml: 1 }}>
+                Award Status
+              </Typography>
+              <ButtonGroup size="small">
+                <Button
+                  variant={filterStatus === "all" ? "contained" : "outlined"}
+                  onClick={() => setFilterStatus("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={
+                    filterStatus === "awarded" ? "contained" : "outlined"
+                  }
+                  color="success"
+                  onClick={() => setFilterStatus("awarded")}
+                >
+                  Awarded
+                </Button>
+                <Button
+                  variant={
+                    filterStatus === "pending" ? "contained" : "outlined"
+                  }
+                  color="warning"
+                  onClick={() => setFilterStatus("pending")}
+                >
+                  Pending
+                </Button>
+              </ButtonGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ display: "block", ml: 1 }}>
+                Project Type
+              </Typography>
+              <ButtonGroup size="small">
+                <Button
+                  variant={filterType === "all" ? "contained" : "outlined"}
+                  onClick={() => setFilterType("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={filterType === "hourly" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setFilterType("hourly")}
+                >
+                  Hourly
+                </Button>
+                <Button
+                  variant={filterType === "fixed" ? "contained" : "outlined"}
+                  color="secondary"
+                  onClick={() => setFilterType("fixed")}
+                >
+                  Fixed
+                </Button>
+              </ButtonGroup>
+            </Box>
+          </Box>
         </Box>
       </Box>
 
-      <TableContainer sx={{ maxHeight: "calc(100vh - 300px)" }}>
+      <Divider />
+
+      <TableContainer sx={{ maxHeight: "calc(100vh - 350px)" }}>
         <Table stickyHeader aria-label="data table" size="small">
           <TableHead>
             <TableRow>
@@ -457,6 +765,10 @@ const DataTable = ({ data = [], title, loading }) => {
                   key={column.id}
                   width={column.width}
                   sortDirection={orderBy === column.id ? order : false}
+                  sx={{
+                    backgroundColor: "background.paper",
+                    fontWeight: "bold",
+                  }}
                 >
                   <TableSortLabel
                     active={orderBy === column.id}
@@ -483,129 +795,189 @@ const DataTable = ({ data = [], title, loading }) => {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((row) => (
-                <>
-                  <TableRow
-                    hover
-                    key={row.bid_id}
-                    sx={{ "& > *": { borderBottom: "unset" } }}
-                  >
-                    <TableCell>
-                      {row.milestone_payments &&
-                      row.milestone_payments.length > 0 ? (
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            setExpandedRow(
-                              expandedRow === row.bid_id ? null : row.bid_id
-                            )
-                          }
-                        >
-                          {expandedRow === row.bid_id ? (
-                            <KeyboardArrowUpIcon />
-                          ) : (
-                            <KeyboardArrowDownIcon />
-                          )}
-                        </IconButton>
-                      ) : null}
-                    </TableCell>
-                    {columns.map((column) => {
-                      const value = row[column.id];
-                      return (
-                        <TableCell key={column.id}>
-                          {column.format ? column.format(value, row) : value}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
+              paginatedData.map((row, index) => {
+                const isAwarded = row.award_status?.toLowerCase() === "awarded";
 
-                  <TableRow>
-                    <TableCell
-                      style={{ paddingBottom: 0, paddingTop: 0 }}
-                      colSpan={columns.length + 1}
+                return (
+                  <>
+                    <TableRow
+                      hover
+                      key={row.bid_id || index}
+                      sx={{
+                        "& > *": { borderBottom: "unset" },
+                        backgroundColor: isAwarded
+                          ? alpha("#4caf50", 0.04)
+                          : "inherit",
+                        "&:nth-of-type(odd)": {
+                          backgroundColor: isAwarded
+                            ? alpha("#4caf50", 0.04)
+                            : alpha("#f5f5f5", 0.3),
+                        },
+                      }}
                     >
-                      <Collapse
-                        in={expandedRow === row.bid_id}
-                        timeout="auto"
-                        unmountOnExit
+                      <TableCell>
+                        {row.milestone_payments &&
+                        row.milestone_payments.length > 0 ? (
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              setExpandedRow(
+                                expandedRow === row.bid_id ? null : row.bid_id
+                              )
+                            }
+                          >
+                            {expandedRow === row.bid_id ? (
+                              <KeyboardArrowUpIcon />
+                            ) : (
+                              <KeyboardArrowDownIcon />
+                            )}
+                          </IconButton>
+                        ) : null}
+                      </TableCell>
+                      {columns.map((column) => {
+                        const value = row[column.id];
+                        return (
+                          <TableCell
+                            key={column.id}
+                            sx={{
+                              maxWidth: column.width,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace:
+                                column.id === "project_title"
+                                  ? "nowrap"
+                                  : "normal",
+                            }}
+                          >
+                            {column.format ? column.format(value, row) : value}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+
+                    <TableRow>
+                      <TableCell
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                        colSpan={columns.length + 1}
                       >
-                        <Box sx={{ margin: 2 }}>
-                          <Typography variant="h6" gutterBottom component="div">
-                            Milestone Payments
-                          </Typography>
+                        <Collapse
+                          in={expandedRow === row.bid_id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box
+                            sx={{
+                              margin: 2,
+                              backgroundColor: alpha("#f5f5f5", 0.3),
+                              borderRadius: 1,
+                              p: 2,
+                            }}
+                          >
+                            <Typography
+                              variant="h6"
+                              gutterBottom
+                              component="div"
+                            >
+                              Milestone Payments - {row.project_title}
+                            </Typography>
 
-                          <Grid container spacing={2}>
-                            {row.milestone_payments &&
-                              row.milestone_payments.map((payment, index) => (
-                                <Grid item xs={12} md={6} lg={4} key={index}>
-                                  <Box
-                                    sx={{
-                                      border: "1px solid",
-                                      borderColor: "divider",
-                                      borderRadius: 1,
-                                      p: 2,
-                                      mb: 1,
-                                      bgcolor:
-                                        payment.status === "cleared"
-                                          ? "success.50"
-                                          : "grey.50",
-                                    }}
-                                  >
-                                    <Typography
-                                      variant="subtitle1"
-                                      sx={{ fontWeight: "bold" }}
-                                    >
-                                      ${parseFloat(payment.amount).toFixed(2)}
-                                    </Typography>
-
+                            <Grid container spacing={2}>
+                              {row.milestone_payments &&
+                                row.milestone_payments.map((payment, index) => (
+                                  <Grid item xs={12} md={6} lg={4} key={index}>
                                     <Box
-                                      display="flex"
-                                      justifyContent="space-between"
-                                      alignItems="center"
-                                    >
-                                      <Typography variant="body2">
-                                        {payment.formatted_date ||
-                                          formatDate(
-                                            new Date(payment.date * 1000)
-                                          )}
-                                      </Typography>
-                                      <Chip
-                                        size="small"
-                                        label={payment.status}
-                                        color={
+                                      sx={{
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 1,
+                                        p: 2,
+                                        mb: 1,
+                                        bgcolor: (theme) =>
                                           payment.status === "cleared"
-                                            ? "success"
-                                            : "default"
-                                        }
-                                      />
-                                    </Box>
-
-                                    {payment.reason && (
+                                            ? alpha(
+                                                theme.palette.success.main,
+                                                0.1
+                                              )
+                                            : alpha(
+                                                theme.palette.grey[500],
+                                                0.1
+                                              ),
+                                        boxShadow: 1,
+                                      }}
+                                    >
                                       <Typography
-                                        variant="body2"
-                                        color="text.secondary"
+                                        variant="subtitle1"
+                                        sx={{
+                                          fontWeight: "bold",
+                                          color: "success.dark",
+                                        }}
+                                      >
+                                        ${parseFloat(payment.amount).toFixed(2)}
+                                      </Typography>
+
+                                      <Box
+                                        display="flex"
+                                        justifyContent="space-between"
+                                        alignItems="center"
                                         mt={1}
                                       >
-                                        {payment.reason}
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                </Grid>
-                              ))}
-                          </Grid>
+                                        <Typography variant="body2">
+                                          {payment.formatted_date ||
+                                            formatDate(
+                                              new Date(payment.date * 1000)
+                                            )}
+                                        </Typography>
+                                        <Chip
+                                          size="small"
+                                          label={payment.status}
+                                          color={
+                                            payment.status === "cleared"
+                                              ? "success"
+                                              : "default"
+                                          }
+                                        />
+                                      </Box>
 
-                          {(!row.milestone_payments ||
-                            row.milestone_payments.length === 0) && (
-                            <Typography variant="body2" color="text.secondary">
-                              No milestone payments found for this bid.
-                            </Typography>
-                          )}
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                </>
-              ))
+                                      {payment.reason && (
+                                        <Typography
+                                          variant="body2"
+                                          color="text.secondary"
+                                          mt={1}
+                                          sx={{
+                                            p: 1,
+                                            borderLeft: "3px solid",
+                                            borderColor: "divider",
+                                            backgroundColor: alpha(
+                                              "#f5f5f5",
+                                              0.5
+                                            ),
+                                            borderRadius: "0 4px 4px 0",
+                                          }}
+                                        >
+                                          {payment.reason}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  </Grid>
+                                ))}
+                            </Grid>
+
+                            {(!row.milestone_payments ||
+                              row.milestone_payments.length === 0) && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                No milestone payments found for this bid.
+                              </Typography>
+                            )}
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -614,7 +986,7 @@ const DataTable = ({ data = [], title, loading }) => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 50, 100]}
         component="div"
-        count={data.length}
+        count={filteredData.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

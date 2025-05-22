@@ -1,5 +1,8 @@
 Immediate:
 
+verified column, where is it comming from, how to expand upon it
+data table better readability
+checkout some weird logic that is being applied in data table
 hireme column name change to recruiter
 type change to payment type
 date of payment needs to be gotten
