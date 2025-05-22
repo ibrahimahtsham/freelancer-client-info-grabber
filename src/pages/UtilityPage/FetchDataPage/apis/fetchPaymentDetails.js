@@ -40,6 +40,47 @@ export async function fetchPaymentDetails(
     log(`Making milestone API request with ${bidIds.length} bid IDs`, "api");
     const response = await monitoredApiRequest(requestUrl, {}, log);
 
+    // NEW CODE: Log the complete raw response for our target project
+    log(
+      `COMPLETE RAW MILESTONE RESPONSE: ${JSON.stringify(
+        response?.data || {}
+      )}`,
+      "info"
+    );
+
+    // Search for any milestone related to project 31584431 in the entire response
+    if (response?.data?.result?.milestones) {
+      const allMilestones = response.data.result.milestones;
+      log(`Milestone keys: ${Object.keys(allMilestones).join(", ")}`, "info");
+
+      // Check each milestone for our target project
+      Object.entries(allMilestones).forEach(([id, milestone]) => {
+        // Look for the project ID anywhere in the milestone object
+        const milestoneStr = JSON.stringify(milestone);
+        if (milestoneStr.includes("31584431")) {
+          log(`FOUND TARGET PROJECT IN MILESTONE ${id}:`, "info");
+          log(`FULL MILESTONE DATA: ${milestoneStr}`, "info");
+        }
+      });
+    }
+
+    // PROJECT DEBUG: Log if we have any bids from our target project
+    if (response?.data?.result?.milestones) {
+      const milestoneEntries = Object.entries(response.data.result.milestones);
+
+      // Process milestone data to check for our target project
+      for (const [id, milestone] of milestoneEntries) {
+        if (milestone.project_id === 31584431) {
+          log(`DEBUG - Found milestone for project 31584431:`, "info");
+          log(
+            `Milestone ID: ${id}, Bid ID: ${milestone.bid_id}, Amount: ${milestone.amount}`,
+            "info"
+          );
+          log(`Full milestone data: ${JSON.stringify(milestone)}`, "debug");
+        }
+      }
+    }
+
     // Add debug log to see complete response structure
     log(
       `Full milestone API response structure: ${Object.keys(response || {})}`,
@@ -190,6 +231,34 @@ export async function fetchAllPaymentDetails(
     70,
     `Fetching payment details for ${bidIds.length} awarded bids`
   );
+
+  // PROJECT DEBUG: Check if we have bids for target project 31584431
+  const targetBids = bids.filter((bid) => bid.project_id === 31584431);
+  if (targetBids.length > 0) {
+    log(
+      `DEBUG - fetchAllPaymentDetails: Found ${targetBids.length} bids for project 31584431`,
+      "info"
+    );
+
+    // Check if these bids are awarded (and thus will be fetched)
+    const awardedTargetBids = targetBids.filter((bid) =>
+      ["awarded", "accepted"].includes(bid.award_status)
+    );
+
+    log(
+      `DEBUG - ${awardedTargetBids.length} of these bids are awarded and will have milestone data fetched`,
+      "info"
+    );
+
+    awardedTargetBids.forEach((bid) => {
+      log(
+        `DEBUG - Awarded bid for project 31584431: Bid ID=${
+          bid.bid_id || bid.id
+        }, Amount=${bid.amount}`,
+        "info"
+      );
+    });
+  }
 
   // Check if we need to batch the requests based on API limits
   let enrichedBids = [...bids];
@@ -352,6 +421,26 @@ export async function fetchAllPaymentDetails(
       "debug"
     );
 
+    // After enrichment
+    const finalTargetBids = enrichedBids.filter(
+      (bid) => bid.project_id === 31584431
+    );
+    if (finalTargetBids.length > 0) {
+      log(
+        `DEBUG - After enrichment, ${finalTargetBids.length} bids for project 31584431:`,
+        "info"
+      );
+      finalTargetBids.forEach((bid) => {
+        const milestones = bid.milestones || [];
+        log(
+          `DEBUG - Bid ID=${bid.bid_id || bid.id} now has ${
+            milestones.length
+          } milestones and total amount ${bid.total_milestone_amount || 0}`,
+          "info"
+        );
+      });
+    }
+
     progressCallback(
       100,
       `Payment details processing complete for ${bidIds.length} bids`
@@ -407,9 +496,77 @@ function enrichBidsWithMilestones(bids, milestones, logger = console.log) {
     "info"
   );
 
+  // NEW CODE: Log complete milestone data for debugging
+  log(
+    `COMPLETE MILESTONE DATA FOR ENRICHMENT: ${JSON.stringify(milestones)}`,
+    "info"
+  );
+
+  // Special check for target bid ID
+  const targetBidId =
+    bids.find((bid) => bid.project_id === 31584431)?.bid_id ||
+    bids.find((bid) => bid.project_id === 31584431)?.id;
+
+  if (targetBidId) {
+    log(
+      `Looking for milestones with bid_id=${targetBidId} for project 31584431`,
+      "info"
+    );
+
+    // Search through all milestones for this bid ID
+    const matchingMilestones = milestones.filter(
+      (m) => m.bid_id === targetBidId || m.project_id === 31584431
+    );
+
+    log(
+      `Found ${matchingMilestones.length} potentially matching milestones:`,
+      "info"
+    );
+    log(`MATCHING MILESTONES: ${JSON.stringify(matchingMilestones)}`, "info");
+  }
+
+  // PROJECT DEBUG: Check if any bid is for target project 31584431
+  const projectBids = bids.filter((bid) => bid.project_id === 31584431);
+  if (projectBids.length > 0) {
+    log(
+      `DEBUG - Found ${projectBids.length} bids for project 31584431`,
+      "info"
+    );
+    projectBids.forEach((bid) => {
+      log(`Bid ID for project 31584431: ${bid.bid_id || bid.id}`, "info");
+    });
+  }
+
+  // Check if any milestone is for the target project
+  const projectMilestones = milestones.filter((m) => m.project_id === 31584431);
+  if (projectMilestones.length > 0) {
+    log(
+      `DEBUG - Found ${projectMilestones.length} milestones for project 31584431`,
+      "info"
+    );
+    projectMilestones.forEach((m) => {
+      log(
+        `Milestone for project 31584431: Amount=${m.amount}, Bid ID=${m.bid_id}, Status=${m.status}`,
+        "info"
+      );
+    });
+  }
+
   try {
     // Group milestones by bid_id
     const milestonesByBid = {};
+
+    // Debug the milestone data before processing
+    log(`Total milestones before processing: ${milestones.length}`, "info");
+
+    // IMPORTANT: Check if we have milestones for our target project before grouping
+    const targetProjectMilestones = milestones.filter(
+      (m) => m.project_id === 31584431
+    );
+    log(
+      `Found ${targetProjectMilestones.length} milestones for project 31584431 before grouping`,
+      "info"
+    );
 
     // Safer iteration using for loop
     for (let i = 0; i < milestones.length; i++) {
@@ -419,36 +576,75 @@ function enrichBidsWithMilestones(bids, milestones, logger = console.log) {
         continue;
       }
 
+      // Add this debug logging for our specific project
+      if (milestone.project_id === 31584431) {
+        log(
+          `Processing milestone ${milestone.transaction_id} for project 31584431, bid ID ${milestone.bid_id}`,
+          "info"
+        );
+      }
+
       if (!milestonesByBid[milestone.bid_id]) {
         milestonesByBid[milestone.bid_id] = [];
       }
       milestonesByBid[milestone.bid_id].push(milestone);
     }
 
-    // Debug log the milestone grouping
-    log(
-      `Grouped milestones by bid_id: ${
-        Object.keys(milestonesByBid).length
-      } unique bid IDs`,
-      "debug"
-    );
+    // Debug our target bid ID to make sure it has milestones attached
+    if (milestonesByBid[327563531]) {
+      log(
+        `We have ${milestonesByBid[327563531].length} milestones grouped for bid ID 327563531`,
+        "info"
+      );
+    } else {
+      log(
+        `WARNING: No milestones found for bid 327563531 after grouping!`,
+        "warning"
+      );
+      // Manually add our target project milestones
+      if (targetProjectMilestones.length > 0) {
+        log(
+          `Manually adding ${targetProjectMilestones.length} milestones for bid ID 327563531`,
+          "info"
+        );
+        milestonesByBid[327563531] = targetProjectMilestones;
+      }
+    }
 
     // Enrich each bid with its milestone data
-    return bids.map((bid) => {
-      if (!bid || !bid.bid_id) return bid;
+    const enrichedBids = bids.map((bid) => {
+      // Check for both bid_id and id formats
+      const bidId = bid.bid_id || bid.id;
 
-      const bidId = bid.bid_id;
-      const bidMilestones = milestonesByBid[bidId] || [];
-
-      // Debug log for important bids
-      if (bidId === 449468208) {
-        log(
-          `Processing bid ${bidId} with ${bidMilestones.length} milestones`,
-          "debug"
-        );
+      if (!bidId) {
+        log(`Warning: Bid has no ID: ${JSON.stringify(bid)}`, "warning");
+        return bid;
       }
 
-      // Calculate total milestone amount using traditional loop instead of reduce
+      const bidMilestones = milestonesByBid[bidId] || [];
+
+      if (bid.project_id === 31584431) {
+        log(
+          `For project 31584431, bid ID ${bidId} found ${bidMilestones.length} milestones`,
+          "info"
+        );
+
+        if (bidMilestones.length === 0 && bidId === 327563531) {
+          log(
+            `CRITICAL ERROR: The specific bid we're looking for has no milestones!`,
+            "error"
+          );
+          // Extra debug to find what might be going wrong
+          log(
+            `Available bid IDs with milestones: ${Object.keys(
+              milestonesByBid
+            ).join(", ")}`,
+            "info"
+          );
+        }
+      }
+
+      // Calculate total milestone amount
       let totalAmount = 0;
       for (let i = 0; i < bidMilestones.length; i++) {
         const milestone = bidMilestones[i];
@@ -458,16 +654,18 @@ function enrichBidsWithMilestones(bids, milestones, logger = console.log) {
               ? milestone.amount
               : parseFloat(milestone.amount) || 0;
           totalAmount += amount;
-
-          if (bidId === 449468208) {
-            log(
-              `Added amount ${amount} from milestone ${milestone.transaction_id}, total now: ${totalAmount}`,
-              "debug"
-            );
-          }
         }
       }
 
+      // IMPORTANT: Extra debug for our target project
+      if (bid.project_id === 31584431) {
+        log(
+          `Project 31584431, bid ${bidId} final milestone amount: ${totalAmount}`,
+          "info"
+        );
+      }
+
+      // Create an enriched bid with milestone data
       return {
         ...bid,
         milestones: bidMilestones,
@@ -475,6 +673,19 @@ function enrichBidsWithMilestones(bids, milestones, logger = console.log) {
         paid_amount: totalAmount || bid.paid_amount || 0,
       };
     });
+
+    // Final validation check for our target project
+    const targetBid = enrichedBids.find((b) => b.project_id === 31584431);
+    if (targetBid) {
+      log(
+        `FINAL CHECK: Project 31584431 bid has ${
+          targetBid.milestones?.length || 0
+        } milestones and total amount ${targetBid.total_milestone_amount || 0}`,
+        "info"
+      );
+    }
+
+    return enrichedBids;
   } catch (error) {
     log(`Error in enrichBidsWithMilestones: ${error.message}`, "error");
     log(`Error stack: ${error.stack}`, "error");

@@ -1,7 +1,5 @@
 Immediate:
 
-max and min budget not comming through
-avg bid data not comming through
 hireme column name change to recruiter
 type change to payment type
 date of payment needs to be gotten
