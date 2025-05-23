@@ -1,7 +1,5 @@
 Immediate:-
 
-    be able to fetch to the minute
-    clean up codebase
     get data for our own user, what are our hidden stats
 
     checkout some weird logic that is being applied in data table

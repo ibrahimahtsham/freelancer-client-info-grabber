@@ -4,6 +4,7 @@ import FetchDataPage from "../FetchDataPage";
 import TimeBreakdownsPage from "../TimeBreakdownsPage";
 import CalculationsPage from "../CalculationsPage";
 import StoredDataSelector from "./StoredDataSelector";
+import UserStatsPage from "../UserStatsPage";
 import TabPanel from "./TabPanel";
 
 const UtilityPageContent = () => {
@@ -27,6 +28,7 @@ const UtilityPageContent = () => {
           <Tab label="Fetch Data" />
           <Tab label="Time Breakdowns" />
           <Tab label="Calculations" />
+          <Tab label="User Stats" />
         </Tabs>
       </Paper>
 
@@ -40,6 +42,10 @@ const UtilityPageContent = () => {
 
       <TabPanel value={tabValue} index={2}>
         <CalculationsPage />
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={3}>
+        <UserStatsPage />
       </TabPanel>
     </Box>
   );
