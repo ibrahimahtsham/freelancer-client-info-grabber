@@ -10,9 +10,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Note: You'll need to install recharts:
-// npm install recharts
-
 const TimeDistribution = ({ timeStats }) => {
   if (!timeStats) return null;
 
@@ -119,7 +116,7 @@ const TimeDistribution = ({ timeStats }) => {
       </Typography>
       <Grid container spacing={3}>
         {timePeriodsWithRates.map((item) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.period}>
+          <Grid item xs={12} sm={6} md={3} key={item.period}>
             <Card>
               <CardContent>
                 <Typography variant="subtitle1" gutterBottom>

@@ -1,6 +1,6 @@
 import {
   parseProjectDateTime,
-  isInShift,
+  to24Hour,
 } from "../../../../utils/projectTimeUtils";
 
 /**
@@ -43,86 +43,167 @@ export function calculateTieredCommission(monthlySales, tiers) {
 }
 
 /**
- * Calculate full salary breakdown - all in USD with optional PKR values
- * @param {object} params - Calculation parameters
- * @returns {object|null} - Salary data object or null if data insufficient
+ * Calculate salary data for the employee based on their shift data and projects
  */
-export function calculateSalary(params) {
-  const {
-    rows,
-    selectedEmployee,
-    baseSalary,
-    commissionTiers,
-    usdToPkrRate,
-    calculationPeriodMonths,
-    perfectAttendance,
-    attendanceBonus,
-    qualityBonus,
-  } = params;
+export const calculateSalary = ({
+  employee,
+  projects,
+  baseSalary,
+  commissionTiers,
+  perfectAttendance,
+  attendanceBonus,
+  qualityBonus,
+  usdToPkrRate,
+  periodMonths,
+}) => {
+  if (!employee || !projects?.length) {
+    return {
+      baseSalaryUSD: 0,
+      baseSalaryPKR: 0,
+      commissionUSD: 0,
+      commissionPKR: 0,
+      attendanceBonusUSD: 0,
+      attendanceBonusPKR: 0,
+      qualityBonusUSD: 0,
+      qualityBonusPKR: 0,
+      totalCompensationUSD: 0,
+      totalCompensationPKR: 0,
+      totalProjects: 0,
+      awardedProjects: 0,
+      totalSalesUSD: 0,
+      monthlySalesUSD: 0,
+      periodMonths,
+    };
+  }
 
-  if (!rows?.length || !selectedEmployee) return null;
+  // Convert shift times to 24-hour format
+  const shiftStart = to24Hour(employee.startHour, employee.startAmPm);
+  const shiftEnd = to24Hour(employee.endHour, employee.endAmPm);
 
-  // Filter projects by employee's shift
-  const personProjects = rows.filter((row) => {
-    const hour = parseProjectDateTime(row.projectUploadDate);
-    return isInShift(
-      hour,
-      selectedEmployee.startHour24,
-      selectedEmployee.endHour24
-    );
+  // Filter projects that fall within the employee's shift
+  const personProjects = projects.filter((project) => {
+    // Handle different date formats from new data structure
+    let projectDateTime;
+
+    // Try to parse bid_time first (new structure)
+    if (project.bid_time) {
+      projectDateTime = parseProjectDateTime(project.bid_time);
+    }
+
+    // Fall back to old structure if needed
+    if (!projectDateTime && project.projectUploadDate) {
+      projectDateTime = parseProjectDateTime(project.projectUploadDate);
+    }
+
+    // Skip projects with invalid dates
+    if (!projectDateTime) return false;
+
+    const projectHour = projectDateTime.getHours();
+
+    // Handle shifts that span across midnight
+    if (shiftStart <= shiftEnd) {
+      return projectHour >= shiftStart && projectHour < shiftEnd;
+    } else {
+      return projectHour >= shiftStart || projectHour < shiftEnd;
+    }
   });
 
-  // Get awarded projects
-  const awardedProjects = personProjects.filter((row) => row.awarded === "Yes");
+  // Count awarded projects and total sales
+  const totalProjects = personProjects.length;
+  const awardedProjects = personProjects.filter(
+    (project) => project.award_status === "awarded" || project.awarded === "Yes"
+  ).length;
 
-  // Calculate total paid amount
-  const totalPaid = personProjects.reduce((sum, row) => {
-    // Remove $ and any commas, then parse
-    const cleanValue = row.totalPaidMilestones?.replace(/[$,]/g, "") || "0";
-    const amount = parseFloat(cleanValue);
-    return sum + (isNaN(amount) ? 0 : amount);
+  // Calculate total sales (using bid_amount from new structure or yourBidAmount from old)
+  const totalSales = personProjects.reduce((sum, project) => {
+    if (project.award_status === "awarded" || project.awarded === "Yes") {
+      // Try new structure first
+      if (project.bid_amount) {
+        return sum + (parseFloat(project.bid_amount) || 0);
+      }
+
+      // Fall back to old structure
+      if (project.yourBidAmount) {
+        const bidAmount =
+          parseFloat(project.yourBidAmount.replace("$", "")) || 0;
+        return sum + bidAmount;
+      }
+    }
+    return sum;
   }, 0);
 
-  // Calculate monthly sales
-  const monthlySales = totalPaid / calculationPeriodMonths;
+  // Convert total sales to monthly sales based on calculation period
+  const monthlySales = totalSales / (periodMonths || 1);
 
-  // Calculate commission
-  const commission =
-    calculateTieredCommission(monthlySales, commissionTiers) *
-    calculationPeriodMonths;
+  // Calculate commissions based on tiered rates
+  const calculateCommission = (sales) => {
+    let commission = 0;
+
+    // Tier 1: $0-$1000
+    const tier1Limit = Math.min(sales, commissionTiers.tier1.max);
+    commission += tier1Limit * (commissionTiers.tier1.rate / 100);
+
+    // Tier 2: $1001-$2500
+    if (sales > commissionTiers.tier2.min) {
+      const tier2Amount = Math.min(
+        sales - commissionTiers.tier2.min,
+        commissionTiers.tier2.max - commissionTiers.tier2.min
+      );
+      commission += tier2Amount * (commissionTiers.tier2.rate / 100);
+    }
+
+    // Tier 3: $2501-$5000
+    if (sales > commissionTiers.tier3.min) {
+      const tier3Amount = Math.min(
+        sales - commissionTiers.tier3.min,
+        commissionTiers.tier3.max - commissionTiers.tier3.min
+      );
+      commission += tier3Amount * (commissionTiers.tier3.rate / 100);
+    }
+
+    // Tier 4: $5001+
+    if (sales > commissionTiers.tier4.min) {
+      const tier4Amount = sales - commissionTiers.tier4.min;
+      commission += tier4Amount * (commissionTiers.tier4.rate / 100);
+    }
+
+    return commission;
+  };
+
+  // Calculate commission for the total sales
+  const commissionUSD = calculateCommission(totalSales);
+
+  // Calculate base salary for the period
+  const baseSalaryForPeriod = baseSalary * periodMonths;
 
   // Calculate bonuses
-  const attendanceBonusValue = perfectAttendance
-    ? attendanceBonus * calculationPeriodMonths
+  const attendanceBonusUSD = perfectAttendance
+    ? attendanceBonus * periodMonths
     : 0;
-  const qualityBonusValue = qualityBonus * calculationPeriodMonths;
+  const qualityBonusUSD = qualityBonus * periodMonths;
 
-  // Calculate totals
-  const baseSalaryForPeriod = baseSalary * calculationPeriodMonths;
-  const totalCompensation =
-    baseSalaryForPeriod + commission + attendanceBonusValue + qualityBonusValue;
+  // Calculate total compensation
+  const totalCompensationUSD =
+    baseSalaryForPeriod + commissionUSD + attendanceBonusUSD + qualityBonusUSD;
 
-  // Include PKR values for display purposes
-  const pkrValues = {
-    baseSalaryPKR: baseSalaryForPeriod * usdToPkrRate,
-    commissionPKR: commission * usdToPkrRate,
-    attendanceBonusPKR: attendanceBonusValue * usdToPkrRate,
-    qualityBonusPKR: qualityBonusValue * usdToPkrRate,
-    totalCompensationPKR: totalCompensation * usdToPkrRate,
-  };
+  // Convert to PKR
+  const toPKR = (usd) => usd * usdToPkrRate;
 
   return {
-    totalProjects: personProjects.length,
-    awardedProjects: awardedProjects.length,
-    totalSalesUSD: totalPaid,
-    monthlySalesUSD: monthlySales,
     baseSalaryUSD: baseSalaryForPeriod,
-    commissionUSD: commission,
-    attendanceBonusUSD: attendanceBonusValue,
-    qualityBonusUSD: qualityBonusValue,
-    totalCompensationUSD: totalCompensation,
-    periodMonths: calculationPeriodMonths,
-    usdToPkrRate,
-    ...pkrValues,
+    baseSalaryPKR: toPKR(baseSalaryForPeriod),
+    commissionUSD,
+    commissionPKR: toPKR(commissionUSD),
+    attendanceBonusUSD,
+    attendanceBonusPKR: toPKR(attendanceBonusUSD),
+    qualityBonusUSD,
+    qualityBonusPKR: toPKR(qualityBonusUSD),
+    totalCompensationUSD,
+    totalCompensationPKR: toPKR(totalCompensationUSD),
+    totalProjects,
+    awardedProjects,
+    totalSalesUSD: totalSales,
+    monthlySalesUSD: monthlySales,
+    periodMonths,
   };
-}
+};

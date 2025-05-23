@@ -13,8 +13,8 @@ export default function useBidsData(rows, fromDate, toDate) {
 
     // Extract project IDs from rows
     const projectIds = rows
-      .filter((row) => row.projectId && row.projectId !== "N/A")
-      .map((row) => row.projectId);
+      .filter((row) => row.project_id)
+      .map((row) => row.project_id);
 
     // Don't fetch if no valid project IDs
     if (!projectIds.length) return;
@@ -24,6 +24,36 @@ export default function useBidsData(rows, fromDate, toDate) {
       setBidsError(null);
 
       try {
+        // If we already have full bid data in rows, we don't need to fetch from API
+        if (rows[0].bid_id && rows[0].award_status) {
+          // Process data directly from rows
+          const statusCounts = rows.reduce((acc, bid) => {
+            acc[bid.award_status] = (acc[bid.award_status] || 0) + 1;
+            return acc;
+          }, {});
+
+          const awardedBids = rows.filter(
+            (bid) => bid.award_status === "awarded"
+          ).length;
+
+          setBidsData({
+            bids: rows,
+            totalBids: rows.length,
+            awardedBids,
+            bidsByProject: projectIds.reduce((acc, projectId) => {
+              acc[projectId] = rows.filter(
+                (bid) => bid.project_id === projectId
+              );
+              return acc;
+            }, {}),
+            statusCounts,
+          });
+
+          setBidsLoading(false);
+          return;
+        }
+
+        // Otherwise, fetch from API (fallback)
         // Construct query string with project IDs
         const projectsQueryParam = projectIds
           .slice(0, 50) // Limit to 50 projects to avoid URL length issues
@@ -56,6 +86,7 @@ export default function useBidsData(rows, fromDate, toDate) {
 
         // Process the response
         const bids = response.data?.result?.bids || [];
+
         setBidsData({
           bids,
           totalBids: bids.length,

@@ -4,28 +4,34 @@
  */
 
 /**
- * Parse date time string to extract hour in 24-hour format
- * @param {string} dateTimeStr - Format: DD-MM-YYYY HH:MM:SS AM/PM
- * @returns {number|null} Hour in 24-hour format or null if parsing failed
+ * Parse a project datetime string into a proper Date object
+ * This function needs to safely handle undefined inputs
  */
 export function parseProjectDateTime(dateTimeStr) {
-  try {
-    // Extract time components from the dateTimeStr (e.g., "21-04-2025 10:31:05 pm")
-    const timePart = dateTimeStr.split(" ")[1]; // "10:31:05"
-    const amPm = dateTimeStr.split(" ")[2]; // "pm" or "am"
-    const hourStr = timePart.split(":")[0]; // "10"
-    const hour = parseInt(hourStr, 10);
+  if (!dateTimeStr) {
+    return null;
+  }
 
-    // Convert to 24-hour format
-    if (amPm && amPm.toLowerCase() === "pm" && hour < 12) {
-      return hour + 12; // 10pm = 22
-    } else if (amPm && amPm.toLowerCase() === "am" && hour === 12) {
-      return 0; // 12am = 0
-    } else {
-      return hour;
+  try {
+    // Handle UNIX timestamp (seconds since epoch)
+    if (typeof dateTimeStr === "number") {
+      return new Date(dateTimeStr * 1000);
     }
-  } catch (error) {
-    console.error("Failed to parse date time:", dateTimeStr, error);
+
+    // Handle already Date object
+    if (dateTimeStr instanceof Date) {
+      return dateTimeStr;
+    }
+
+    // Handle bid_time in the new data structure (timestamp)
+    if (!isNaN(dateTimeStr)) {
+      return new Date(Number(dateTimeStr) * 1000);
+    }
+
+    // Otherwise parse as string
+    return new Date(dateTimeStr);
+  } catch (err) {
+    console.warn(`Failed to parse date time: ${dateTimeStr}`, err);
     return null;
   }
 }
@@ -71,18 +77,11 @@ export const filterProjectsByShift = (projects, employee) => {
 };
 
 /**
- * Convert 12-hour time to 24-hour time
- * @param {number|string} hour - Hour in 12-hour format
- * @param {string} ampm - "AM" or "PM"
- * @returns {number} Hour in 24-hour format
+ * Convert 12-hour time to 24-hour format
  */
-export const to24Hour = (hour, ampm) => {
+export function to24Hour(hour, ampm) {
   hour = parseInt(hour, 10);
-
-  if (ampm === "PM" && hour < 12) {
-    return hour + 12;
-  } else if (ampm === "AM" && hour === 12) {
-    return 0;
-  }
+  if (ampm.toUpperCase() === "PM" && hour < 12) hour += 12;
+  if (ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
   return hour;
-};
+}

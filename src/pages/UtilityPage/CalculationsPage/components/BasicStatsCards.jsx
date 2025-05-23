@@ -1,7 +1,7 @@
 import { Grid, Card, CardContent, Typography, Box } from "@mui/material";
 
 const StatCard = ({ title, value, secondaryValue, color = "primary" }) => (
-  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+  <Grid item xs={12} md={6} lg={3}>
     <Card sx={{ height: "100%" }}>
       <CardContent>
         <Typography color="text.secondary" gutterBottom>

@@ -9,6 +9,9 @@ import BidAnalysisChart from "./components/BidAnalysisChart";
 import TeamComparison from "./components/TeamComparison";
 import SalaryCalculator from "./components/SalaryCalculator";
 import StatsStepper from "./components/StatsStepper";
+import ProjectCalendarHeatmap from "./components/ProjectCalendarHeatmap";
+import ClientLocationStats from "./components/ClientLocationStats";
+import BidTimingHeatmap from "./components/BidTimingHeatmap";
 
 const CalculationsPage = () => {
   const { rows } = useUtility();
@@ -18,7 +21,7 @@ const CalculationsPage = () => {
   const { stats, timeStats } = useStatsCalculation(rows);
   const { bidsData, bidsLoading, bidsError } = useBidsData(rows);
 
-  // Steps for the stepper navigation
+  // Steps for the stepper navigation - updated with new components
   const steps = [
     { label: "Summary Stats", component: <BasicStatsCards stats={stats} /> },
     {
@@ -34,6 +37,18 @@ const CalculationsPage = () => {
           error={bidsError}
         />
       ),
+    },
+    {
+      label: "Calendar View",
+      component: <ProjectCalendarHeatmap rows={rows} />,
+    },
+    {
+      label: "Client Locations",
+      component: <ClientLocationStats rows={rows} />,
+    },
+    {
+      label: "Bid Timing Heatmap",
+      component: <BidTimingHeatmap rows={rows} />,
     },
     {
       label: "Team Comparison",
