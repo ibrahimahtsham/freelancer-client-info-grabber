@@ -30,9 +30,7 @@ const ClientLocationStats = ({ rows }) => {
   const theme = useTheme();
 
   // Get theme-aware colors
-  const backgroundColor = theme.palette.background.paper;
   const textColor = theme.palette.text.primary;
-  const secondaryTextColor = theme.palette.text.secondary;
   const borderColor = theme.palette.divider;
 
   useEffect(() => {
@@ -175,8 +173,8 @@ const ClientLocationStats = ({ rows }) => {
             <Tooltip
               formatter={(value) => [`${value} projects`, "Count"]}
               contentStyle={{
-                backgroundColor: backgroundColor,
-                color: textColor,
+                backgroundColor: "white",
+                color: "black",
                 borderRadius: "4px",
                 padding: "10px",
                 border: `1px solid ${borderColor}`,
