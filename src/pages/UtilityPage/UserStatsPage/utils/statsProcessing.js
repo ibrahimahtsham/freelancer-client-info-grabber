@@ -6,6 +6,9 @@
 export function processUserStats(userData) {
   if (!userData) return null;
 
+  //console log user data in raw json
+  console.log("Raw User Data:", JSON.stringify(userData, null, 2));
+
   // Look for reputation data in multiple possible locations
   const repData =
     userData.full_reputation && !isEmpty(userData.full_reputation)
@@ -137,9 +140,15 @@ export function processUserStats(userData) {
     "";
 
   // Process and format earnings if available
-  const earnings = entireHistory.earnings || 0;
-  const formattedEarnings =
-    typeof earnings === "number" ? earnings.toFixed(2) : "0.00";
+  let hasEarnings = false;
+  let formattedEarnings = "0.00";
+  if (entireHistory.earnings !== null && entireHistory.earnings !== undefined) {
+    hasEarnings = true;
+    const numericEarnings = Number(entireHistory.earnings);
+    if (!isNaN(numericEarnings)) {
+      formattedEarnings = numericEarnings.toFixed(2);
+    }
+  }
 
   // Determine if we have meaningful freelancer data
   const hasFreelancerData =
@@ -157,6 +166,7 @@ export function processUserStats(userData) {
     registrationDate,
     activeSince,
     hasFreelancerData,
+    hasEarnings, // Add this flag
     profileDescription,
     reputation: {
       overall: entireHistory.overall || 0,
