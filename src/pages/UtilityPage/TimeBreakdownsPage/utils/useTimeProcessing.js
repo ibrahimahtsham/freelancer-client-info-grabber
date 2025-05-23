@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  parseProjectDateTime,
-  isInShift,
-  to24Hour,
-} from "../../../../utils/projectTimeUtils";
+import { parseProjectDateTime, to24Hour } from "./projectTimeUtils";
 
 /**
  * Custom hook for processing time-based project data
@@ -31,78 +27,93 @@ export function useTimeProcessing({ rows, employees, selectedEmployeeIndex }) {
     if (!rows.length || !employees.length) return;
 
     console.log("Starting time processing with", rows.length, "projects");
+    setProcessingState({
+      isProcessing: true,
+      progress: 10,
+      stage: "Processing employee shifts",
+    });
 
     // Start processing in non-blocking chunks
     const processedProjects = {};
+    let parsedCount = 0;
 
-    employees.forEach((employee, index) => {
-      // Convert shift times using the shared utility
-      const startHour24 = to24Hour(employee.startHour, employee.startAmPm);
-      const endHour24 = to24Hour(employee.endHour, employee.endAmPm);
+    try {
+      employees.forEach((employee, index) => {
+        // Convert shift times using the shared utility
+        const startHour24 = to24Hour(employee.startHour, employee.startAmPm);
+        const endHour24 = to24Hour(employee.endHour, employee.endAmPm);
 
-      console.log(
-        `Employee ${index} (${employee.name}): Shift ${startHour24}:00 to ${endHour24}:00`
-      );
+        console.log(
+          `Employee ${index} (${employee.name}): Shift ${startHour24}:00 to ${endHour24}:00`
+        );
 
-      // Filter projects for this employee using shared logic
-      const employeeProjects = rows.filter((row) => {
-        // Get full datetime object instead of just hour
-        const projectTime = parseProjectDateTime(row.projectUploadDate);
+        // Filter projects for this employee using shared logic
+        const employeeProjects = rows.filter((row) => {
+          // Use bid_time as the timestamp to check
+          const projectDateTime = parseProjectDateTime(row.bid_time);
 
-        // Log more details for debugging
-        if (row.awarded === "Yes") {
-          console.log(
-            `Project ID: ${row.projectId}, Date: ${row.projectUploadDate}, ` +
-              `Parsed Hour: ${projectTime}, Raw Time: ${row.projectUploadDate}, ` +
-              `Shift: ${startHour24}-${endHour24}, ` +
-              `In Shift: ${isInShift(
-                projectTime,
-                startHour24,
-                endHour24
-              )}, Awarded: Yes`
-          );
-        }
+          if (!projectDateTime) {
+            return false;
+          }
 
-        return isInShift(projectTime, startHour24, endHour24);
+          parsedCount++;
+
+          const projectHour = projectDateTime.getHours();
+
+          // Handle shifts that cross midnight
+          if (startHour24 <= endHour24) {
+            return projectHour >= startHour24 && projectHour < endHour24;
+          } else {
+            // Shift crosses midnight (e.g., 10pm to 6am)
+            return projectHour >= startHour24 || projectHour < endHour24;
+          }
+        });
+
+        console.log(
+          `Employee ${index}: Found ${employeeProjects.length} projects in shift`
+        );
+
+        // Separate awarded and other projects
+        processedProjects[index] = {
+          awarded: employeeProjects.filter(
+            (project) => project.award_status?.toLowerCase() === "awarded"
+          ),
+          other: employeeProjects.filter(
+            (project) => project.award_status?.toLowerCase() !== "awarded"
+          ),
+        };
+
+        // Update progress
+        setProcessingState((prev) => ({
+          ...prev,
+          progress: 10 + (80 * (index + 1)) / employees.length,
+          stage: `Processing shift data for ${employee.name}`,
+        }));
       });
 
-      console.log(
-        `Employee ${index}: Found ${employeeProjects.length} projects in shift`
-      );
+      // Complete the processing and update state
+      setFilteredProjects(processedProjects);
 
-      // Separate awarded and other projects
-      const awardedProjects = employeeProjects.filter(
-        (project) => project.awarded === "Yes"
-      );
+      setDebugInfo({
+        total: rows.length,
+        parsed: parsedCount,
+        example:
+          rows.length > 0 ? new Date(rows[0].bid_time * 1000).toString() : "",
+      });
 
-      console.log(
-        `Employee ${index}: ${awardedProjects.length} awarded projects in shift`
-      );
-
-      processedProjects[index] = {
-        awarded: awardedProjects,
-        other: employeeProjects.filter((project) => project.awarded !== "Yes"),
-      };
-    });
-
-    // Complete the processing and update state
-    setFilteredProjects(processedProjects);
-
-    setDebugInfo({
-      total: rows.length,
-      parsed: Object.values(processedProjects).reduce(
-        (sum, projects) =>
-          sum + projects.awarded.length + projects.other.length,
-        0
-      ),
-      example: rows.length > 0 ? rows[0].projectUploadDate : "",
-    });
-
-    setProcessingState({
-      isProcessing: false,
-      progress: 100,
-      stage: "Completed",
-    });
+      setProcessingState({
+        isProcessing: false,
+        progress: 100,
+        stage: "Completed",
+      });
+    } catch (error) {
+      console.error("Error processing time data:", error);
+      setProcessingState({
+        isProcessing: false,
+        progress: 0,
+        stage: "Error: " + error.message,
+      });
+    }
   }, [rows, employees, selectedEmployeeIndex]);
 
   return { filteredProjects, processingState, debugInfo };

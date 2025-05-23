@@ -7,15 +7,18 @@ import {
   Chip,
   Tabs,
   Tab,
+  Paper,
+  Grid,
 } from "@mui/material";
 import { useUtility } from "../UtilityContext/hooks";
 import { useEmployees } from "../../../contexts/EmployeeHooks";
-import ShiftCard from "./components/ShiftCard";
 import { useTimeProcessing } from "./utils/useTimeProcessing";
+import DataTable from "../components/DataTable";
+import StatsCard from "./components/StatsCard";
 
 /**
  * Time Breakdowns Page Component
- * Shows project data broken down by shift times
+ * Shows project data broken down by employee shifts using DataTable
  */
 const TimeBreakdownsPage = () => {
   const { rows } = useUtility();
@@ -76,6 +79,41 @@ const TimeBreakdownsPage = () => {
       </Box>
     );
   }
+
+  // Get current employee data
+  const awardedProjects = filteredProjects[validIndex]?.awarded || [];
+  const otherProjects = filteredProjects[validIndex]?.other || [];
+
+  // Calculate stats for the current employee
+  const totalBidAmount = awardedProjects.reduce(
+    (sum, project) => sum + (parseFloat(project.bid_amount) || 0),
+    0
+  );
+
+  const totalPaidAmount = awardedProjects.reduce(
+    (sum, project) => sum + (parseFloat(project.paid_amount) || 0),
+    0
+  );
+
+  const winRate =
+    rows.length > 0
+      ? (
+          (awardedProjects.length /
+            (awardedProjects.length + otherProjects.length)) *
+          100
+        ).toFixed(1)
+      : 0;
+
+  // Format the shift time for display
+  const formatShiftTime = () => {
+    const start = `${
+      currentEmployee.startHour
+    }${currentEmployee.startAmPm.toLowerCase()}`;
+    const end = `${
+      currentEmployee.endHour
+    }${currentEmployee.endAmPm.toLowerCase()}`;
+    return `${start} to ${end}`;
+  };
 
   return (
     <Box>
@@ -151,24 +189,77 @@ const TimeBreakdownsPage = () => {
         </Tabs>
       </Box>
 
-      {/* Employee's shift card */}
-      <ShiftCard
-        title={currentEmployee.name}
-        backgroundColor={`${currentEmployee.color}15`} // 15 opacity hex
-        startHour={currentEmployee.startHour}
-        startAmPm={currentEmployee.startAmPm}
-        endHour={currentEmployee.endHour}
-        endAmPm={currentEmployee.endAmPm}
-        // Explicitly passing null functions to ensure no time editing is possible
-        setStartHour={null}
-        setStartAmPm={null}
-        setEndHour={null}
-        setEndAmPm={null}
-        awardedProjects={filteredProjects[validIndex]?.awarded || []}
-        otherProjects={filteredProjects[validIndex]?.other || []}
-        loading={processingState.isProcessing}
-        readOnly={true}
-      />
+      {/* Employee stats */}
+      <Box sx={{ mb: 3 }}>
+        <Paper
+          elevation={2}
+          sx={{ p: 2, backgroundColor: `${currentEmployee.color}15` }}
+        >
+          <Typography variant="h5" gutterBottom>
+            {currentEmployee.name}'s Shift: {formatShiftTime()}
+          </Typography>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatsCard
+                title="Projects Won"
+                value={awardedProjects.length}
+                total={awardedProjects.length + otherProjects.length}
+                suffix="projects"
+                color={currentEmployee.color}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatsCard
+                title="Win Rate"
+                value={winRate}
+                suffix="%"
+                color={currentEmployee.color}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatsCard
+                title="Total Bid Amount"
+                value={totalBidAmount.toFixed(2)}
+                prefix="$"
+                color={currentEmployee.color}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatsCard
+                title="Total Paid Amount"
+                value={totalPaidAmount.toFixed(2)}
+                prefix="$"
+                color={currentEmployee.color}
+              />
+            </Grid>
+          </Grid>
+        </Paper>
+      </Box>
+
+      {/* Awarded Projects Table */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom sx={{ color: "green" }}>
+          Projects Won During {currentEmployee.name}'s Shift
+        </Typography>
+        <DataTable
+          data={awardedProjects}
+          title={`Awarded Projects (${awardedProjects.length})`}
+          loading={processingState.isProcessing}
+        />
+      </Box>
+
+      {/* Non-awarded Projects Table */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom sx={{ color: "text.secondary" }}>
+          Other Bids During {currentEmployee.name}'s Shift
+        </Typography>
+        <DataTable
+          data={otherProjects}
+          title={`Non-awarded Projects (${otherProjects.length})`}
+          loading={processingState.isProcessing}
+        />
+      </Box>
 
       <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
         <Alert severity="info">
