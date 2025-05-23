@@ -6,9 +6,6 @@
 export function processUserStats(userData) {
   if (!userData) return null;
 
-  //console log user data in raw json
-  console.log("Raw User Data:", JSON.stringify(userData, null, 2));
-
   // Look for reputation data in multiple possible locations
   const repData =
     userData.full_reputation && !isEmpty(userData.full_reputation)

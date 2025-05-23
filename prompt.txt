@@ -1,5 +1,94 @@
 @workspace
 
+can you help me add in the user stats page the user id, that i can click to copy
+
+and the stats for reputation over the period of months it shows in a form of a chart
+{
+  "id": 9608928,
+  "username": "adeelpirzada",
+  "suspended": null,
+  "closed": false,
+  "is_active": null,
+  "force_verify": null,
+  "avatar": "/ppic/274019879/logo/9608928/profile_logo_9608928.jpg",
+  "email": null,
+  "reputation": {
+    "entire_history": {
+      "overall": 4.956865478093764,
+      "on_budget": 0.9974344023131452,
+      "on_time": 0.9971285333108368,
+      "positive": 0.004068952244597835,
+      "category_ratings": {
+        "quality": 4.9874202983028075,
+        "communication": 4.839413991547695,
+        "expertise": 4.984769943397806,
+        "professionalism": 4.983978493262948,
+        "hire_again": 4.988744663957565
+      },
+      "all": 158,
+      "reviews": 149,
+      "incomplete_reviews": 2,
+      "complete": 156,
+      "incomplete": 2,
+      "earnings": null,
+      "completion_rate": 0.9873417721518988,
+      "rehire_rate": null,
+      "user_id": 9608928,
+      "completed_relevant_job_count": null,
+      "job_ranks": null,
+      "rehire_rank": null
+    },
+    "last3months": {
+      "overall": 4.807645994419197,
+      "on_budget": 1,
+      "on_time": 1,
+      "positive": 0,
+      "category_ratings": {
+        "quality": 4.999999999999999,
+        "communication": 4.038229972095986,
+        "expertise": 4.999999999999999,
+        "professionalism": 4.999999999999999,
+        "hire_again": 4.999999999999999
+      },
+      "all": 16,
+      "reviews": 16,
+      "incomplete_reviews": 0,
+      "complete": 16,
+      "incomplete": 0,
+      "earnings": null,
+      "completion_rate": 1,
+      "rehire_rate": null,
+      "user_id": 9608928,
+      "completed_relevant_job_count": null,
+      "job_ranks": null,
+      "rehire_rank": null
+    },
+    "last12months": {
+      "overall": 4.8278681590882595,
+      "on_budget": 1,
+      "on_time": 1,
+      "positive": 0,
+      "category_ratings": {
+        "quality": 5,
+        "communication": 4.1393407954413,
+        "expertise": 5,
+        "professionalism": 5,
+        "hire_again": 5
+      },
+      "all": 20,
+      "reviews": 20,
+      "incomplete_reviews": 0,
+      "complete": 20,
+      "incomplete": 0,
+      "earnings": null,
+      "completion_rate": 1,
+      "rehire_rate": null,
+      "user_id": 9608928,
+      "completed_relevant_job_count": null,
+      "job_ranks": null,
+      "rehire_rank": null
+    },
+
 
 used frequently:
 
