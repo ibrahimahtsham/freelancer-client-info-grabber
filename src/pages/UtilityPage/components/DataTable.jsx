@@ -27,8 +27,8 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import CodeIcon from "@mui/icons-material/Code";
 import { formatDate } from "../../../utils/dateUtils";
 import ColumnSelector from "./ColumnSelector";
 
@@ -589,6 +589,7 @@ const DataTable = ({ data = [], title, loading }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const handleColumnChange = (newColumns) => {
     setVisibleColumns(newColumns);
@@ -752,6 +753,19 @@ const DataTable = ({ data = [], title, loading }) => {
   // Get columns that are currently visible
   const columns = ALL_COLUMNS.filter((col) => visibleColumns.includes(col.id));
 
+  const handleRowClick = (rowId) => {
+    setSelectedRow(rowId === selectedRow ? null : rowId);
+  };
+
+  const logRowData = () => {
+    if (selectedRow) {
+      const rowData = data.find((row) => row.bid_id === selectedRow);
+      if (rowData) {
+        console.log("Raw row data:", JSON.stringify(rowData, null, 2));
+      }
+    }
+  };
+
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
       <Box p={2} display="flex" flexDirection="column" gap={2}>
@@ -770,6 +784,21 @@ const DataTable = ({ data = [], title, loading }) => {
               visibleColumns={visibleColumns}
               onChange={handleColumnChange}
             />
+            <Tooltip
+              title={
+                selectedRow ? "Log Selected Row Data" : "Select a row first"
+              }
+            >
+              <span>
+                <IconButton
+                  onClick={logRowData}
+                  disabled={!selectedRow}
+                  color={selectedRow ? "primary" : "default"}
+                >
+                  <CodeIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
             <Tooltip title="Download CSV">
               <IconButton onClick={downloadCSV}>
                 <FileDownloadIcon />
@@ -906,6 +935,7 @@ const DataTable = ({ data = [], title, loading }) => {
             ) : (
               paginatedData.map((row, index) => {
                 const isAwarded = row.award_status?.toLowerCase() === "awarded";
+                const isSelected = selectedRow === row.bid_id;
 
                 return (
                   <>
@@ -914,15 +944,22 @@ const DataTable = ({ data = [], title, loading }) => {
                       key={row.bid_id || index}
                       sx={{
                         "& > *": { borderBottom: "unset" },
-                        backgroundColor: isAwarded
+                        backgroundColor: isSelected
+                          ? alpha("#2196f3", 0.08)
+                          : isAwarded
                           ? alpha("#4caf50", 0.04)
                           : "inherit",
                         "&:nth-of-type(odd)": {
-                          backgroundColor: isAwarded
+                          backgroundColor: isSelected
+                            ? alpha("#2196f3", 0.08)
+                            : isAwarded
                             ? alpha("#4caf50", 0.04)
                             : alpha("#f5f5f5", 0.3),
                         },
+                        cursor: "pointer",
                       }}
+                      onClick={() => handleRowClick(row.bid_id)}
+                      selected={isSelected}
                     >
                       <TableCell>
                         {row.milestone_payments &&
