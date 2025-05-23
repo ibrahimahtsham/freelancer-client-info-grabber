@@ -1,5 +1,6 @@
 Immediate:-
 
+    be able to fetch to the minute
     clean up codebase
     get data for our own user, what are our hidden stats
 
@@ -10,7 +11,8 @@ Stats that need to be shown:-
 
     heatmap of which days had more responses on a calendar, which days had awarded
     which locations had most awarded
-    
+    somehow show what shift had most bids made, heatmap form is nice
+
 
 
 
