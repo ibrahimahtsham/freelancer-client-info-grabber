@@ -7,6 +7,8 @@ import {
   Grid,
   Tabs,
   Tab,
+  Button,
+  ButtonGroup,
 } from "@mui/material";
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
@@ -14,10 +16,11 @@ import { Tooltip as ReactTooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";
 import {
   subMonths,
+  addMonths,
   startOfMonth,
   endOfMonth,
   format,
-  parseISO,
+  isAfter,
 } from "date-fns";
 
 const ProjectCalendarHeatmap = ({ rows }) => {
@@ -27,6 +30,31 @@ const ProjectCalendarHeatmap = ({ rows }) => {
     subMonths(startOfMonth(new Date()), 5)
   );
   const [endDate, setEndDate] = useState(endOfMonth(new Date()));
+
+  // Add date range navigation functions
+  const goBackward = () => {
+    setStartDate((prevStart) => subMonths(prevStart, 3));
+    setEndDate((prevEnd) => subMonths(prevEnd, 3));
+  };
+
+  const goForward = () => {
+    // Don't go beyond current month
+    const newEndDate = addMonths(endDate, 3);
+    const today = new Date();
+
+    if (isAfter(newEndDate, today)) {
+      setEndDate(endOfMonth(today));
+      setStartDate(subMonths(endOfMonth(today), 5));
+    } else {
+      setStartDate(addMonths(startDate, 3));
+      setEndDate(newEndDate);
+    }
+  };
+
+  const resetDateRange = () => {
+    setStartDate(subMonths(startOfMonth(new Date()), 5));
+    setEndDate(endOfMonth(new Date()));
+  };
 
   useEffect(() => {
     if (!rows?.length) return;
@@ -76,7 +104,7 @@ const ProjectCalendarHeatmap = ({ rows }) => {
     };
 
     processData();
-  }, [rows, tab]);
+  }, [rows, tab, startDate, endDate]);
 
   const getClassForValue = (value) => {
     if (!value || value.count === 0) {
@@ -95,18 +123,37 @@ const ProjectCalendarHeatmap = ({ rows }) => {
 
       <Card>
         <CardContent>
-          <Tabs
-            value={tab}
-            onChange={(e, newValue) => setTab(newValue)}
-            textColor="primary"
-            indicatorColor="primary"
-            variant="fullWidth"
-            sx={{ mb: 2 }}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
           >
-            <Tab label="Bids" />
-            <Tab label="Responses" />
-            <Tab label="Awarded" />
-          </Tabs>
+            <Tabs
+              value={tab}
+              onChange={(e, newValue) => setTab(newValue)}
+              textColor="primary"
+              indicatorColor="primary"
+              sx={{ flexGrow: 1 }}
+            >
+              <Tab label="Bids" />
+              <Tab label="Responses" />
+              <Tab label="Awarded" />
+            </Tabs>
+
+            <Box>
+              <Typography variant="caption" sx={{ mr: 1 }}>
+                {format(startDate, "MMM yyyy")} - {format(endDate, "MMM yyyy")}
+              </Typography>
+              <ButtonGroup size="small">
+                <Button onClick={goBackward}>◀ Earlier</Button>
+                <Button onClick={resetDateRange}>Reset</Button>
+                <Button onClick={goForward}>Later ▶</Button>
+              </ButtonGroup>
+            </Box>
+          </Box>
 
           <Box
             sx={{
