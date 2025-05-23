@@ -72,33 +72,33 @@ export function formatDate(date, options = {}) {
   try {
     // If date is null or undefined
     if (!date) return "N/A";
-    
+
     // If it's a number, assume it's a timestamp in milliseconds
-    if (typeof date === 'number') {
+    if (typeof date === "number") {
       date = new Date(date);
     }
-    
+
     // If it's a string, try to parse it
-    if (typeof date === 'string') {
+    if (typeof date === "string") {
       date = new Date(date);
     }
-    
+
     // Check if the date is valid
     if (!(date instanceof Date) || isNaN(date.getTime())) {
       console.warn("Invalid date:", date);
       return "Invalid date";
     }
-    
+
     // Default options
     const defaultOptions = {
-      dateStyle: 'medium',
-      timeStyle: 'short'
+      dateStyle: "medium",
+      timeStyle: "short",
     };
-    
+
     // Use Intl.DateTimeFormat for consistent formatting
-    return new Intl.DateTimeFormat('en-AU', {
+    return new Intl.DateTimeFormat("en-AU", {
       ...defaultOptions,
-      ...options
+      ...options,
     }).format(date);
   } catch (error) {
     console.error("Date formatting error:", error);
