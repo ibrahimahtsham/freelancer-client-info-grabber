@@ -71,7 +71,7 @@ const CircularProgressWithLabel = ({
   );
 };
 
-const ProjectStats = ({ stats, earnings, userData }) => {
+const ProjectStats = ({ stats, earnings }) => {
   if (!stats) return null;
 
   const {
@@ -119,26 +119,14 @@ const ProjectStats = ({ stats, earnings, userData }) => {
 
       <Divider sx={{ my: 2 }} />
 
-      {userData.hasEarnings && (
+      {stats.hasEarnings && (
         <div className="stat-item">
           <h3>Total Earnings</h3>
           <p>${earnings}</p>
         </div>
       )}
 
-      {!userData.hasEarnings && (
-        <div className="stat-item">
-          <h3>Top Expertise</h3>
-          {userData.topSkillsWithCounts.slice(0, 3).map((skill) => (
-            <div key={skill.name}>
-              <span>{skill.name}</span>
-              <span>{skill.count} projects</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <Divider sx={{ my: 2 }} />
+      {stats.hasEarnings && <Divider sx={{ my: 2 }} />}
 
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle1" gutterBottom>
