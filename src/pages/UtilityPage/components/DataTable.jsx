@@ -468,6 +468,99 @@ const ALL_COLUMNS = [
       );
     },
   },
+  {
+    id: "client_verification_status",
+    label: "Client Verification",
+    width: 140,
+    format: (value, row) => {
+      // Count verified items
+      const verifiedCount = [
+        row.client_payment_verified,
+        row.client_email_verified,
+        row.client_phone_verified,
+        row.client_identity_verified,
+        row.client_profile_complete,
+        row.client_deposit_made,
+      ].filter(Boolean).length;
+
+      const totalItems = 6;
+      const level =
+        verifiedCount < 2 ? "error" : verifiedCount < 4 ? "warning" : "success";
+
+      return (
+        <Tooltip
+          title={`Payment: ${row.client_payment_verified ? "✓" : "✗"}, 
+                        Email: ${row.client_email_verified ? "✓" : "✗"}, 
+                        Phone: ${row.client_phone_verified ? "✓" : "✗"}, 
+                        Identity: ${row.client_identity_verified ? "✓" : "✗"}, 
+                        Profile: ${row.client_profile_complete ? "✓" : "✗"}, 
+                        Deposit: ${row.client_deposit_made ? "✓" : "✗"}`}
+        >
+          <Chip
+            size="small"
+            label={`${verifiedCount}/${totalItems}`}
+            color={level}
+          />
+        </Tooltip>
+      );
+    },
+  },
+  {
+    id: "client_experience",
+    label: "Client Experience",
+    width: 120,
+    format: (value, row) => {
+      const projectCount = row.client_total_projects || 0;
+      let experienceLevel = "New";
+      let color = "default";
+
+      if (projectCount > 50) {
+        experienceLevel = "Expert";
+        color = "success";
+      } else if (projectCount > 20) {
+        experienceLevel = "Experienced";
+        color = "primary";
+      } else if (projectCount > 5) {
+        experienceLevel = "Intermediate";
+        color = "info";
+      } else if (projectCount > 0) {
+        experienceLevel = "Beginner";
+        color = "warning";
+      }
+
+      return (
+        <Tooltip title={`${projectCount} completed projects`}>
+          <Chip size="small" label={experienceLevel} color={color} />
+        </Tooltip>
+      );
+    },
+  },
+  {
+    id: "client_age",
+    label: "Account Age",
+    width: 120,
+    format: (value, row) => {
+      if (!row.client_registration_date) return "Unknown";
+
+      const registrationDate = new Date(row.client_registration_date * 1000);
+      const now = new Date();
+      const diffYears = Math.floor(
+        (now - registrationDate) / (1000 * 60 * 60 * 24 * 365)
+      );
+
+      return (
+        <Tooltip title={`Registered: ${formatDate(registrationDate)}`}>
+          <Typography>{diffYears} years</Typography>
+        </Tooltip>
+      );
+    },
+  },
+  {
+    id: "client_company",
+    label: "Company",
+    width: 150,
+    format: (value) => value || "Not specified",
+  },
 ];
 
 // Default visible columns
@@ -601,6 +694,22 @@ const DataTable = ({ data = [], title, loading }) => {
             } else {
               value = "No payments";
             }
+          } else if (col.id === "client_verification_status" && row) {
+            // For client verification status, show the actual verification items
+            const verifiedItems = [
+              row.client_payment_verified ? "Payment" : null,
+              row.client_email_verified ? "Email" : null,
+              row.client_phone_verified ? "Phone" : null,
+              row.client_identity_verified ? "Identity" : null,
+              row.client_profile_complete ? "Profile" : null,
+              row.client_deposit_made ? "Deposit" : null,
+            ].filter(Boolean);
+
+            value =
+              verifiedItems.length > 0 ? verifiedItems.join(", ") : "None";
+          } else if (col.id === "client_badges") {
+            // For badges, join the array with commas
+            value = Array.isArray(value) ? value.join(", ") : "None";
           }
 
           // Convert arrays to comma-separated strings

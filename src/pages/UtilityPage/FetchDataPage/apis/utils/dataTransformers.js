@@ -177,22 +177,44 @@ export function enrichWithMilestoneData(bids, milestoneData) {
  */
 export function enrichWithClientData(bids, clientData) {
   if (!clientData?.result?.users) {
+    console.log("Missing client data structure:", clientData);
     return bids;
   }
 
   const clients = clientData.result.users;
+  console.log("Client data available for IDs:", Object.keys(clients));
 
   return bids.map((bid) => {
     const client = clients[bid.client_id];
 
-    if (!client) return bid;
+    if (!client) {
+      console.log("No client data found for client_id:", bid.client_id);
+      return bid;
+    }
 
+    // Extract more detailed information from client data
     return {
       ...bid,
       client_country: client.location?.country?.name || null,
       client_rating:
         client.employer_reputation?.entire_history?.overall || null,
       client_payment_verified: client.status?.payment_verified || false,
+      // New fields to extract
+      client_email_verified: client.status?.email_verified || false,
+      client_identity_verified: client.status?.identity_verified || false,
+      client_phone_verified: client.status?.phone_verified || false,
+      client_deposit_made: client.status?.deposit_made || false,
+      client_profile_complete: client.status?.profile_complete || false,
+      client_total_reviews:
+        client.employer_reputation?.entire_history?.reviews || 0,
+      client_total_projects:
+        client.employer_reputation?.entire_history?.complete || 0,
+      client_registration_date: client.registration_date || null,
+      client_badges: client.badges
+        ? client.badges.map((badge) => badge.name)
+        : [],
+      client_primary_language: client.primary_language || null,
+      client_company: client.company || null,
     };
   });
 }
@@ -299,6 +321,22 @@ export function transformDataToRows({
       client_country: client.location?.country?.name || "Unknown",
       client_rating: client.employer_reputation?.entire_history?.overall,
       client_payment_verified: client.status?.payment_verified || false,
+      // New client fields
+      client_email_verified: client.status?.email_verified || false,
+      client_identity_verified: client.status?.identity_verified || false,
+      client_phone_verified: client.status?.phone_verified || false,
+      client_deposit_made: client.status?.deposit_made || false,
+      client_profile_complete: client.status?.profile_complete || false,
+      client_total_reviews:
+        client.employer_reputation?.entire_history?.reviews || 0,
+      client_total_projects:
+        client.employer_reputation?.entire_history?.complete || 0,
+      client_registration_date: client.registration_date || null,
+      client_badges: client.badges
+        ? client.badges.map((badge) => badge.name)
+        : [],
+      client_primary_language: client.primary_language || null,
+      client_company: client.company || null,
 
       // Project data
       project_type: project.type === "hourly" ? "hourly" : "fixed",

@@ -1,7 +1,8 @@
 Immediate:
+get data for our own user, what are our hidden stats
 
 verified column, where is it comming from, how to expand upon it
-data table better readability
+data table better readability, have a function to get how a row is being stored in the dataset
 checkout some weird logic that is being applied in data table
 hireme column name change to recruiter
 type change to payment type
