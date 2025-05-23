@@ -1,4 +1,5 @@
 Immediate:
+clean up codebase
 get data for our own user, what are our hidden stats
 
 verified column, where is it comming from, how to expand upon it
