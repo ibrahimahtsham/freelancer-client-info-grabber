@@ -8,7 +8,9 @@ Immediate:-
 
 Stats that need to be shown:-
 
-
+    heatmap of which days had more responses on a calendar, which days had awarded
+    which locations had most awarded
+    
 
 
 

@@ -26,7 +26,6 @@ export function useTimeProcessing({ rows, employees, selectedEmployeeIndex }) {
   useEffect(() => {
     if (!rows.length || !employees.length) return;
 
-    console.log("Starting time processing with", rows.length, "projects");
     setProcessingState({
       isProcessing: true,
       progress: 10,
@@ -42,10 +41,6 @@ export function useTimeProcessing({ rows, employees, selectedEmployeeIndex }) {
         // Convert shift times using the shared utility
         const startHour24 = to24Hour(employee.startHour, employee.startAmPm);
         const endHour24 = to24Hour(employee.endHour, employee.endAmPm);
-
-        console.log(
-          `Employee ${index} (${employee.name}): Shift ${startHour24}:00 to ${endHour24}:00`
-        );
 
         // Filter projects for this employee using shared logic
         const employeeProjects = rows.filter((row) => {
@@ -68,10 +63,6 @@ export function useTimeProcessing({ rows, employees, selectedEmployeeIndex }) {
             return projectHour >= startHour24 || projectHour < endHour24;
           }
         });
-
-        console.log(
-          `Employee ${index}: Found ${employeeProjects.length} projects in shift`
-        );
 
         // Separate awarded and other projects
         processedProjects[index] = {
