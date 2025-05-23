@@ -1,27 +1,26 @@
-Immediate:
-clean up codebase
-get data for our own user, what are our hidden stats
+Immediate:-
 
-verified column, where is it comming from, how to expand upon it
-data table better readability, have a function to get how a row is being stored in the dataset
-checkout some weird logic that is being applied in data table
-hireme column name change to recruiter
-type change to payment type
-date of payment needs to be gotten
-get rid of milestones and milestones total as they seem to be unnecessary/irrelevant
-data table sorting and filtering
+    clean up codebase
+    get data for our own user, what are our hidden stats
+
+    checkout some weird logic that is being applied in data table
+    reporganize columns in the data table that makes sense
+
+Stats that need to be shown:-
 
 
 
 
-Do later:
 
-fix ui for add new employee screen
-fix rate limited not showing time remaining, see if there is any lirary that will let me read api headers
-auto select past whole month as range to 
-salary needs to take in acount the date of payment + if someone helped with chat
-remove logs for project id: 39331419
-bid id: 449468208
+
+
+Do later:-
+
+    fix ui for add new employee screen
+    fix rate limited not showing time remaining, see if there is any lirary that will let me read api headers
+    auto select past whole month as range to 
+    salary needs to take in acount the date of payment + if someone helped with chat
+    auto scrollability in API Usage Statistics
 
 
 
@@ -29,8 +28,9 @@ bid id: 449468208
 
 QOL:
 
-optimize tabs switching
-update progress bar with stages, record time for each stage
-integrate bid timings calculations too
-make it so datasets instantly are acessible without refreshing page after saving, also they should have proper names rn the dates are not accurately represented of the filter that was applied to get the dataset
-make it so after putting api token it welcomes you as your username and shows it on the navbar
+    optimize tabs switching
+    dataset name functionality fix
+    update progress bar with stages, record time for each stage
+    integrate bid timings calculations too
+    make it so datasets instantly are acessible without refreshing page after saving, also they should have proper names rn the dates are not accurately represented of the filter that was applied to get the dataset
+    make it so after putting api token it welcomes you as your username and shows it on the navbar
