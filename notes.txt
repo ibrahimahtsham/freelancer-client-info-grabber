@@ -21,6 +21,7 @@ Do later:-
     auto select past whole month as range to 
     salary needs to take in acount the date of payment + if someone helped with chat
     auto scrollability in API Usage Statistics
+    data table should have popups for each cell since some data can just go in overflow
 
 
 
@@ -34,3 +35,4 @@ QOL:
     integrate bid timings calculations too
     make it so datasets instantly are acessible without refreshing page after saving, also they should have proper names rn the dates are not accurately represented of the filter that was applied to get the dataset
     make it so after putting api token it welcomes you as your username and shows it on the navbar
+    current data in dataset be updated in real time

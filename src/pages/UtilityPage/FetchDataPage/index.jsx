@@ -19,7 +19,6 @@ import { useUtility } from "../UtilityContext/hooks";
 import DataFetchControls from "./components/DataFetchControls";
 import DataActions from "./components/DataActions";
 import FetchStatusDisplay from "./components/FetchStatusDisplay";
-import ResultsArea from "./components/ResultsArea";
 import LogViewer from "./components/LogViewer";
 import APICallsMonitor from "./components/APICallsMonitor";
 import { getApiCallsStats, resetApiCallsStats } from "./apis";
@@ -308,7 +307,7 @@ const FetchDataPage = () => {
         if (success) {
           // Refresh the stored datasets list in context
           refreshStoredDatasets && refreshStoredDatasets();
-          
+
           setSnackbar({
             open: true,
             message: `Data saved successfully as dataset: ${
@@ -339,7 +338,7 @@ const FetchDataPage = () => {
     limitEnabled,
     limit,
     fetchType,
-    refreshStoredDatasets
+    refreshStoredDatasets,
   ]);
 
   // Close snackbar
