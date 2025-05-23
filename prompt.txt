@@ -1,10 +1,10 @@
 @workspace
-  
+
 
 used frequently:
 
   @workspace
 
-  can you help me refactort this file by putting into a folder with that is the file name with an index file and the break it down into utils, components, apis, if applicable.
+  can you help me refactor this file by putting into a folder with that is the file name with an index file and the break it down into utils, components, apis, if applicable.
 
   can you do in a way where it wont include any unused variables
