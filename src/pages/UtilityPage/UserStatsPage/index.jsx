@@ -22,6 +22,9 @@ import ProjectStats from "./components/ProjectStats";
 import LoginInfo from "./components/LoginInfo";
 import HistoryTimeline from "./components/HistoryTimeline";
 
+// Create a silent logger that doesn't use console.log
+const silentLogger = () => {};
+
 const UserStatsPage = () => {
   const [processedStats, setProcessedStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,14 +37,14 @@ const UserStatsPage = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch user details
-        const userData = await fetchUserDetails(console.log);
+        // Use the silent logger instead of console.log
+        const userData = await fetchUserDetails(silentLogger);
 
         // Process the user stats
         const stats = processUserStats(userData);
         setProcessedStats(stats);
-      } catch (err) {
-        console.error("Error fetching user data:", err);
+      } catch {
+        // Only log to error state, not to console
         setError("Failed to load user data. Please try again.");
       } finally {
         setLoading(false);

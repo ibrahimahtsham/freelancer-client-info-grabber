@@ -14,11 +14,33 @@ import {
 } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import SchoolIcon from "@mui/icons-material/School";
+import WorkIcon from "@mui/icons-material/Work";
 
 const SkillsDisplay = ({ skills, qualifications, badges }) => {
   const hasSkills = skills && Object.keys(skills).length > 0;
   const hasQualifications = qualifications && qualifications.length > 0;
   const hasBadges = badges && badges.length > 0;
+
+  // Helper function to check if a URL is absolute (starts with http:// or https://)
+  const isAbsoluteUrl = (url) => {
+    return url && (url.startsWith("http://") || url.startsWith("https://"));
+  };
+
+  // Helper function to get badge icon - either an image or a fallback icon
+  const getBadgeIcon = (badge) => {
+    if (badge.icon_url && isAbsoluteUrl(badge.icon_url)) {
+      return badge.icon_url;
+    }
+
+    // If there's a URL but it's not absolute, try to construct the full URL
+    // (This is a guess based on typical Freelancer CDN patterns - may need adjustment)
+    if (badge.icon_url && !isAbsoluteUrl(badge.icon_url)) {
+      return `https://www.freelancer.com/${badge.icon_url}`;
+    }
+
+    // No valid URL, return null to use the fallback letter avatar
+    return null;
+  };
 
   if (!hasSkills && !hasQualifications && !hasBadges) {
     return (
@@ -124,36 +146,43 @@ const SkillsDisplay = ({ skills, qualifications, badges }) => {
           </Box>
 
           <Grid container spacing={2}>
-            {badges.map((badge, index) => (
-              <Grid item xs={12} sm={6} md={4} key={`badge-${index}`}>
-                <Card variant="outlined" sx={{ height: "100%" }}>
-                  <CardHeader
-                    avatar={
-                      <Avatar
-                        src={badge.icon_url}
-                        alt={badge.name}
-                        sx={{ bgcolor: "warning.light" }}
-                      >
-                        {badge.name.charAt(0)}
-                      </Avatar>
-                    }
-                    title={badge.name}
-                    subheader={
-                      badge.time_awarded
-                        ? new Date(
-                            badge.time_awarded * 1000
-                          ).toLocaleDateString()
-                        : ""
-                    }
-                  />
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary">
-                      {badge.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+            {badges.map((badge, index) => {
+              const badgeIconUrl = getBadgeIcon(badge);
+              return (
+                <Grid item xs={12} sm={6} md={4} key={`badge-${index}`}>
+                  <Card variant="outlined" sx={{ height: "100%" }}>
+                    <CardHeader
+                      avatar={
+                        <Avatar
+                          src={badgeIconUrl}
+                          alt={badge.name}
+                          sx={{ bgcolor: "warning.light" }}
+                        >
+                          {badge.name ? (
+                            badge.name.charAt(0)
+                          ) : (
+                            <EmojiEventsIcon />
+                          )}
+                        </Avatar>
+                      }
+                      title={badge.name}
+                      subheader={
+                        badge.time_awarded
+                          ? new Date(
+                              badge.time_awarded * 1000
+                            ).toLocaleDateString()
+                          : ""
+                      }
+                    />
+                    <CardContent>
+                      <Typography variant="body2" color="text.secondary">
+                        {badge.description || "No description available"}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })}
           </Grid>
         </Paper>
       )}

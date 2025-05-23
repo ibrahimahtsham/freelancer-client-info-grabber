@@ -14,10 +14,11 @@ import {
 import LaptopIcon from "@mui/icons-material/Laptop";
 import SmartphoneIcon from "@mui/icons-material/Smartphone";
 import TabletIcon from "@mui/icons-material/Tablet";
-import PublicIcon from "@mui/icons-material/Public";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { formatDate } from "../utils/statsProcessing";
 
 const LoginInfo = ({ loginInfo }) => {
+  // Remove console log
   if (!loginInfo?.devices || loginInfo.devices.length === 0) {
     return (
       <Paper sx={{ p: 3 }}>
@@ -37,25 +38,70 @@ const LoginInfo = ({ loginInfo }) => {
   );
   const mostRecentDevice = sortedDevices[0];
 
-  // Determine device icon
+  // Parse user agent to determine device type and browser
+  const parseUserAgent = (userAgent) => {
+    if (!userAgent)
+      return { device: "Unknown", browser: "Unknown", os: "Unknown" };
+
+    // Extract platform info
+    let device = "Desktop";
+    if (userAgent.toLowerCase().includes("mobile")) {
+      device = "Mobile";
+    } else if (userAgent.toLowerCase().includes("tablet")) {
+      device = "Tablet";
+    }
+
+    // Extract browser and OS info from user agent string
+    let browser = "Unknown";
+    let os = "Unknown";
+
+    if (userAgent.includes("(")) {
+      const parts = userAgent.split("(");
+      if (parts.length > 1) {
+        const osPart = parts[1].split(")")[0].trim();
+        os = osPart;
+
+        if (parts[1].includes(")")) {
+          const browserPart = parts[1].split(")")[1].trim();
+          if (browserPart) {
+            browser = browserPart;
+          } else if (osPart.includes("Chrome")) {
+            // Handle case where Chrome version is in OS part
+            browser = osPart.match(/Chrome [0-9.]+/)
+              ? osPart.match(/Chrome [0-9.]+/)[0]
+              : "Chrome";
+            os = osPart.replace(/Chrome [0-9.]+/, "").trim();
+          }
+        }
+      }
+    } else {
+      browser = userAgent;
+    }
+
+    return { device, browser, os };
+  };
+
+  // Determine device icon based on user agent
   const getDeviceIcon = (device) => {
-    const deviceType = (device.device_type || "").toLowerCase();
-    if (deviceType.includes("mobile") || deviceType.includes("phone")) {
+    const userAgent = (device.user_agent || "").toLowerCase();
+    if (userAgent.includes("mobile") || userAgent.includes("phone")) {
       return <SmartphoneIcon />;
-    } else if (deviceType.includes("tablet")) {
+    } else if (userAgent.includes("tablet")) {
       return <TabletIcon />;
     } else {
       return <LaptopIcon />;
     }
   };
 
-  // Group devices by IP address
-  const devicesByIp = sortedDevices.reduce((acc, device) => {
-    const ip = device.ip_address || "Unknown";
-    if (!acc[ip]) {
-      acc[ip] = [];
+  // Group devices by location (city and country)
+  const devicesByLocation = sortedDevices.reduce((acc, device) => {
+    const location = `${device.city || "Unknown"}, ${
+      device.country || "Unknown"
+    }`;
+    if (!acc[location]) {
+      acc[location] = [];
     }
-    acc[ip].push(device);
+    acc[location].push(device);
     return acc;
   }, {});
 
@@ -78,21 +124,23 @@ const LoginInfo = ({ loginInfo }) => {
                 {formatDate(new Date(mostRecentDevice.last_login * 1000))}
               </Typography>
               <Typography variant="body2">
-                <strong>IP Address:</strong>{" "}
-                {mostRecentDevice.ip_address || "Unknown"}
+                <strong>Location:</strong>{" "}
+                {`${mostRecentDevice.city || "Unknown"}, ${
+                  mostRecentDevice.country || "Unknown"
+                }`}
               </Typography>
               <Typography variant="body2">
                 <strong>Device:</strong>{" "}
-                {mostRecentDevice.device_type || "Unknown"}
+                {mostRecentDevice.platform || "Unknown"}
               </Typography>
               <Typography variant="body2">
-                <strong>Browser:</strong>{" "}
-                {mostRecentDevice.browser_name || "Unknown"}{" "}
-                {mostRecentDevice.browser_version || ""}
+                <strong>User Agent:</strong>{" "}
+                {mostRecentDevice.user_agent || "Unknown"}
               </Typography>
               <Typography variant="body2">
-                <strong>OS:</strong> {mostRecentDevice.os_name || "Unknown"}{" "}
-                {mostRecentDevice.os_version || ""}
+                <strong>Status:</strong>{" "}
+                {mostRecentDevice.is_active ? "Active" : "Inactive"}
+                {mostRecentDevice.is_current ? " (Current)" : ""}
               </Typography>
             </Box>
           </Grid>
@@ -102,14 +150,14 @@ const LoginInfo = ({ loginInfo }) => {
       <Divider sx={{ my: 3 }} />
 
       <Typography variant="subtitle1" gutterBottom>
-        Login History
+        Login History by Location
       </Typography>
 
-      {Object.entries(devicesByIp).map(([ip, devices]) => (
-        <Box key={ip} sx={{ mb: 3 }}>
+      {Object.entries(devicesByLocation).map(([location, devices]) => (
+        <Box key={location} sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-            <PublicIcon color="action" sx={{ mr: 1 }} />
-            <Typography variant="subtitle2">IP Address: {ip}</Typography>
+            <LocationOnIcon color="action" sx={{ mr: 1 }} />
+            <Typography variant="subtitle2">Location: {location}</Typography>
             <Chip
               label={`${devices.length} login${devices.length > 1 ? "s" : ""}`}
               size="small"
@@ -118,20 +166,26 @@ const LoginInfo = ({ loginInfo }) => {
           </Box>
 
           <List dense>
-            {devices.map((device, index) => (
-              <ListItem
-                key={`${ip}-${index}`}
-                divider={index !== devices.length - 1}
-              >
-                <ListItemIcon>{getDeviceIcon(device)}</ListItemIcon>
-                <ListItemText
-                  primary={`${device.browser_name || "Unknown"} on ${
-                    device.os_name || "Unknown"
-                  } ${device.os_version || ""}`}
-                  secondary={formatDate(new Date(device.last_login * 1000))}
-                />
-              </ListItem>
-            ))}
+            {devices.map((device, index) => {
+              const { browser } = parseUserAgent(device.user_agent);
+              return (
+                <ListItem
+                  key={`${location}-${index}`}
+                  divider={index !== devices.length - 1}
+                >
+                  <ListItemIcon>{getDeviceIcon(device)}</ListItemIcon>
+                  <ListItemText
+                    primary={`${browser} on ${device.platform}`}
+                    secondary={
+                      <>
+                        {formatDate(new Date(device.last_login * 1000))}
+                        {device.is_active ? " • Active" : " • Inactive"}
+                      </>
+                    }
+                  />
+                </ListItem>
+              );
+            })}
           </List>
         </Box>
       ))}
