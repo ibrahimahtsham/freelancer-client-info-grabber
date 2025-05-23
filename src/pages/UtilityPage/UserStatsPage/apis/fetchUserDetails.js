@@ -265,6 +265,9 @@ export async function fetchUserDetails(logger = console.log) {
       directory_data: directoryData || {}, // Add directory data
     };
 
+    //conole log all data in json
+    console.log("Combined user data:", JSON.stringify(combinedData, null, 2));
+
     cachedUserDetails = combinedData;
     log("User details retrieved and combined successfully", "success");
 

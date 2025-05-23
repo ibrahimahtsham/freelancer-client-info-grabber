@@ -21,8 +21,9 @@ import SkillsDisplay from "./components/SkillsDisplay";
 import ProjectStats from "./components/ProjectStats";
 import LoginInfo from "./components/LoginInfo";
 import HistoryTimeline from "./components/HistoryTimeline";
+import SkillsStatsChart from "./components/SkillsStatsChart";
 
-// Create a silent logger that doesn't use console.log
+// Silent logger that doesn't use console.log
 const silentLogger = () => {};
 
 const UserStatsPage = () => {
@@ -37,14 +38,13 @@ const UserStatsPage = () => {
         setLoading(true);
         setError(null);
 
-        // Use the silent logger instead of console.log
+        // Use silent logger instead of console.log
         const userData = await fetchUserDetails(silentLogger);
 
         // Process the user stats
         const stats = processUserStats(userData);
         setProcessedStats(stats);
       } catch {
-        // Only log to error state, not to console
         setError("Failed to load user data. Please try again.");
       } finally {
         setLoading(false);
@@ -119,6 +119,7 @@ const UserStatsPage = () => {
           aria-label="user data tabs"
         >
           <Tab label="Reputation & Stats" />
+          <Tab label="Skill Distribution" />
           <Tab label="Skills & Qualifications" />
           <Tab label="Login History" />
           <Tab label="Project History" />
@@ -141,6 +142,13 @@ const UserStatsPage = () => {
         )}
 
         {tabValue === 1 && (
+          <SkillsStatsChart
+            topSkillsWithCounts={processedStats.topSkillsWithCounts}
+            skillsByCategory={processedStats.skillsByCategory}
+          />
+        )}
+
+        {tabValue === 2 && (
           <SkillsDisplay
             skills={processedStats.skills}
             qualifications={processedStats.qualifications}
@@ -148,13 +156,9 @@ const UserStatsPage = () => {
           />
         )}
 
-        {tabValue === 2 && (
-          <LoginInfo
-            loginInfo={{ devices: processedStats.loginInfo.devices }}
-          />
-        )}
+        {tabValue === 3 && <LoginInfo loginInfo={processedStats.loginInfo} />}
 
-        {tabValue === 3 && (
+        {tabValue === 4 && (
           <HistoryTimeline registrationDate={processedStats.registrationDate} />
         )}
       </Box>

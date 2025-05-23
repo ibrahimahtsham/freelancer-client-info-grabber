@@ -6,102 +6,128 @@
 export function processUserStats(userData) {
   if (!userData) return null;
 
-  // Extract reputation data - handle the new nested structure
-  const reputationData = userData.reputation || {};
-  
-  // These might be at different levels depending on the API response structure
-  const entireHistory = reputationData.entire_history || 
-                       reputationData.freelancer?.entire_history || 
-                       reputationData.employer?.entire_history || 
-                       {};
-                       
-  const last3months = reputationData.last3months || 
-                     reputationData.freelancer?.last3months || 
-                     reputationData.employer?.last3months || 
-                     {};
-                     
-  const last12months = reputationData.last12months || 
-                      reputationData.freelancer?.last12months || 
-                      reputationData.employer?.last12months || 
-                      {};
+  // Look for reputation data in multiple possible locations
+  const repData =
+    userData.full_reputation && !isEmpty(userData.full_reputation)
+      ? userData.full_reputation
+      : userData.reputation ||
+        (userData.directory_data && userData.directory_data.reputation) ||
+        {};
+
+  const entireHistory = repData.entire_history || {};
+  const last3months = repData.last3months || {};
+  const last12months = repData.last12months || {};
+
+  // Get job history from reputation data
+  const jobHistory = repData.job_history || {};
+  const jobCounts = jobHistory.job_counts || [];
 
   // Process registration date
-  const registrationDate = userData.registration_date 
-    ? new Date(userData.registration_date * 1000) 
+  const registrationDate = userData.registration_date
+    ? new Date(userData.registration_date * 1000)
     : null;
-  
+
   // Calculate account age
   let activeSince = "Unknown";
   if (registrationDate) {
     const now = new Date();
     const yearDiff = now.getFullYear() - registrationDate.getFullYear();
     const monthDiff = now.getMonth() - registrationDate.getMonth();
-    
+
     if (yearDiff > 0) {
-      activeSince = `${yearDiff} year${yearDiff !== 1 ? 's' : ''}`;
+      activeSince = `${yearDiff} year${yearDiff !== 1 ? "s" : ""}`;
       if (monthDiff > 0) {
-        activeSince += `, ${monthDiff} month${monthDiff !== 1 ? 's' : ''}`;
+        activeSince += `, ${monthDiff} month${monthDiff !== 1 ? "s" : ""}`;
       }
     } else if (monthDiff > 0) {
-      activeSince = `${monthDiff} month${monthDiff !== 1 ? 's' : ''}`;
+      activeSince = `${monthDiff} month${monthDiff !== 1 ? "s" : ""}`;
     } else {
       const dayDiff = now.getDate() - registrationDate.getDate();
-      activeSince = `${dayDiff} day${dayDiff !== 1 ? 's' : ''}`;
+      activeSince = `${dayDiff} day${dayDiff !== 1 ? "s" : ""}`;
     }
   }
 
-  // Determine if this account has meaningful freelancer data
-  const hasFreelancerData = 
-    (entireHistory.reviews > 0) || 
-    (entireHistory.complete > 0) || 
-    (userData.role === 'freelancer');
+  // Get jobs data - prioritize directory data which might be more complete
+  const jobsData = userData.directory_data?.jobs || userData.jobs || [];
 
-  // Extract skills from directory data or jobs
+  // Count skills by category
   const skills = {};
-  
-  // Try to get skills from directory data (more detailed)
-  if (userData.directory_data?.jobs && Array.isArray(userData.directory_data.jobs)) {
-    userData.directory_data.jobs.forEach(job => {
-      const category = job.category?.name || "Other";
-      if (!skills[category]) {
-        skills[category] = 0;
+  const skillsByCategory = {};
+
+  if (jobsData && Array.isArray(jobsData)) {
+    jobsData.forEach((job) => {
+      const categoryName = job.category?.name || "Other";
+      const jobName = job.name || "Unknown";
+
+      // Count skills overall
+      if (!skills[jobName]) {
+        skills[jobName] = 0;
       }
-      skills[category]++;
-    });
-  } 
-  // Fallback to regular jobs data
-  else if (userData.jobs && Array.isArray(userData.jobs)) {
-    userData.jobs.forEach(job => {
-      const category = job.category?.name || "Other";
-      if (!skills[category]) {
-        skills[category] = 0;
+      skills[jobName]++;
+
+      // Group by category
+      if (!skillsByCategory[categoryName]) {
+        skillsByCategory[categoryName] = {};
       }
-      skills[category]++;
+      if (!skillsByCategory[categoryName][jobName]) {
+        skillsByCategory[categoryName][jobName] = 0;
+      }
+      skillsByCategory[categoryName][jobName]++;
     });
   }
 
-  // Process login information
-  const loginInfo = {
-    devices: userData.devices || [],
-    // Add more login info if available
-  };
+  // Create a map of top skills with counts from job_counts
+  const topSkillsWithCounts = [];
+  if (jobCounts && Array.isArray(jobCounts)) {
+    jobCounts.forEach((item) => {
+      if (item.job && item.count) {
+        topSkillsWithCounts.push({
+          name: item.job.name,
+          count: item.count,
+          category: item.job.category?.name || "Other",
+        });
+      }
+    });
 
-  // Process earnings if available
+    // Sort by count in descending order
+    topSkillsWithCounts.sort((a, b) => b.count - a.count);
+  }
+
+  // Get qualifications - prioritize directory data
+  const qualifications =
+    userData.directory_data?.qualifications || userData.qualifications || [];
+
+  // Get badges - prioritize directory data
+  const badges = userData.directory_data?.badges || userData.badges || [];
+
+  // Get profile description - prioritize directory data
+  const profileDescription =
+    userData.directory_data?.profile_description ||
+    userData.profile_description ||
+    "";
+
+  // Process and format earnings if available
   const earnings = entireHistory.earnings || 0;
-  const formattedEarnings = typeof earnings === 'number' ? earnings.toFixed(2) : '0.00';
+  const formattedEarnings =
+    typeof earnings === "number" ? earnings.toFixed(2) : "0.00";
 
-  // Get qualifications from directory data
-  const qualifications = userData.directory_data?.qualifications || userData.qualifications || [];
+  // Determine if we have meaningful freelancer data
+  const hasFreelancerData =
+    entireHistory.reviews > 0 ||
+    entireHistory.complete > 0 ||
+    userData.role === "freelancer" ||
+    badges.length > 0 ||
+    jobCounts.length > 0;
 
-  // Return structured data
+  // Return processed data
   return {
     username: userData.username,
     displayName: userData.display_name || userData.username,
-    profileImage: userData.avatar_large_cdn || userData.avatar_cdn || null,
+    profileImage: userData.avatar_large_cdn || userData.avatar_cdn,
     registrationDate,
     activeSince,
     hasFreelancerData,
-    profileDescription: userData.profile_description || userData.directory_data?.profile_description || null,
+    profileDescription,
     reputation: {
       overall: entireHistory.overall || 0,
       onBudget: entireHistory.on_budget || 0,
@@ -115,16 +141,23 @@ export function processUserStats(userData) {
         overall: last12months.overall || 0,
         reviews: last12months.reviews || 0,
       },
+      totalReviews: entireHistory.reviews || 0,
     },
     totalEarnings: formattedEarnings,
     projectsCompleted: entireHistory.complete || 0,
     completionRate: Math.round((entireHistory.completion_rate || 0) * 100),
     totalReviews: entireHistory.reviews || 0,
     skills,
+    skillsByCategory,
+    topSkillsWithCounts, // Added top skills with counts from job_history
     qualifications,
-    badges: userData.badges || [],
-    jobCount: (userData.jobs?.length || 0) || (userData.directory_data?.jobs?.length || 0),
-    profileVerified: userData.status?.freelancer_verified_user || false,
+    badges,
+    loginInfo: {
+      devices: userData.devices || [],
+      lastLogin: userData.last_login_time
+        ? new Date(userData.last_login_time * 1000)
+        : null,
+    },
     projectStats: {
       completed: entireHistory.complete || 0,
       inProgress: entireHistory.incomplete || 0,
@@ -139,8 +172,28 @@ export function processUserStats(userData) {
       identity: userData.status?.identity_verified || false,
       profileComplete: userData.status?.profile_complete || false,
     },
-    loginInfo
+    role: userData.role || "freelancer",
+    hourlyRate: userData.hourly_rate || 0,
+    location: userData.location,
+    // Add employer stats if available
+    employerStats: userData.employer_reputation?.project_stats
+      ? {
+          openProjects: userData.employer_reputation.project_stats.open || 0,
+          workInProgress:
+            userData.employer_reputation.project_stats.work_in_progress || 0,
+          completedProjects:
+            userData.employer_reputation.project_stats.complete || 0,
+          pendingProjects:
+            userData.employer_reputation.project_stats.pending || 0,
+          draftProjects: userData.employer_reputation.project_stats.draft || 0,
+        }
+      : null,
   };
+}
+
+// Helper function to check if an object is empty
+function isEmpty(obj) {
+  return Object.keys(obj).length === 0;
 }
 
 /**
@@ -149,20 +202,20 @@ export function processUserStats(userData) {
  * @returns {string} - Formatted date
  */
 export function formatDate(date) {
-  if (!date || !(date instanceof Date) || isNaN(date)) return 'N/A';
-  
+  if (!date || !(date instanceof Date) || isNaN(date)) return "N/A";
+
   try {
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     };
-    
+
     return date.toLocaleDateString(undefined, options);
   } catch (error) {
     console.error("Error formatting date:", error);
-    return 'Invalid date';
+    return "Invalid date";
   }
 }
