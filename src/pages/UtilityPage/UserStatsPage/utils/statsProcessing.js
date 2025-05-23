@@ -76,8 +76,10 @@ export function processUserStats(userData) {
     });
   }
 
-  // Create a map of top skills with counts from job_counts
-  const topSkillsWithCounts = [];
+  // Create a more comprehensive skills list by combining both sources
+  let topSkillsWithCounts = [];
+
+  // First process the job_counts data which has accurate counts
   if (jobCounts && Array.isArray(jobCounts)) {
     jobCounts.forEach((item) => {
       if (item.job && item.count) {
@@ -88,10 +90,38 @@ export function processUserStats(userData) {
         });
       }
     });
-
-    // Sort by count in descending order
-    topSkillsWithCounts.sort((a, b) => b.count - a.count);
   }
+
+  // Now add any skills from jobsData that aren't already in the list
+  if (jobsData && Array.isArray(jobsData)) {
+    // Create a map of skills already added
+    const existingSkills = new Set(
+      topSkillsWithCounts.map((item) => item.name)
+    );
+
+    // Process skills from our complete jobs data
+    Object.entries(skills).forEach(([skillName, count]) => {
+      if (!existingSkills.has(skillName)) {
+        // Find category for this skill
+        let category = "Other";
+        for (const [catName, catSkills] of Object.entries(skillsByCategory)) {
+          if (catSkills[skillName]) {
+            category = catName;
+            break;
+          }
+        }
+
+        topSkillsWithCounts.push({
+          name: skillName,
+          count: count,
+          category: category,
+        });
+      }
+    });
+  }
+
+  // Sort all skills by count in descending order
+  topSkillsWithCounts.sort((a, b) => b.count - a.count);
 
   // Get qualifications - prioritize directory data
   const qualifications =

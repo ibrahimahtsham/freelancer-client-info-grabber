@@ -11,6 +11,7 @@ Stats that need to be shown:-
     which locations had most awarded
     somehow show what shift had most bids made, heatmap form is nice
     stats for bid timings, which hours the bids were made the most, a distribution
+    highest paying clients
 
 
 
