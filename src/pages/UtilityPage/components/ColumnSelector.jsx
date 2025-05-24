@@ -1,5 +1,3 @@
-// filepath: c:\Users\Siamax\Desktop\freelancer-client-info-grabber\src\pages\UtilityPage\components\ColumnSelector.jsx
-
 import React, { useState } from "react";
 import {
   Button,

@@ -1,5 +1,4 @@
 #!/bin/bash
-# filepath: /home/siamax/Desktop/freelancer-client-info-grabber/run_or_deploy.sh
 
 set -e
 
