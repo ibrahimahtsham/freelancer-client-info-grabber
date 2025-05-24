@@ -1,9 +1,10 @@
 Immediate:-
 
-    get data for our own user, what are our hidden stats
+    fix calculations page
+    salary calculator fix
+    add export and import of json instead of csv
+    be able to save a BIG record of 4000+ rows
 
-    checkout some weird logic that is being applied in data table
-    reporganize columns in the data table that makes sense
 
 Stats that need to be shown:-
 
@@ -22,10 +23,13 @@ Do later:-
 
     fix ui for add new employee screen
     fix rate limited not showing time remaining, see if there is any lirary that will let me read api headers
-    auto select past whole month as range to 
+    auto select past whole month as range to
     salary needs to take in acount the date of payment + if someone helped with chat
     auto scrollability in API Usage Statistics
     data table should have popups for each cell since some data can just go in overflow
+    checkout some weird logic that is being applied in data table
+    reporganize columns in the data table that makes sense
+    add a welcome [username] on navbar
 
 
 
