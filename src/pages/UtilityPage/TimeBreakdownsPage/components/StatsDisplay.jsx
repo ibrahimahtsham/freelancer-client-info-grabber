@@ -28,7 +28,6 @@ const StatsDisplay = ({ currentEmployee, awardedProjects, otherProjects }) => {
               title="Projects Won"
               value={awardedProjects.length}
               total={awardedProjects.length + otherProjects.length}
-              suffix="projects"
               color={currentEmployee.color}
             />
           </Grid>
