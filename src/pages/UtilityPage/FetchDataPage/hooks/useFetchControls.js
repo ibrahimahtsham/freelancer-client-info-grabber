@@ -43,6 +43,9 @@ export function useFetchControls(deps) {
   const [limit, setLimit] = useState(DEFAULT_VALUES.LIMIT);
   const [fetchType, setFetchType] = useState("complete");
 
+  // Add rate limit settings
+  const [rateLimitAggressiveness, setRateLimitAggressiveness] = useState(0.7); // Default to 70% aggressiveness
+
   // Format date in readable format for logs (DD/MM/YYYY h:mm a)
   const formatDateForDisplay = (date) => {
     return format(date, "dd/MM/yyyy h:mm a");
@@ -177,6 +180,11 @@ export function useFetchControls(deps) {
       setLimit,
       fetchType,
       setFetchType,
+      // Add rate limit settings to the returned object
+      rateLimit: {
+        aggressiveness: rateLimitAggressiveness,
+        setAggressiveness: setRateLimitAggressiveness,
+      },
     },
     handleFetchClick,
     handleProgressUpdate,

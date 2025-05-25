@@ -1,70 +1,67 @@
 import { apiRequest } from "../../../../../../apis/request";
 import { trackApiCall } from "./tracking";
 import { extractRateLimits, withRetry } from "./rateLimiting";
+import { updateRateLimitState, smartDelay } from "./rateLimitManager";
 
 /**
  * Monitored version of apiRequest that tracks API calls and handles rate limiting
- * @param {string} endpoint - API endpoint
- * @param {Object} options - Request options
- * @param {Function} logger - Optional logger function
- * @returns {Promise<Object>} API response with additional metadata
  */
 export async function monitoredApiRequest(
   endpoint,
   options = {},
   logger = console.log
 ) {
-  // Ensure logger is a function
   const log = typeof logger === "function" ? logger : console.log;
 
   try {
+    // Apply intelligent throttling based on previous rate limit data
+    await smartDelay(endpoint, log);
+
     log(`API Request: ${endpoint}`, "api");
-
-    // Debug log the request details
-    const baseUrl = "https://www.freelancer.com/api/";
-    const fullUrl = endpoint.startsWith("http")
-      ? endpoint
-      : `${baseUrl}${endpoint}`;
-    log(`Full URL: ${fullUrl}`, "debug");
-
-    // Make the API call
     const response = await apiRequest(endpoint, options);
 
     // Track the API call
     trackApiCall(endpoint, response);
 
-    // Extract rate limit info if available
+    // Extract and parse rate limit info
     const rateLimits = extractRateLimits(response.headers);
 
-    // Check for rate limiting
+    // Update dynamic rate limiting state with this response's headers
+    updateRateLimitState(response.headers, endpoint);
+
+    // Log warnings when getting close to limits
     if (rateLimits && rateLimits.remaining < 5) {
       log(
-        `Rate limit warning: ${rateLimits.remaining}/${rateLimits.limit} remaining`,
+        `Rate limit warning: ${rateLimits.remaining}/${rateLimits.limit} remaining for ${endpoint}`,
         "warning"
       );
     }
 
-    // Return enhanced response object
     return {
       ...response,
       endpoint,
       rateLimits,
     };
   } catch (error) {
-    // Track failed call
     trackApiCall(endpoint);
 
-    // Enhanced error logging
+    // Check if this is a rate limit error (HTTP 429)
+    if (error.status === 429) {
+      log(`Rate limit exceeded for ${endpoint}. Backing off.`, "error");
+      // Force rate limited status to true
+      updateRateLimitState(
+        {
+          "ratelimit-remaining": "0",
+          "ratelimit-limit": "50",
+          "ratelimit-reset": "60",
+        },
+        endpoint
+      );
+    }
+
     log(`API Error (${endpoint}): ${error.message}`, "error");
-
-    // Log additional error details if available
-    if (error.status) {
-      log(`Status code: ${error.status}`, "error");
-    }
-
-    if (error.details) {
+    if (error.details)
       log(`Error details: ${JSON.stringify(error.details)}`, "error");
-    }
 
     throw error;
   }

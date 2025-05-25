@@ -7,6 +7,7 @@ import {
   fetchClientProfiles,
   transformDataToRows,
 } from "../../FetchDataPage/apis";
+import { setRateLimitAggressiveness } from "../../FetchDataPage/apis/utils/apiUtils/rateLimitConfig";
 
 /**
  * Core data fetching implementation with progress tracking
@@ -16,6 +17,7 @@ import {
  * @param {string} fetchType - Type of data to fetch (complete, bids_only, etc)
  * @param {Function} progressCallback - Callback for progress updates
  * @param {Function} logger - Logger function for detailed logging
+ * @param {number} rateLimitAggressiveness - Rate limit aggressiveness (0 to 1)
  * @returns {Promise<Array>} - Promise resolving to the processed data rows
  */
 export async function fetchDataWithProgress(
@@ -24,8 +26,12 @@ export async function fetchDataWithProgress(
   toDate,
   fetchType,
   progressCallback,
-  logger
+  logger,
+  rateLimitAggressiveness = 0.7 // Default value
 ) {
+  // Update the global rate limit aggressiveness setting
+  setRateLimitAggressiveness(rateLimitAggressiveness);
+
   // Convert dates to timestamps
   const fromTimestamp = fromDate
     ? Math.floor(new Date(fromDate).getTime() / 1000)

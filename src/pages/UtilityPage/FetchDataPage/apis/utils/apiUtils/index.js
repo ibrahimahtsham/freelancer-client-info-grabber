@@ -23,3 +23,12 @@ export {
 
 // Re-export functions from batching.js
 export { needsBatching, batchItems, formatQueryParams } from "./batching";
+
+// Re-export functions from rateLimitManager.js
+export {
+  parseRateLimitHeaders,
+  calculateDynamicDelay,
+  updateRateLimitState,
+  getRecommendedDelay,
+  smartDelay,
+} from "./rateLimitManager";

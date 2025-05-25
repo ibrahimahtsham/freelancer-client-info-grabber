@@ -91,20 +91,10 @@ const FetchDataPage = () => {
   });
 
   // Close snackbar
-  const handleSnackbarClose = (event, reason) => {
+  const handleSnackbarClose = (reason) => {
     if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
   };
-
-  // Add debugging to see actual values when saving
-  console.log(
-    "Save props being passed:",
-    JSON.stringify({
-      fromDate: fromDateTime,
-      toDate: toDateTime,
-      datasetName,
-    })
-  );
 
   return (
     <Box sx={{ padding: 3 }}>
