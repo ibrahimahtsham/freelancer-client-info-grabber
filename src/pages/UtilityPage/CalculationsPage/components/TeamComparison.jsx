@@ -55,38 +55,57 @@ const TeamComparison = ({ rows }) => {
     const firstId = firstEmployee.id;
     const secondId = secondEmployee.id;
 
-    // Helper to parse dates & check if in shift time
-    const parseDateTime = (dateString) => {
-      if (!dateString || dateString === "N/A") return null;
-
-      try {
-        // Parse DD-MM-YYYY HH:MM:SS AM/PM format
-        const parts = dateString.split(" ");
-        if (parts.length < 2) return null;
-
-        const datePart = parts[0];
-        const timePart = parts[1];
-        const ampmPart = parts[2];
-
-        // Parse date
-        const [day, month, year] = datePart.split("-").map(Number);
-
-        // Parse time
-        const [hours, minutes] = timePart.split(":").map(Number);
-
-        // Convert to 24-hour format
-        let hour24 = hours;
-        if (ampmPart === "PM" && hours < 12) hour24 += 12;
-        else if (ampmPart === "AM" && hours === 12) hour24 = 0;
-
-        return {
-          hour: hour24,
-          date: new Date(year, month - 1, day, hour24, minutes),
-        };
-      } catch (e) {
-        console.warn("Failed to parse date time:", dateString, e);
-        return null;
+    // Helper function to parse date/time from both old and new data structure
+    const parseDateTime = (row) => {
+      // First try new data structure with bid_time (Unix timestamp)
+      if (row.bid_time) {
+        try {
+          const date = new Date(row.bid_time * 1000);
+          return {
+            hour: date.getHours(),
+            date: date,
+          };
+        } catch (err) {
+          console.warn("Failed to parse bid_time:", row.bid_time, err);
+        }
       }
+
+      // Fall back to old structure with projectUploadDate (DD-MM-YYYY HH:MM:SS AM/PM)
+      if (row.projectUploadDate && row.projectUploadDate !== "N/A") {
+        try {
+          // Parse DD-MM-YYYY HH:MM:SS AM/PM format
+          const parts = row.projectUploadDate.split(" ");
+          if (parts.length < 2) return null;
+
+          const datePart = parts[0];
+          const timePart = parts[1];
+          const ampmPart = parts[2];
+
+          // Parse date
+          const [day, month, year] = datePart.split("-").map(Number);
+
+          // Parse time
+          const [hours, minutes] = timePart.split(":").map(Number);
+
+          // Convert to 24-hour format
+          let hour24 = hours;
+          if (ampmPart === "PM" && hours < 12) hour24 += 12;
+          else if (ampmPart === "AM" && hours === 12) hour24 = 0;
+
+          return {
+            hour: hour24,
+            date: new Date(year, month - 1, day, hour24, minutes),
+          };
+        } catch (e) {
+          console.warn(
+            "Failed to parse projectUploadDate:",
+            row.projectUploadDate,
+            e
+          );
+        }
+      }
+
+      return null;
     };
 
     // Check if time falls within a shift
@@ -121,7 +140,7 @@ const TeamComparison = ({ rows }) => {
 
     // Process each row
     rows.forEach((row) => {
-      const dateTime = parseDateTime(row.projectUploadDate);
+      const dateTime = parseDateTime(row);
       if (!dateTime) return;
 
       // Check which shift the project belongs to
@@ -139,23 +158,38 @@ const TeamComparison = ({ rows }) => {
       // Update stats
       stats[employeeId].total++;
 
-      if (row.awarded === "Yes") {
+      // Check if awarded - handle both new and old data structures
+      const isAwarded = row.award_status === "awarded" || row.awarded === "Yes";
+
+      if (isAwarded) {
         stats[employeeId].awarded++;
       }
 
-      // Parse bid amount
-      const bidAmount = parseFloat(row.yourBidAmount?.replace("$", "") || 0);
-      if (!isNaN(bidAmount)) {
-        stats[employeeId].totalBid += bidAmount;
+      // Parse bid amount - handle both data structures
+      let bidAmount = 0;
+
+      if (row.bid_amount !== undefined) {
+        // New structure
+        bidAmount = parseFloat(row.bid_amount) || 0;
+      } else if (row.yourBidAmount) {
+        // Old structure
+        bidAmount = parseFloat(row.yourBidAmount.replace("$", "")) || 0;
       }
 
-      // Parse paid amount
-      const paidAmount = parseFloat(
-        row.totalPaidMilestones?.replace("$", "") || 0
-      );
-      if (!isNaN(paidAmount)) {
-        stats[employeeId].totalPaid += paidAmount;
+      stats[employeeId].totalBid += bidAmount;
+
+      // Parse paid amount - handle both data structures
+      let paidAmount = 0;
+
+      if (row.paid_amount !== undefined) {
+        // New structure
+        paidAmount = parseFloat(row.paid_amount) || 0;
+      } else if (row.totalPaidMilestones) {
+        // Old structure
+        paidAmount = parseFloat(row.totalPaidMilestones.replace("$", "")) || 0;
       }
+
+      stats[employeeId].totalPaid += paidAmount;
     });
 
     // Calculate derived stats
@@ -277,7 +311,7 @@ const TeamComparison = ({ rows }) => {
 
       {/* Detailed stats comparison */}
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -313,7 +347,7 @@ const TeamComparison = ({ rows }) => {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
