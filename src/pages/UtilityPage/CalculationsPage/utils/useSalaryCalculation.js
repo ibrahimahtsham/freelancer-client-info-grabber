@@ -4,7 +4,6 @@ export function useSalaryCalculation() {
   // Base parameters - all in USD
   const [baseSalary, setBaseSalary] = useState(180);
   const [calculationPeriodMonths, setCalculationPeriodMonths] = useState(1);
-  const [usdToPkrRate, setUsdToPkrRate] = useState(290); // Current exchange rate
 
   // Commission tiers in USD
   const [commissionTiers, setCommissionTiers] = useState({
@@ -15,9 +14,9 @@ export function useSalaryCalculation() {
   });
 
   // Bonus parameters in USD
-  const [attendanceBonus, setAttendanceBonus] = useState(10); // $10 = ~3000 PKR
+  const [attendanceBonus, setAttendanceBonus] = useState(17); // ~$17 USD = 5,000 PKR
   const [perfectAttendance, setPerfectAttendance] = useState(true);
-  const [qualityBonus, setQualityBonus] = useState(15); // $15 = ~4000 PKR
+  const [qualityBonus, setQualityBonus] = useState(35); // ~$35 USD = 10,000 PKR
 
   // Update a specific tier's rate
   const updateTierRate = (tierName, newRate) => {
@@ -31,16 +30,15 @@ export function useSalaryCalculation() {
   const resetToDefaults = () => {
     setBaseSalary(180);
     setCalculationPeriodMonths(1);
-    setUsdToPkrRate(290);
     setCommissionTiers({
       tier1: { min: 1000, max: 2500, rate: 3 },
       tier2: { min: 2501, max: 6000, rate: 5 },
       tier3: { min: 6001, max: 9999, rate: 7 },
       tier4: { min: 10000, max: Infinity, rate: 10 },
     });
-    setAttendanceBonus(10);
+    setAttendanceBonus(17);
     setPerfectAttendance(true);
-    setQualityBonus(15);
+    setQualityBonus(35);
   };
 
   return {
@@ -48,8 +46,6 @@ export function useSalaryCalculation() {
     setBaseSalary,
     calculationPeriodMonths,
     setCalculationPeriodMonths,
-    usdToPkrRate,
-    setUsdToPkrRate,
     commissionTiers,
     updateTierRate,
     attendanceBonus,

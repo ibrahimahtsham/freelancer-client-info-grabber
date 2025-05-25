@@ -1,24 +1,32 @@
+import React from "react";
 import {
+  Box,
   Card,
   CardContent,
   Typography,
-  Box,
-  Slider,
+  FormControlLabel,
   Switch,
+  Slider,
   Button,
+  Tooltip,
+  IconButton,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Tooltip,
-  IconButton,
-  Chip,
+  Divider, // Added Divider import
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import StarIcon from "@mui/icons-material/Star";
+import {
+  EmojiEvents as EmojiEventsIcon,
+  ExpandMore as ExpandMoreIcon,
+  RestartAlt as RestartAltIcon,
+  CheckCircle as CheckCircleIcon,
+  Info as InfoIcon,
+  InfoOutlined as InfoOutlinedIcon,
+  Star as StarIcon,
+  AutoGraph as AutoGraphIcon,
+  Diversity3 as Diversity3Icon,
+  AddTask as AddTaskIcon,
+} from "@mui/icons-material";
 
 const BonusPanel = ({
   attendanceBonus,
@@ -28,41 +36,44 @@ const BonusPanel = ({
   qualityBonus,
   setQualityBonus,
   resetToDefaults,
-  usdToPkrRate,
 }) => {
   return (
-    <Card
-      sx={{ mb: 2, borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-    >
+    <Card sx={{ mb: 3, borderRadius: 2 }}>
       <CardContent>
-        <Accordion elevation={0}>
+        <Typography
+          variant="subtitle1"
+          gutterBottom
+          sx={{
+            fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <EmojiEventsIcon sx={{ mr: 1 }} fontSize="small" />
+          Bonus Configuration
+        </Typography>
+
+        <Accordion defaultExpanded>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
-            sx={{
-              backgroundColor: "rgba(25, 118, 210, 0.04)",
-              borderRadius: 1,
-            }}
+            aria-controls="attendance-content"
+            id="attendance-header"
           >
             <Typography sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <EmojiEventsIcon fontSize="small" />
-              Performance Bonuses
+              <CheckCircleIcon fontSize="small" />
+              Attendance & Performance
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ pt: 3 }}>
-            <Box
-              sx={{
-                mb: 3,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                backgroundColor: perfectAttendance
-                  ? "rgba(76, 175, 80, 0.08)"
-                  : "transparent",
-                p: 1.5,
-                borderRadius: 2,
-              }}
-            >
-              <Box sx={{ display: "flex", flexDirection: "column" }}>
+          <AccordionDetails>
+            <Box sx={{ mb: 3 }}>
+              <Box
+                sx={{
+                  mb: 1.5,
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
                 <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
                   <CheckCircleIcon
                     fontSize="small"
@@ -84,83 +95,139 @@ const BonusPanel = ({
                     </IconButton>
                   </Tooltip>
                 </Box>
-                <Box sx={{ display: "flex", alignItems: "center", ml: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    ${attendanceBonus} USD (≈{" "}
-                    {Math.round(attendanceBonus * usdToPkrRate)} PKR)
-                  </Typography>
-                </Box>
-              </Box>
-              <Switch
-                checked={perfectAttendance}
-                onChange={(e) => setPerfectAttendance(e.target.checked)}
-                color="success"
-              />
-            </Box>
-
-            <Box sx={{ mb: 3, px: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Typography variant="body2" fontWeight={500}>
-                  Attendance Bonus Amount
-                </Typography>
-                <Chip
-                  label={`$${attendanceBonus}`}
-                  size="small"
-                  variant="outlined"
-                  sx={{ ml: 1 }}
+                <Switch
+                  checked={perfectAttendance}
+                  onChange={(e) => setPerfectAttendance(e.target.checked)}
+                  color="success"
                 />
               </Box>
+              <Box sx={{ display: "flex", alignItems: "center", ml: 4 }}>
+                <Typography variant="body2" color="text.secondary">
+                  ${attendanceBonus} USD
+                </Typography>
+              </Box>
+
               <Slider
                 value={attendanceBonus}
-                onChange={(e, newValue) => setAttendanceBonus(newValue)}
-                valueLabelDisplay="auto"
-                min={0}
-                max={30}
+                onChange={(e, val) => setAttendanceBonus(val)}
+                disabled={!perfectAttendance}
+                min={5}
+                max={50}
                 step={1}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(x) => `$${x}`}
+                sx={{ mt: 3 }}
                 marks={[
-                  { value: 0, label: "$0" },
-                  { value: 15, label: "$15" },
-                  { value: 30, label: "$30" },
+                  { value: 5, label: "$5" },
+                  { value: 17, label: "$17" },
+                  { value: 50, label: "$50" },
                 ]}
               />
             </Box>
 
-            <Box sx={{ mb: 3, px: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+            <Divider sx={{ my: 2 }} />
+
+            <Box sx={{ mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{ mb: 1, display: "flex", alignItems: "center" }}
+              >
                 <StarIcon
                   fontSize="small"
                   sx={{ mr: 1, color: "warning.main" }}
                 />
-                <Typography variant="body2" fontWeight={500}>
-                  Quality of Bid Bonus
-                </Typography>
-                <Chip
-                  label={`$${qualityBonus}`}
-                  size="small"
-                  variant="outlined"
-                  sx={{ ml: 1 }}
-                />
-              </Box>
+                Quality of Bids Bonus (monthly)
+                <Tooltip title="Based on review score from Business Development Lead">
+                  <IconButton size="small" sx={{ ml: 0.5 }}>
+                    <InfoOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Typography>
               <Slider
                 value={qualityBonus}
-                onChange={(e, newValue) => setQualityBonus(newValue)}
-                valueLabelDisplay="auto"
+                onChange={(e, val) => setQualityBonus(val)}
                 min={0}
-                max={30}
+                max={50}
                 step={1}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(x) => `$${x}`}
                 marks={[
                   { value: 0, label: "$0" },
                   { value: 15, label: "$15" },
-                  { value: 30, label: "$30" },
+                  { value: 35, label: "$35" },
+                  { value: 50, label: "$50" },
                 ]}
               />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: "block", mt: 1, textAlign: "right" }}
-              >
-                ~{Math.round(qualityBonus * usdToPkrRate)} PKR
-              </Typography>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="other-bonuses-content"
+            id="other-bonuses-header"
+          >
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AutoGraphIcon fontSize="small" />
+              Additional Bonuses
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ mb: 2 }}>
+              <Tooltip title="Calculation is automatic based on sales figures">
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <InfoOutlinedIcon
+                    fontSize="small"
+                    sx={{ mr: 1, color: "text.secondary" }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Sales Maturity Bonus: $35 for sales over $1000
+                  </Typography>
+                </Box>
+              </Tooltip>
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <Tooltip title="Automatic after 3+ months of $2500+ sales">
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <InfoOutlinedIcon
+                    fontSize="small"
+                    sx={{ mr: 1, color: "text.secondary" }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Consistency Bonus: $85 × months (for 3+ months at $2500+)
+                  </Typography>
+                </Box>
+              </Tooltip>
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <Tooltip title="For assisting with chat/follow-ups">
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <InfoOutlinedIcon
+                    fontSize="small"
+                    sx={{ mr: 1, color: "text.secondary" }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Lead assist: 0.5% of project total (requires tracking)
+                  </Typography>
+                </Box>
+              </Tooltip>
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <Tooltip title="Requires additional data">
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <InfoOutlinedIcon
+                    fontSize="small"
+                    sx={{ mr: 1, color: "text.secondary" }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Leadership Bonus: 1% from subordinate total sales
+                  </Typography>
+                </Box>
+              </Tooltip>
             </Box>
           </AccordionDetails>
         </Accordion>

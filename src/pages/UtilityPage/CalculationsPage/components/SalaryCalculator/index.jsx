@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Box, Typography, Grid, Alert, Paper } from "@mui/material";
 import { useEmployees } from "../../../../../contexts/EmployeeHooks";
-import { to24Hour } from "../../../../../utils/projectTimeUtils";
+import { to24Hour } from "../../../../../utils/dateUtils";
 import { useSalaryCalculation } from "../../utils/useSalaryCalculation";
 import { calculateSalary } from "../../utils/salaryCalculations";
 
@@ -48,7 +48,6 @@ const SalaryCalculator = ({ rows }) => {
     selectedEmployee,
     baseSalary: salaryParams.baseSalary,
     commissionTiers: salaryParams.commissionTiers,
-    usdToPkrRate: salaryParams.usdToPkrRate,
     calculationPeriodMonths: salaryParams.calculationPeriodMonths,
     perfectAttendance: salaryParams.perfectAttendance,
     attendanceBonus: salaryParams.attendanceBonus,
@@ -78,15 +77,14 @@ const SalaryCalculator = ({ rows }) => {
       sx={{
         p: 3,
         borderRadius: 2,
-        bgcolor: "background.paper", // This will be light in light mode, dark in dark mode
-        // Alternative: bgcolor: theme => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100'
+        bgcolor: "background.paper",
       }}
     >
       <Typography
         variant="h5"
         fontWeight="500"
         gutterBottom
-        sx={{ mb: 3, color: "primary.main" }} // Already theme-aware
+        sx={{ mb: 3, color: "primary.main" }}
       >
         Salary Calculator
       </Typography>
@@ -109,8 +107,6 @@ const SalaryCalculator = ({ rows }) => {
           <SalaryConfigPanel
             baseSalary={salaryParams.baseSalary}
             setBaseSalary={salaryParams.setBaseSalary}
-            usdToPkrRate={salaryParams.usdToPkrRate}
-            setUsdToPkrRate={salaryParams.setUsdToPkrRate}
             calculationPeriodMonths={salaryParams.calculationPeriodMonths}
             setCalculationPeriodMonths={salaryParams.setCalculationPeriodMonths}
           />
@@ -128,7 +124,6 @@ const SalaryCalculator = ({ rows }) => {
             qualityBonus={salaryParams.qualityBonus}
             setQualityBonus={salaryParams.setQualityBonus}
             resetToDefaults={salaryParams.resetToDefaults}
-            usdToPkrRate={salaryParams.usdToPkrRate}
           />
         </Grid>
 

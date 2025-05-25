@@ -1,35 +1,34 @@
+import React from "react";
 import {
+  Box,
   Card,
   CardContent,
   Typography,
-  Box,
   Divider,
-  Chip,
   Grid,
-  Tooltip,
   Paper,
+  Chip,
+  Tooltip,
 } from "@mui/material";
-import WorkIcon from "@mui/icons-material/Work";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import PaidIcon from "@mui/icons-material/Paid";
-import AddTaskIcon from "@mui/icons-material/AddTask";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import AccountBalanceWallet from "@mui/icons-material/AccountBalanceWallet";
+import AttachMoney from "@mui/icons-material/AttachMoney";
+import TrendingUp from "@mui/icons-material/TrendingUp";
+import MonetizationOn from "@mui/icons-material/MonetizationOn";
+import Paid from "@mui/icons-material/Paid";
+import Percent from "@mui/icons-material/Percent";
+import WorkspacePremium from "@mui/icons-material/WorkspacePremium";
+import Diamond from "@mui/icons-material/Diamond";
+import TipsAndUpdates from "@mui/icons-material/TipsAndUpdates";
+import Star from "@mui/icons-material/Star";
+import Leaderboard from "@mui/icons-material/Leaderboard";
+import Group from "@mui/icons-material/Group";
+import Add from "@mui/icons-material/Add";
 
 const SalaryResults = ({ salaryData, selectedEmployee }) => {
-  if (!salaryData) {
+  if (!salaryData || !selectedEmployee) {
     return (
-      <Card
-        sx={{
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: 2,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        }}
-      >
-        <CardContent sx={{ textAlign: "center", py: 6 }}>
+      <Card sx={{ height: "100%" }}>
+        <CardContent sx={{ textAlign: "center", py: 4 }}>
           <Typography variant="h6" color="text.secondary" gutterBottom>
             No Data Available
           </Typography>
@@ -42,10 +41,8 @@ const SalaryResults = ({ salaryData, selectedEmployee }) => {
     );
   }
 
-  // Format currency
+  // Format currency in USD
   const formatUSD = (amount) => `$${amount.toFixed(2)}`;
-  const formatPKR = (amount) =>
-    `₨ ${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
   return (
     <Card
@@ -58,60 +55,50 @@ const SalaryResults = ({ salaryData, selectedEmployee }) => {
       <CardContent
         sx={{ height: "100%", display: "flex", flexDirection: "column" }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              bgcolor: selectedEmployee?.color || "#1976d2",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mr: 2,
-              color: "#fff",
-            }}
-          >
-            {selectedEmployee?.name?.charAt(0) || "E"}
-          </Box>
-          <Box>
-            <Typography variant="h6">
-              {selectedEmployee?.name || "Employee"}'s Compensation
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Based on {salaryData.totalProjects} total projects (
-              {salaryData.awardedProjects} awarded)
-            </Typography>
-          </Box>
-        </Box>
+        <Typography variant="h6" gutterBottom>
+          {selectedEmployee.name}'s Compensation Summary
+        </Typography>
 
-        {/* Stats cards */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={6} md={6}>
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={6} md={4}>
             <StatsCard
-              title="Total Sales"
-              value={formatUSD(salaryData.totalSalesUSD)}
-              secondary={`Monthly: ${formatUSD(salaryData.monthlySalesUSD)}`}
-              icon={<TrendingUpIcon />}
-              color="#2196f3"
+              title="Total Projects"
+              value={salaryData.totalProjects}
+              secondary={`${salaryData.awardedProjects} awarded`}
+              icon={<TrendingUp />}
+              color="#4285F4"
             />
           </Grid>
-          <Grid item xs={6} md={6}>
+
+          <Grid item xs={6} md={4}>
             <StatsCard
-              title="Projects"
-              value={salaryData.totalProjects}
-              secondary={`${salaryData.awardedProjects} awarded (${Math.round(
-                (salaryData.awardedProjects / salaryData.totalProjects) * 100
-              )}%)`}
-              icon={<WorkIcon />}
-              color="#ff9800"
+              title="Monthly Sales"
+              value={formatUSD(salaryData.monthlySalesUSD)}
+              secondary={`Period: ${salaryData.periodMonths} months`}
+              icon={<AttachMoney />}
+              color="#0F9D58"
+            />
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <StatsCard
+              title="Paid Amount"
+              value={formatUSD(salaryData.paidSalesUSD)}
+              secondary={`For commission calculation`}
+              icon={<Paid />}
+              color="#DB4437"
             />
           </Grid>
         </Grid>
 
         <Paper
           elevation={0}
-          sx={{ p: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2, mb: 3 }}
+          sx={{
+            p: 2,
+            mb: 3,
+            border: "1px solid rgba(0,0,0,0.12)",
+            borderRadius: 2,
+          }}
         >
           <Typography
             variant="subtitle1"
@@ -122,26 +109,24 @@ const SalaryResults = ({ salaryData, selectedEmployee }) => {
               alignItems: "center",
             }}
           >
-            <AccountBalanceWalletIcon fontSize="small" sx={{ mr: 1 }} />
+            <AccountBalanceWallet fontSize="small" sx={{ mr: 1 }} />
             Compensation Breakdown
           </Typography>
 
           <CompensationItem
             title="Base Salary"
             valueUSD={salaryData.baseSalaryUSD}
-            valuePKR={salaryData.baseSalaryPKR}
           />
 
           <CompensationItem
             title="Sales Commission"
             valueUSD={salaryData.commissionUSD}
-            valuePKR={salaryData.commissionPKR}
             showPercentage={
-              salaryData.totalSalesUSD > 0
-                ? (
-                    (salaryData.commissionUSD / salaryData.totalSalesUSD) *
+              salaryData.paidSalesUSD > 0
+                ? `${(
+                    (salaryData.commissionUSD / salaryData.paidSalesUSD) *
                     100
-                  ).toFixed(1) + "%"
+                  ).toFixed(1)}%`
                 : "0%"
             }
           />
@@ -149,14 +134,36 @@ const SalaryResults = ({ salaryData, selectedEmployee }) => {
           <CompensationItem
             title="Attendance Bonus"
             valueUSD={salaryData.attendanceBonusUSD}
-            valuePKR={salaryData.attendanceBonusPKR}
           />
 
           <CompensationItem
             title="Quality Bonus"
             valueUSD={salaryData.qualityBonusUSD}
-            valuePKR={salaryData.qualityBonusPKR}
           />
+
+          <CompensationItem
+            title="Sales Maturity Bonus"
+            valueUSD={salaryData.salesMaturityBonusUSD}
+          />
+
+          <CompensationItem
+            title="Consistency Bonus"
+            valueUSD={salaryData.consistencyBonusUSD}
+          />
+
+          {salaryData.processAssistBonusUSD > 0 && (
+            <CompensationItem
+              title="Process Assist Bonus"
+              valueUSD={salaryData.processAssistBonusUSD}
+            />
+          )}
+
+          {salaryData.leadershipBonusUSD > 0 && (
+            <CompensationItem
+              title="Leadership Bonus"
+              valueUSD={salaryData.leadershipBonusUSD}
+            />
+          )}
         </Paper>
 
         <Box sx={{ mt: "auto" }}>
@@ -174,26 +181,13 @@ const SalaryResults = ({ salaryData, selectedEmployee }) => {
               {salaryData.periodMonths > 1 ? "months" : "month"}
             </Typography>
 
-            <Tooltip title={`${formatPKR(salaryData.totalCompensationPKR)}`}>
-              <Chip
-                icon={<PaidIcon />}
-                label={formatUSD(salaryData.totalCompensationUSD)}
-                color="success"
-                sx={{ fontWeight: "bold" }}
-              />
-            </Tooltip>
+            <Chip
+              icon={<Paid />}
+              label={formatUSD(salaryData.totalCompensationUSD)}
+              color="success"
+              sx={{ fontWeight: "bold" }}
+            />
           </Box>
-
-          {salaryData.periodMonths > 1 && (
-            <Box sx={{ textAlign: "right", mt: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Monthly Average:{" "}
-                {formatUSD(
-                  salaryData.totalCompensationUSD / salaryData.periodMonths
-                )}
-              </Typography>
-            </Box>
-          )}
         </Box>
       </CardContent>
     </Card>
@@ -260,7 +254,7 @@ const StatsCard = ({ title, value, secondary, icon, color }) => (
 );
 
 // Compensation item subcomponent
-const CompensationItem = ({ title, valueUSD, valuePKR, showPercentage }) => (
+const CompensationItem = ({ title, valueUSD, showPercentage }) => (
   <Box
     sx={{
       display: "flex",
@@ -285,11 +279,6 @@ const CompensationItem = ({ title, valueUSD, valuePKR, showPercentage }) => (
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
         ${valueUSD.toFixed(2)}
       </Typography>
-      <Tooltip title="PKR value">
-        <Typography variant="caption" sx={{ ml: 1, color: "text.secondary" }}>
-          (₨ {Math.round(valuePKR).toLocaleString()})
-        </Typography>
-      </Tooltip>
     </Box>
   </Box>
 );
