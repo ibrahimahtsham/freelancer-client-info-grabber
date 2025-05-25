@@ -15,9 +15,6 @@ export async function saveDataToLocalStorage(
       throw new Error("No data to save");
     }
 
-    // Log the incoming dataset name for debugging
-    console.log("STORAGE saving dataset with name:", datasetName);
-
     // Generate a unique ID for this dataset
     const datasetId = `dataset_${Date.now()}_${Math.random()
       .toString(36)
