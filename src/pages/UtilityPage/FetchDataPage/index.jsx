@@ -49,6 +49,7 @@ const FetchDataPage = () => {
   const { apiCalls, showApiStats, resetApiStats, toggleApiStats } =
     useApiStats(loading);
 
+  // Get fetch controls and destructure them
   const { fetchControls, handleFetchClick } = useFetchControls({
     fetchData,
     addLog,
@@ -67,10 +68,21 @@ const FetchDataPage = () => {
     logger,
   });
 
+  // Destructuring fetchControls to access the individual properties
+  const { fromDateTime, toDateTime, limitEnabled, limit, fetchType } =
+    fetchControls;
+
+  // Now use the destructured variables
   const { handleSaveClick, handleSaveWithName } = useSaveDataset({
     rows,
     saveData,
-    fetchControls,
+    fetchControls: {
+      fromDate: fromDateTime,
+      toDate: toDateTime,
+      limitEnabled,
+      limit,
+      fetchType,
+    },
     refreshStoredDatasets,
     setNameDialogOpen,
     setDatasetName,
@@ -83,6 +95,16 @@ const FetchDataPage = () => {
     if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
   };
+
+  // Add debugging to see actual values when saving
+  console.log(
+    "Save props being passed:",
+    JSON.stringify({
+      fromDate: fromDateTime,
+      toDate: toDateTime,
+      datasetName,
+    })
+  );
 
   return (
     <Box sx={{ padding: 3 }}>

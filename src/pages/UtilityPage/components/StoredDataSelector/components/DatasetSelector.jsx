@@ -35,15 +35,17 @@ const DatasetSelector = ({
           const dataset = storedDatasets.find((d) => d.id === selected);
           if (!dataset) return selected;
 
-          const timestamp = getFormattedTimestamp(dataset.metadata.savedAt);
-          return `${timestamp} • ${dataset.metadata.fromDate} to ${dataset.metadata.toDate} (${dataset.metadata.rowCount} records)`;
+          // Always use the dataset name if available
+          return (
+            dataset.name ||
+            `Dataset from ${getFormattedTimestamp(dataset.metadata.savedAt)}`
+          );
         }}
       >
         <MenuItem value="">
           <em>Select a dataset</em>
         </MenuItem>
 
-        {/* Direct MenuItem components */}
         {storedDatasets.map((dataset) => (
           <MenuItem
             key={dataset.id}
@@ -51,11 +53,15 @@ const DatasetSelector = ({
             sx={{ display: "flex", justifyContent: "space-between" }}
           >
             <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+                {dataset.name}
+              </Typography>
               <Typography variant="body2">
                 <strong>
                   {getFormattedTimestamp(dataset.metadata.savedAt)}
-                </strong>{" "}
-                • {dataset.metadata.fromDate} to {dataset.metadata.toDate}
+                </strong>
+                {" • "}
+                {dataset.metadata.fromDate} to {dataset.metadata.toDate}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {dataset.metadata.rowCount} records • Limit:{" "}

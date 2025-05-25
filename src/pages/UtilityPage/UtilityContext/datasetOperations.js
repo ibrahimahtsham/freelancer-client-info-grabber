@@ -41,6 +41,7 @@ export function loadAvailableDatasets() {
           const dataset = JSON.parse(localStorage.getItem(key));
           datasets.push({
             id: dataset.id,
+            name: dataset.name, // Include the name property
             metadata: dataset.metadata,
           });
         } catch (e) {

@@ -17,23 +17,39 @@ const QuickAccessButtons = ({ datasets, onDatasetSelect }) => {
           gap: 1,
         }}
       >
-        {datasets.slice(0, 5).map((dataset) => (
-          <Tooltip key={dataset.id} title={dataset.name || "Unnamed Dataset"}>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => onDatasetSelect(dataset.id)}
+        {datasets.slice(0, 5).map((dataset) => {
+          // Force use the actual dataset name, not the timestamp
+          const displayName = dataset.name
+            ? dataset.name
+            : `Dataset ${getFormattedTimestamp(dataset.metadata.savedAt)}`;
+
+          return (
+            <Tooltip
+              key={dataset.id}
+              title={
+                <div style={{ whiteSpace: "pre-line" }}>
+                  {`Name: ${displayName}
+Date Range: ${dataset.metadata.fromDate || "Not specified"} to ${
+                    dataset.metadata.toDate || "Not specified"
+                  }
+Records: ${dataset.metadata.rowCount}
+Limit: ${dataset.metadata.limit}
+Saved: ${getFormattedTimestamp(dataset.metadata.savedAt)}`}
+                </div>
+              }
             >
-              {dataset.name
-                ? `${dataset.name.substring(0, 10)}${
-                    dataset.name.length > 10 ? "..." : ""
-                  }`
-                : getFormattedTimestamp(dataset.metadata.savedAt).slice(0, 10)}
-              {" • "}
-              {dataset.metadata.rowCount} records
-            </Button>
-          </Tooltip>
-        ))}
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => onDatasetSelect(dataset.id)}
+              >
+                {displayName.length > 15
+                  ? displayName.substring(0, 15) + "..."
+                  : displayName}
+              </Button>
+            </Tooltip>
+          );
+        })}
       </Box>
     </Box>
   );

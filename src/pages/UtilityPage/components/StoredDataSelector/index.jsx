@@ -6,6 +6,11 @@ import NotificationSystem from "./components/NotificationSystem";
 import DatasetSelector from "./components/DatasetSelector";
 import QuickAccessButtons from "./components/QuickAccessButtons";
 import DialogManager from "./components/DialogManager";
+import DatasetImportDialog from "../DatasetImportDialog";
+// Import the export function
+import { exportDatasetAsJson } from "../DataTable/utils/exportUtils";
+// Import the import function from storage
+import { importDatasetFromJson } from "../../utils/useUtilityData/storage";
 
 const StoredDataSelector = () => {
   const {
@@ -15,6 +20,7 @@ const StoredDataSelector = () => {
     deleteDataset,
     rows,
     setRows,
+    refreshStoredDatasets,
   } = useUtility();
 
   // State for delete confirmation dialogs
@@ -26,6 +32,8 @@ const StoredDataSelector = () => {
     message: "",
     severity: "info",
   });
+  // Add state for import dialog
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   // Handle dataset selection - either from dropdown or quick access
   const handleDatasetSelect = (datasetId) => {
@@ -141,6 +149,80 @@ const StoredDataSelector = () => {
     setNotification({ ...notification, open: false });
   };
 
+  // Handle export current dataset
+  const handleExportCurrentDataset = () => {
+    if (!selectedDatasetId || rows.length === 0) {
+      setNotification({
+        open: true,
+        message: "No dataset selected to export",
+        severity: "warning",
+      });
+      return;
+    }
+
+    // Find the current dataset metadata
+    const dataset = storedDatasets.find((ds) => ds.id === selectedDatasetId);
+    if (!dataset) {
+      setNotification({
+        open: true,
+        message: "Dataset metadata not found",
+        severity: "error",
+      });
+      return;
+    }
+
+    // Export the dataset
+    try {
+      exportDatasetAsJson(
+        rows,
+        dataset.metadata,
+        dataset.name || "Freelancer Dataset"
+      );
+      setNotification({
+        open: true,
+        message: "Dataset exported successfully",
+        severity: "success",
+      });
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error exporting dataset: ${err.message}`,
+        severity: "error",
+      });
+    }
+  };
+
+  // Handle import dataset
+  const handleImport = async (importedData) => {
+    try {
+      const { success, datasetId } = await importDatasetFromJson(importedData);
+
+      if (success) {
+        // Refresh the dataset list
+        refreshStoredDatasets();
+
+        setNotification({
+          open: true,
+          message: `Dataset "${
+            importedData.name || datasetId
+          }" imported successfully with ${importedData.rows.length} records`,
+          severity: "success",
+        });
+
+        // Automatically select the imported dataset
+        handleDatasetSelect(datasetId);
+      } else {
+        throw new Error("Failed to import dataset");
+      }
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error importing dataset: ${err.message}`,
+        severity: "error",
+      });
+    }
+  };
+
   return (
     <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
       {/* Dialog management */}
@@ -151,6 +233,13 @@ const StoredDataSelector = () => {
         onDeleteConfirm={handleConfirmDelete}
         onClearAllClose={() => setClearAllDialogOpen(false)}
         onClearAllConfirm={handleConfirmClearAll}
+      />
+
+      {/* Import Dialog */}
+      <DatasetImportDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        onImport={handleImport}
       />
 
       {/* Notifications */}
@@ -164,6 +253,8 @@ const StoredDataSelector = () => {
         rowsCount={rows.length}
         hasStoredDatasets={storedDatasets.length > 0}
         onClearAll={handleClearAllClick}
+        onImport={() => setImportDialogOpen(true)}
+        onExport={handleExportCurrentDataset}
       />
 
       {/* Dataset selector dropdown */}

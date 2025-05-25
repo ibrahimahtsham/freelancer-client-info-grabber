@@ -99,3 +99,47 @@ export function downloadCSV(data, visibleColumns, title) {
   link.click();
   document.body.removeChild(link);
 }
+
+/**
+ * Export dataset as JSON file
+ * @param {Array} data - Table data
+ * @param {Object} metadata - Dataset metadata (filters, dates, etc)
+ * @param {string} datasetName - Name of the dataset
+ */
+export function exportDatasetAsJson(data, metadata, datasetName) {
+  const dataset = {
+    id: `dataset_${Date.now()}`,
+    name: datasetName || `Dataset ${new Date().toLocaleDateString()}`,
+    metadata: {
+      ...metadata,
+      rowCount: data.length,
+      savedAt: new Date().toISOString(),
+      exportedAt: new Date().toISOString(),
+    },
+    rows: data,
+  };
+
+  const jsonString = JSON.stringify(dataset, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${datasetName || "freelancer-data"}-${
+    new Date().toISOString().split("T")[0]
+  }.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Download data as JSON file
+ * @param {Array} data - Table data
+ * @param {Object} filters - Applied filters
+ * @param {string} title - Title for the file
+ */
+export function downloadJSON(data, filters, title) {
+  exportDatasetAsJson(data, filters, title);
+}
