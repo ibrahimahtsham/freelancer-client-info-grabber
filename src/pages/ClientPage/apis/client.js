@@ -17,7 +17,8 @@ export async function fetchClientInfo(projectId) {
   const project = projectResponse.data.result.projects[0];
   const ownerId = project.owner_id;
 
-  const userResponse = await apiRequest(`${API_ENDPOINTS.USERS}${ownerId}/`);
+  // Fix: Add a slash between the endpoint and the user ID
+  const userResponse = await apiRequest(`${API_ENDPOINTS.USERS}/${ownerId}/`);
 
   if (userResponse.error) {
     throw userResponse.error;
