@@ -1,6 +1,7 @@
 Immediate:-
 
     make it so that the progress tracker has breakup of main line into its categories
+    fix the page getting slower overtime
 
 
 Stats that need to be shown:-
