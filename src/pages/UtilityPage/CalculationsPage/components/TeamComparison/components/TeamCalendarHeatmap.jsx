@@ -64,17 +64,17 @@ const heatmapStyles = `
     margin: 0 auto;
   }
   .team-heatmap-container .react-calendar-heatmap {
-    width: 100% !important;
-    height: 100px !important;
+    width: auto !important;
+    height: 500px !important; /* removed the fixed 100px height */
   }
   .team-heatmap-container .react-calendar-heatmap rect {
     stroke-width: 1px;
     rx: 1;
     ry: 1;
-    width: 6px !important;
-    height: 6px !important;
+    width: 10px !important;    /* new square width */
+    height: 10px !important;   /* new square height */
     /* Optional: adding some spacing between squares */
-    margin: 1px;
+    margin: 10px;
   }
 `;
 
