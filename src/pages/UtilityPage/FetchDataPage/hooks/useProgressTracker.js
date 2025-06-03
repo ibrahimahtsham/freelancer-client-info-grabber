@@ -7,21 +7,30 @@ export function useProgressTracker() {
     categories: {},
     totalEstimatedTime: 0,
     elapsedTime: 0,
+    eta: null,
   });
 
   const categoryTimers = useRef({});
   const categoryWeights = useRef({
-    user_id: { weight: 5, estimated: 2000 }, // 5% - Quick user ID fetch
-    bids: { weight: 25, estimated: 15000 }, // 25% - Main bids fetch
-    projects: { weight: 20, estimated: 12000 }, // 20% - Project details
-    threads: { weight: 20, estimated: 12000 }, // 20% - Thread info
-    payments: { weight: 15, estimated: 10000 }, // 15% - Payment details
-    clients: { weight: 10, estimated: 8000 }, // 10% - Client profiles
-    processing: { weight: 5, estimated: 3000 }, // 5% - Data processing
+    // Updated weights based on your actual performance data (81 bids = 78s total)
+    user_id: { weight: 1, estimated: 500 }, // 1% - Very quick (0s observed)
+    bids: { weight: 3, estimated: 2000 }, // 3% - Quick fetch (2s observed)
+    projects: { weight: 8, estimated: 6000 }, // 8% - Moderate (6s observed)
+    threads: { weight: 65, estimated: 51000 }, // 65% - MAJOR bottleneck (51s observed!)
+    payments: { weight: 1, estimated: 500 }, // 1% - Quick when applicable (0s observed)
+    clients: { weight: 22, estimated: 17000 }, // 22% - Significant time (17s observed)
+    processing: { weight: 0.5, estimated: 200 }, // 0.5% - Very quick (0s observed)
   });
+
+  const overallStartTime = useRef(null);
 
   const startCategory = useCallback((categoryName) => {
     const now = Date.now();
+
+    // Track overall start time
+    if (!overallStartTime.current) {
+      overallStartTime.current = now;
+    }
 
     categoryTimers.current[categoryName] = {
       startTime: now,
@@ -29,34 +38,54 @@ export function useProgressTracker() {
       duration: 0,
     };
 
-    setProgressData((prev) => ({
-      ...prev,
-      currentCategory: categoryName,
-      categories: {
-        ...prev.categories,
-        [categoryName]: {
-          status: "in-progress",
-          startTime: now,
-          duration: 0,
-          progress: 0,
+    setProgressData((prev) => {
+      const newData = {
+        ...prev,
+        currentCategory: categoryName,
+        categories: {
+          ...prev.categories,
+          [categoryName]: {
+            status: "in-progress",
+            startTime: now,
+            duration: 0,
+            progress: 0,
+          },
         },
-      },
-    }));
+      };
+
+      // Calculate ETA based on current progress and elapsed time
+      const elapsedTime = now - (overallStartTime.current || now);
+      newData.elapsedTime = elapsedTime;
+      newData.eta = calculateETA(newData, elapsedTime);
+
+      return newData;
+    });
   }, []);
 
   const updateCategoryProgress = useCallback(
     (categoryName, progress, message = "") => {
-      setProgressData((prev) => ({
-        ...prev,
-        categories: {
-          ...prev.categories,
-          [categoryName]: {
-            ...prev.categories[categoryName],
-            progress,
-            message,
+      setProgressData((prev) => {
+        const now = Date.now();
+        const elapsedTime = now - (overallStartTime.current || now);
+
+        const newData = {
+          ...prev,
+          elapsedTime,
+          categories: {
+            ...prev.categories,
+            [categoryName]: {
+              ...prev.categories[categoryName],
+              progress,
+              message,
+            },
           },
-        },
-      }));
+        };
+
+        // Update ETA
+        newData.eta = calculateETA(newData, elapsedTime);
+
+        return newData;
+      });
     },
     []
   );
@@ -70,6 +99,8 @@ export function useProgressTracker() {
       timer.duration = now - timer.startTime;
 
       setProgressData((prev) => {
+        const elapsedTime = now - (overallStartTime.current || now);
+
         const updatedCategories = {
           ...prev.categories,
           [categoryName]: {
@@ -92,34 +123,65 @@ export function useProgressTracker() {
           }
         });
 
-        return {
+        const newData = {
           ...prev,
           currentCategory: null,
           overall: Math.min(totalProgress, 100),
           categories: updatedCategories,
+          elapsedTime,
         };
+
+        // Update ETA
+        newData.eta = calculateETA(newData, elapsedTime);
+
+        return newData;
       });
     }
   }, []);
 
   const resetProgress = useCallback(() => {
     categoryTimers.current = {};
+    overallStartTime.current = null;
     setProgressData({
       overall: 0,
       currentCategory: null,
       categories: {},
       totalEstimatedTime: 0,
       elapsedTime: 0,
+      eta: null,
     });
+  }, []);
+
+  // Calculate ETA based on current progress and performance
+  const calculateETA = useCallback((progressData, elapsedTime) => {
+    if (progressData.overall <= 0 || progressData.overall >= 100) {
+      return null;
+    }
+
+    // Calculate rate of progress (percentage per millisecond)
+    const progressRate = progressData.overall / elapsedTime;
+
+    if (progressRate <= 0) {
+      return null;
+    }
+
+    // Calculate remaining percentage and estimated time
+    const remainingProgress = 100 - progressData.overall;
+    const estimatedRemainingTime = remainingProgress / progressRate;
+
+    return {
+      remainingTimeMs: estimatedRemainingTime,
+      estimatedCompletionTime: Date.now() + estimatedRemainingTime,
+    };
   }, []);
 
   // Update category weights based on actual performance
   const updateCategoryWeight = useCallback((categoryName, actualDuration) => {
     const category = categoryWeights.current[categoryName];
     if (category) {
-      // Adjust estimated time based on actual performance (simple moving average)
+      // Adjust estimated time based on actual performance (weighted moving average)
       category.estimated = Math.round(
-        (category.estimated + actualDuration) / 2
+        category.estimated * 0.7 + actualDuration * 0.3
       );
     }
   }, []);

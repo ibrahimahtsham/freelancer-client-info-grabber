@@ -16,6 +16,7 @@ import {
   RadioButtonUnchecked,
   Schedule,
   Api as ApiIcon,
+  Timer,
 } from "@mui/icons-material";
 
 const CategoryIcon = ({ status }) => {
@@ -41,11 +42,24 @@ const formatDuration = (duration) => {
   return `${remainingSeconds}s`;
 };
 
+const formatETA = (eta) => {
+  if (!eta || !eta.remainingTimeMs) return null;
+
+  const remainingSeconds = Math.floor(eta.remainingTimeMs / 1000);
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s remaining`;
+  }
+  return `${seconds}s remaining`;
+};
+
 const categoryDisplayNames = {
   user_id: "User ID Lookup",
   bids: "Bid Data Fetch",
   projects: "Project Details",
-  threads: "Thread Information",
+  threads: "Thread Information", // This is the bottleneck!
   payments: "Payment Details",
   clients: "Client Profiles",
   processing: "Data Processing",
@@ -54,7 +68,8 @@ const categoryDisplayNames = {
 const DetailedProgressDisplay = ({ progressData, visible = false }) => {
   if (!visible) return null;
 
-  const { overall, currentCategory, categories } = progressData;
+  const { overall, currentCategory, categories, eta, elapsedTime } =
+    progressData;
   const categoryList = Object.entries(categories);
   const completedCategories = categoryList.filter(
     ([, data]) => data.status === "completed"
@@ -76,11 +91,22 @@ const DetailedProgressDisplay = ({ progressData, visible = false }) => {
           }}
         >
           <Typography variant="h6">Detailed Progress Tracking</Typography>
-          <Chip
-            label={`${Math.round(overall)}% Complete`}
-            color={overall === 100 ? "success" : "primary"}
-            variant="outlined"
-          />
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Chip
+              label={`${Math.round(overall)}% Complete`}
+              color={overall === 100 ? "success" : "primary"}
+              variant="outlined"
+            />
+            {eta && (
+              <Chip
+                icon={<Timer />}
+                label={formatETA(eta)}
+                color="info"
+                variant="outlined"
+                size="small"
+              />
+            )}
+          </Box>
         </Box>
 
         {/* Overall Progress */}
@@ -90,7 +116,8 @@ const DetailedProgressDisplay = ({ progressData, visible = false }) => {
               Overall Progress
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Total Time: {formatDuration(totalDuration)}
+              Elapsed: {formatDuration(elapsedTime)} | Total:{" "}
+              {formatDuration(totalDuration)}
             </Typography>
           </Box>
           <LinearProgress
@@ -148,6 +175,8 @@ const DetailedProgressDisplay = ({ progressData, visible = false }) => {
                               }}
                             >
                               {displayName}
+                              {key === "threads" && " ⚠️"}{" "}
+                              {/* Warning for bottleneck */}
                             </Typography>
                             {categoryData?.duration && (
                               <Typography
@@ -191,23 +220,41 @@ const DetailedProgressDisplay = ({ progressData, visible = false }) => {
               }}
             >
               {completedCategories.length > 0 ? (
-                completedCategories.map(([name, data]) => (
+                <>
+                  {completedCategories.map(([name, data]) => (
+                    <Box
+                      key={name}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
+                      <Typography variant="caption">
+                        {categoryDisplayNames[name] || name}:
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color={name === "threads" ? "warning.main" : "primary"}
+                      >
+                        {formatDuration(data.duration)}
+                      </Typography>
+                    </Box>
+                  ))}
+
+                  {/* Performance insights */}
                   <Box
-                    key={name}
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
-                    }}
+                    sx={{ mt: 2, pt: 1, borderTop: 1, borderColor: "divider" }}
                   >
-                    <Typography variant="caption">
-                      {categoryDisplayNames[name] || name}:
-                    </Typography>
-                    <Typography variant="caption" color="primary">
-                      {formatDuration(data.duration)}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontStyle: "italic" }}
+                    >
+                      💡 Thread fetching takes ~65% of total time
                     </Typography>
                   </Box>
-                ))
+                </>
               ) : (
                 <Typography variant="caption" color="text.secondary">
                   No completed categories yet
