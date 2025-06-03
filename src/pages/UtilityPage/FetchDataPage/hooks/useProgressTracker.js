@@ -24,43 +24,46 @@ export function useProgressTracker() {
 
   const overallStartTime = useRef(null);
 
-  const startCategory = useCallback((categoryName) => {
-    const now = Date.now();
+  const startCategory = useCallback(
+    (categoryName) => {
+      const now = Date.now();
 
-    // Track overall start time
-    if (!overallStartTime.current) {
-      overallStartTime.current = now;
-    }
+      // Track overall start time
+      if (!overallStartTime.current) {
+        overallStartTime.current = now;
+      }
 
-    categoryTimers.current[categoryName] = {
-      startTime: now,
-      endTime: null,
-      duration: 0,
-    };
-
-    setProgressData((prev) => {
-      const newData = {
-        ...prev,
-        currentCategory: categoryName,
-        categories: {
-          ...prev.categories,
-          [categoryName]: {
-            status: "in-progress",
-            startTime: now,
-            duration: 0,
-            progress: 0,
-          },
-        },
+      categoryTimers.current[categoryName] = {
+        startTime: now,
+        endTime: null,
+        duration: 0,
       };
 
-      // Calculate ETA based on current progress and elapsed time
-      const elapsedTime = now - (overallStartTime.current || now);
-      newData.elapsedTime = elapsedTime;
-      newData.eta = calculateETA(newData, elapsedTime);
+      setProgressData((prev) => {
+        const newData = {
+          ...prev,
+          currentCategory: categoryName,
+          categories: {
+            ...prev.categories,
+            [categoryName]: {
+              status: "in-progress",
+              startTime: now,
+              duration: 0,
+              progress: 0,
+            },
+          },
+        };
 
-      return newData;
-    });
-  }, []);
+        // Calculate ETA based on current progress and elapsed time
+        const elapsedTime = now - (overallStartTime.current || now);
+        newData.elapsedTime = elapsedTime;
+        newData.eta = calculateETA(newData, elapsedTime);
+
+        return newData;
+      });
+    },
+    [calculateETA]
+  );
 
   const updateCategoryProgress = useCallback(
     (categoryName, progress, message = "") => {
@@ -87,57 +90,60 @@ export function useProgressTracker() {
         return newData;
       });
     },
-    []
+    [calculateETA]
   );
 
-  const endCategory = useCallback((categoryName) => {
-    const now = Date.now();
-    const timer = categoryTimers.current[categoryName];
+  const endCategory = useCallback(
+    (categoryName) => {
+      const now = Date.now();
+      const timer = categoryTimers.current[categoryName];
 
-    if (timer) {
-      timer.endTime = now;
-      timer.duration = now - timer.startTime;
+      if (timer) {
+        timer.endTime = now;
+        timer.duration = now - timer.startTime;
 
-      setProgressData((prev) => {
-        const elapsedTime = now - (overallStartTime.current || now);
+        setProgressData((prev) => {
+          const elapsedTime = now - (overallStartTime.current || now);
 
-        const updatedCategories = {
-          ...prev.categories,
-          [categoryName]: {
-            ...prev.categories[categoryName],
-            status: "completed",
-            endTime: now,
-            duration: timer.duration,
-            progress: 100,
-          },
-        };
+          const updatedCategories = {
+            ...prev.categories,
+            [categoryName]: {
+              ...prev.categories[categoryName],
+              status: "completed",
+              endTime: now,
+              duration: timer.duration,
+              progress: 100,
+            },
+          };
 
-        // Calculate overall progress based on completed categories and their weights
-        let totalProgress = 0;
-        Object.entries(updatedCategories).forEach(([catName, catData]) => {
-          if (catData.status === "completed") {
-            totalProgress += categoryWeights.current[catName]?.weight || 0;
-          } else if (catData.status === "in-progress") {
-            const weight = categoryWeights.current[catName]?.weight || 0;
-            totalProgress += (weight * catData.progress) / 100;
-          }
+          // Calculate overall progress based on completed categories and their weights
+          let totalProgress = 0;
+          Object.entries(updatedCategories).forEach(([catName, catData]) => {
+            if (catData.status === "completed") {
+              totalProgress += categoryWeights.current[catName]?.weight || 0;
+            } else if (catData.status === "in-progress") {
+              const weight = categoryWeights.current[catName]?.weight || 0;
+              totalProgress += (weight * catData.progress) / 100;
+            }
+          });
+
+          const newData = {
+            ...prev,
+            currentCategory: null,
+            overall: Math.min(totalProgress, 100),
+            categories: updatedCategories,
+            elapsedTime,
+          };
+
+          // Update ETA
+          newData.eta = calculateETA(newData, elapsedTime);
+
+          return newData;
         });
-
-        const newData = {
-          ...prev,
-          currentCategory: null,
-          overall: Math.min(totalProgress, 100),
-          categories: updatedCategories,
-          elapsedTime,
-        };
-
-        // Update ETA
-        newData.eta = calculateETA(newData, elapsedTime);
-
-        return newData;
-      });
-    }
-  }, []);
+      }
+    },
+    [calculateETA]
+  );
 
   const resetProgress = useCallback(() => {
     categoryTimers.current = {};
