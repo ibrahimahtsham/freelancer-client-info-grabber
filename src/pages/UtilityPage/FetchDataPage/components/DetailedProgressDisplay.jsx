@@ -32,27 +32,39 @@ const CategoryIcon = ({ status }) => {
 
 const formatDuration = (duration) => {
   if (!duration) return "0s";
-  const seconds = Math.floor(duration / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
 
-  if (minutes > 0) {
-    return `${minutes}m ${remainingSeconds}s`;
-  }
-  return `${remainingSeconds}s`;
+  const totalSeconds = Math.floor(duration / 1000);
+  const days = Math.floor(totalSeconds / (24 * 3600));
+  const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+
+  return parts.slice(0, 2).join(" "); // Show max 2 units for readability
 };
 
 const formatETA = (eta) => {
   if (!eta || !eta.remainingTimeMs) return null;
 
-  const remainingSeconds = Math.floor(eta.remainingTimeMs / 1000);
-  const minutes = Math.floor(remainingSeconds / 60);
-  const seconds = remainingSeconds % 60;
+  const totalSeconds = Math.floor(eta.remainingTimeMs / 1000);
+  const days = Math.floor(totalSeconds / (24 * 3600));
+  const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
-  if (minutes > 0) {
-    return `${minutes}m ${seconds}s remaining`;
-  }
-  return `${seconds}s remaining`;
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0 || parts.length === 0) parts.push(`${seconds}s`);
+
+  const timeString = parts.slice(0, 2).join(" "); // Show max 2 units
+  return `${timeString} remaining`;
 };
 
 const categoryDisplayNames = {
@@ -178,25 +190,43 @@ const DetailedProgressDisplay = ({ progressData, visible = false }) => {
                               {key === "threads" && " ⚠️"}{" "}
                               {/* Warning for bottleneck */}
                             </Typography>
-                            {categoryData?.duration && (
+                            {categoryData?.duration ? (
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
                               >
                                 {formatDuration(categoryData.duration)}
                               </Typography>
-                            )}
+                            ) : categoryData?.estimated ? (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ fontStyle: "italic" }}
+                              >
+                                ~{formatDuration(categoryData.estimated)}
+                              </Typography>
+                            ) : null}
                           </Box>
                         }
                         secondary={
-                          categoryData?.message && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {categoryData.message}
-                            </Typography>
-                          )
+                          <>
+                            {categoryData?.message && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {categoryData.message}
+                              </Typography>
+                            )}
+                            {categoryData?.status === "in-progress" &&
+                              categoryData?.progress > 0 && (
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={categoryData.progress}
+                                  sx={{ mt: 0.5, height: 4 }}
+                                />
+                              )}
+                          </>
                         }
                       />
                     </ListItem>

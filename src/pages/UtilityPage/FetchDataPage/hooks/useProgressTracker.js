@@ -24,6 +24,29 @@ export function useProgressTracker() {
 
   const overallStartTime = useRef(null);
 
+  // Calculate ETA based on current progress and performance - moved to top
+  const calculateETA = useCallback((progressData, elapsedTime) => {
+    if (progressData.overall <= 0 || progressData.overall >= 100) {
+      return null;
+    }
+
+    // Calculate rate of progress (percentage per millisecond)
+    const progressRate = progressData.overall / elapsedTime;
+
+    if (progressRate <= 0) {
+      return null;
+    }
+
+    // Calculate remaining percentage and estimated time
+    const remainingProgress = 100 - progressData.overall;
+    const estimatedRemainingTime = remainingProgress / progressRate;
+
+    return {
+      remainingTimeMs: estimatedRemainingTime,
+      estimatedCompletionTime: Date.now() + estimatedRemainingTime,
+    };
+  }, []);
+
   const startCategory = useCallback(
     (categoryName) => {
       const now = Date.now();
@@ -50,6 +73,7 @@ export function useProgressTracker() {
               startTime: now,
               duration: 0,
               progress: 0,
+              estimated: categoryWeights.current[categoryName]?.estimated || 0,
             },
           },
         };
@@ -70,6 +94,10 @@ export function useProgressTracker() {
       setProgressData((prev) => {
         const now = Date.now();
         const elapsedTime = now - (overallStartTime.current || now);
+        const categoryTimer = categoryTimers.current[categoryName];
+        const currentDuration = categoryTimer
+          ? now - categoryTimer.startTime
+          : 0;
 
         const newData = {
           ...prev,
@@ -80,6 +108,7 @@ export function useProgressTracker() {
               ...prev.categories[categoryName],
               progress,
               message,
+              duration: currentDuration, // Update current duration
             },
           },
         };
@@ -156,29 +185,6 @@ export function useProgressTracker() {
       elapsedTime: 0,
       eta: null,
     });
-  }, []);
-
-  // Calculate ETA based on current progress and performance
-  const calculateETA = useCallback((progressData, elapsedTime) => {
-    if (progressData.overall <= 0 || progressData.overall >= 100) {
-      return null;
-    }
-
-    // Calculate rate of progress (percentage per millisecond)
-    const progressRate = progressData.overall / elapsedTime;
-
-    if (progressRate <= 0) {
-      return null;
-    }
-
-    // Calculate remaining percentage and estimated time
-    const remainingProgress = 100 - progressData.overall;
-    const estimatedRemainingTime = remainingProgress / progressRate;
-
-    return {
-      remainingTimeMs: estimatedRemainingTime,
-      estimatedCompletionTime: Date.now() + estimatedRemainingTime,
-    };
   }, []);
 
   // Update category weights based on actual performance

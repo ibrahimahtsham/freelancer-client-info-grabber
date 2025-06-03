@@ -1,15 +1,11 @@
 Immediate:-
 
-    fix calculations page
-    salary calculator fix
-    add export and import of json instead of csv
-    be able to save a BIG record of 4000+ rows
+    make it so that the progress tracker has breakup of main line into its categories
 
 
 Stats that need to be shown:-
 
-    heatmap of which days had more responses on a calendar, which days had awarded
-    which locations had most awarded
+    which locations had most awarded (fix this so it sorts by awarded)
     somehow show what shift had most bids made, heatmap form is nice
     stats for bid timings, which hours the bids were made the most, a distribution
     highest paying clients
