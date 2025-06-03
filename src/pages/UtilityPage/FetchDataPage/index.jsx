@@ -9,6 +9,7 @@ import { useLogger } from "./hooks/useLogger";
 import { useApiStats } from "./hooks/useApiStats";
 import { useSaveDataset } from "./hooks/useSaveDataset";
 import { useFetchControls } from "./hooks/useFetchControls";
+import { useProgressTracker } from "./hooks/useProgressTracker"; // Add this
 
 // Components
 import ControlPanel from "./components/ControlPanel";
@@ -16,6 +17,7 @@ import FetchActions from "./components/FetchActions";
 import LogsPanel from "./components/LogsPanel";
 import ResultsSection from "./components/ResultsSection";
 import DatasetNameDialog from "../components/DatasetNameDialog";
+import DetailedProgressDisplay from "./components/DetailedProgressDisplay"; // Add this
 
 const FetchDataPage = () => {
   const { rows, refreshStoredDatasets } = useUtility();
@@ -48,6 +50,13 @@ const FetchDataPage = () => {
     useLogger();
   const { apiCalls, showApiStats, resetApiStats, toggleApiStats } =
     useApiStats(loading);
+  const {
+    progressData,
+    startCategory,
+    updateCategoryProgress,
+    endCategory,
+    resetProgress,
+  } = useProgressTracker(); // Add this
 
   // Get fetch controls and destructure them
   const { fetchControls, handleFetchClick } = useFetchControls({
@@ -66,6 +75,13 @@ const FetchDataPage = () => {
     setSnackbar,
     toggleLogs,
     logger,
+    progressTracker: {
+      // Pass progress tracker to fetch controls
+      startCategory,
+      updateCategoryProgress,
+      endCategory,
+      resetProgress,
+    },
   });
 
   // Destructuring fetchControls to access the individual properties
@@ -118,6 +134,12 @@ const FetchDataPage = () => {
         error={error}
         progress={progress}
         progressText={progressText}
+      />
+
+      {/* Add the detailed progress display */}
+      <DetailedProgressDisplay
+        progressData={progressData}
+        visible={loading || progressData.overall > 0}
       />
 
       <LogsPanel

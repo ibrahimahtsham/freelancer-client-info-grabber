@@ -19,6 +19,7 @@ export function useFetchControls(deps) {
     setSnackbar,
     toggleLogs,
     logger,
+    progressTracker, // Add this parameter
   } = deps;
 
   // Initialize date range with first day to last day of previous month
@@ -62,7 +63,7 @@ export function useFetchControls(deps) {
   );
 
   // Handle fetch button click
-  const handleFetchClick = useCallback(() => {
+  const handleFetchClick = async () => {
     // Check if fetch is already in progress
     if (fetchInProgressRef.current) {
       addLog("Fetch already in progress, not starting another one", "warning");
@@ -104,69 +105,53 @@ export function useFetchControls(deps) {
     const fromDateTimeString = fromDateTime.toISOString();
     const toDateTimeString = toDateTime.toISOString();
 
-    fetchData(
-      actualLimit,
-      fromDateTimeString,
-      toDateTimeString,
-      fetchType,
-      handleProgressUpdate,
-      logger
-    )
-      .then((data) => {
-        if (currentFetchId === fetchRequestCountRef.current) {
-          addLog(`Successfully fetched ${data.length} rows of data`, "success");
-          setSnackbar({
-            open: true,
-            message: `Data fetched successfully! (${data.length} rows)`,
-            severity: "success",
-          });
-        }
-      })
-      .catch((err) => {
-        if (currentFetchId === fetchRequestCountRef.current) {
-          const errorMessage = err.message || "Error fetching data";
-          addLog(`Error: ${errorMessage}`, "error");
-          setError(errorMessage);
-          setSnackbar({
-            open: true,
-            message: `Error: ${errorMessage}`,
-            severity: "error",
-          });
-        }
-      })
-      .finally(() => {
-        if (currentFetchId === fetchRequestCountRef.current) {
-          // Stop timer
-          stopTimer();
-          addLog("Fetch operation completed", "success");
+    try {
+      // Reset progress tracker
+      progressTracker?.resetProgress();
 
-          setLoading(false);
-          fetchInProgressRef.current = false;
-        }
-      });
-  }, [
-    fetchInProgressRef,
-    fetchRequestCountRef,
-    addLog,
-    clearLogs,
-    resetApiStats,
-    startTimer,
-    setError,
-    setProgress,
-    setProgressText,
-    setLoading,
-    toggleLogs,
-    limitEnabled,
-    limit,
-    fromDateTime,
-    toDateTime,
-    fetchType,
-    fetchData,
-    logger,
-    setSnackbar,
-    stopTimer,
-    handleProgressUpdate,
-  ]);
+      const result = await fetchData(
+        limitEnabled ? limit : null,
+        fromDateTimeString,
+        toDateTimeString,
+        fetchType,
+        (percent, message) => {
+          setProgress(percent);
+          setProgressText(message);
+        },
+        logger,
+        progressTracker // Pass the progress tracker as the 7th parameter
+      );
+
+      if (currentFetchId === fetchRequestCountRef.current) {
+        addLog(`Successfully fetched ${result.length} rows of data`, "success");
+        setSnackbar({
+          open: true,
+          message: `Data fetched successfully! (${result.length} rows)`,
+          severity: "success",
+        });
+      }
+    } catch (err) {
+      if (currentFetchId === fetchRequestCountRef.current) {
+        const errorMessage = err.message || "Error fetching data";
+        addLog(`Error: ${errorMessage}`, "error");
+        setError(errorMessage);
+        setSnackbar({
+          open: true,
+          message: `Error: ${errorMessage}`,
+          severity: "error",
+        });
+      }
+    } finally {
+      if (currentFetchId === fetchRequestCountRef.current) {
+        // Stop timer
+        stopTimer();
+        addLog("Fetch operation completed", "success");
+
+        setLoading(false);
+        fetchInProgressRef.current = false;
+      }
+    }
+  };
 
   return {
     fetchControls: {

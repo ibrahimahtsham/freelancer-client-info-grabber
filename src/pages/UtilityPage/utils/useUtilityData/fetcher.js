@@ -27,7 +27,8 @@ export async function fetchDataWithProgress(
   fetchType,
   progressCallback,
   logger,
-  rateLimitAggressiveness = 0.7 // Default value
+  rateLimitAggressiveness = 0.7,
+  categoryTracker = null // Add category tracker parameter
 ) {
   // Update the global rate limit aggressiveness setting
   setRateLimitAggressiveness(rateLimitAggressiveness);
@@ -40,21 +41,28 @@ export async function fetchDataWithProgress(
     ? Math.floor(new Date(toDate).getTime() / 1000)
     : null;
 
-  // Get user ID (needed for some API calls)
+  // Category: User ID Lookup
+  categoryTracker?.startCategory("user_id");
   progressCallback(5, "Fetching your user ID...");
   const userId = await fetchMyUserId(logger);
   logger(`Using user ID: ${userId}`, "api");
+  categoryTracker?.endCategory("user_id");
 
-  // Step 1: Fetch bids with project info
+  // Category: Main Bids Fetch
+  categoryTracker?.startCategory("bids");
   progressCallback(10, "Fetching bids with basic project and client info...");
   const { bids, projects, users } = await fetchBidsWithProjectInfo(
     userId,
     fromTimestamp,
     toTimestamp,
     limit,
-    progressCallback,
+    (percent, message) => {
+      categoryTracker?.updateCategoryProgress("bids", percent, message);
+      progressCallback(10 + percent * 0.15, message); // 10-25% range
+    },
     logger
   );
+  categoryTracker?.endCategory("bids");
 
   logger(
     `Fetched ${bids.length} bids, ${
@@ -65,24 +73,34 @@ export async function fetchDataWithProgress(
 
   // Early return for bids-only fetch type
   if (fetchType === "bids_only") {
-    return transformDataToRows({ bids, projects, users });
+    categoryTracker?.startCategory("processing");
+    const result = transformDataToRows({ bids, projects, users });
+    categoryTracker?.endCategory("processing");
+    return result;
   }
 
   // Project IDs that need detailed info
   const projectIds = Object.keys(projects).map((id) => parseInt(id));
 
-  // Step 2: Fetch detailed project information if needed
+  // Category: Project Details
   let detailedProjects = {};
   if (fetchType === "complete" || fetchType === "projects_only") {
+    categoryTracker?.startCategory("projects");
     progressCallback(
       30,
       `Fetching detailed project information for ${projectIds.length} projects...`
     );
+
     detailedProjects = await fetchMissingProjectDetails(
       projectIds,
-      progressCallback,
+      (percent, message) => {
+        categoryTracker?.updateCategoryProgress("projects", percent, message);
+        progressCallback(30 + percent * 0.2, message); // 30-50% range
+      },
       logger
     );
+    categoryTracker?.endCategory("projects");
+
     logger(
       `Fetched detailed information for ${
         Object.keys(detailedProjects).length
@@ -91,52 +109,70 @@ export async function fetchDataWithProgress(
     );
   }
 
-  // Step 3: Fetch conversation threads if needed
+  // Category: Thread Information
   let threads = [];
   if (fetchType === "complete" || fetchType === "threads_only") {
+    categoryTracker?.startCategory("threads");
     progressCallback(
       50,
       `Fetching conversation threads for ${projectIds.length} projects...`
     );
+
     threads = await fetchThreadInformation(
       projectIds,
-      progressCallback,
+      (percent, message) => {
+        categoryTracker?.updateCategoryProgress("threads", percent, message);
+        progressCallback(50 + percent * 0.2, message); // 50-70% range
+      },
       logger
     );
+    categoryTracker?.endCategory("threads");
+
     logger(`Fetched ${threads.length} conversation threads`, "info");
   }
 
-  // Step 4: Fetch payment details for awarded bids if needed
-  let enrichedBids = [...bids]; // Start with a copy of the original bids
+  // Category: Payment Details
+  let enrichedBids = [...bids];
   if (fetchType === "complete") {
+    categoryTracker?.startCategory("payments");
     progressCallback(70, `Fetching payment details for awarded bids...`);
 
     const paymentResult = await fetchAllPaymentDetails(
       enrichedBids,
-      progressCallback,
+      (percent, message) => {
+        categoryTracker?.updateCategoryProgress("payments", percent, message);
+        progressCallback(70 + percent * 0.15, message); // 70-85% range
+      },
       logger
     );
 
-    // Use the enriched bids that already have milestones attached
     enrichedBids = paymentResult.data;
+    categoryTracker?.endCategory("payments");
 
     logger(`Fetched payment details for bids`, "info");
   }
 
-  // Step 5: Fetch detailed client information if needed
+  // Category: Client Profiles
   let clientProfiles = {};
   if (fetchType === "complete" || fetchType === "clients_only") {
+    categoryTracker?.startCategory("clients");
     const clientIds = Object.keys(users).map((id) => parseInt(id));
 
     progressCallback(
       85,
       `Fetching detailed profiles for ${clientIds.length} clients...`
     );
+
     clientProfiles = await fetchClientProfiles(
       clientIds,
-      progressCallback,
+      (percent, message) => {
+        categoryTracker?.updateCategoryProgress("clients", percent, message);
+        progressCallback(85 + percent * 0.1, message); // 85-95% range
+      },
       logger
     );
+    categoryTracker?.endCategory("clients");
+
     logger(
       `Fetched detailed profiles for ${
         Object.keys(clientProfiles).length
@@ -145,15 +181,18 @@ export async function fetchDataWithProgress(
     );
   }
 
-  // Transform collected data into rows
+  // Category: Data Processing
+  categoryTracker?.startCategory("processing");
   progressCallback(95, "Processing and transforming data...");
   const rows = transformDataToRows({
-    bids: enrichedBids, // Use the enriched bids that have milestones attached
+    bids: enrichedBids,
     projects: { ...projects, ...detailedProjects },
     users: { ...users, ...clientProfiles },
     threads,
   });
 
   progressCallback(100, `Completed! Processed ${rows.length} data rows.`);
+  categoryTracker?.endCategory("processing");
+
   return rows;
 }

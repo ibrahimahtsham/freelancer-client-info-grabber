@@ -24,7 +24,8 @@ export const useUtilityData = () => {
       toDate,
       fetchType = "complete",
       progressCallback,
-      logger = console.log
+      logger = console.log,
+      progressTracker = null // Add this parameter
     ) => {
       logger(
         "useUtilityData: fetchData called with " +
@@ -39,14 +40,16 @@ export const useUtilityData = () => {
       resetApiCallsStats();
 
       try {
-        // Delegate to the fetcher implementation
+        // Delegate to the fetcher implementation - pass progressTracker
         const rows = await fetchDataWithProgress(
           limit,
           fromDate,
           toDate,
           fetchType,
           progressCallback,
-          logger
+          logger,
+          0.7, // rateLimitAggressiveness
+          progressTracker // Pass the progress tracker here
         );
 
         // Update context with the processed data
