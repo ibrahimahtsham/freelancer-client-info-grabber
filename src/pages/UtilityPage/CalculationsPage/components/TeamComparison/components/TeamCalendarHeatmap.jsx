@@ -22,8 +22,10 @@ import {
   endOfMonth,
   format,
 } from "date-fns";
+
 import { processHeatmapData } from "../utils/heatmapDataProcessor";
 import HeatmapStatsPanel from "./HeatmapStatsPanel";
+import { formatCustomTime } from "../utils/timeFormatters";
 
 const heatmapStyles = `
   .react-calendar-heatmap text {
@@ -120,18 +122,19 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
   const getTooltipContent = (value) => {
     if (!value || !value.date) return null;
     const dateObj = new Date(value.date);
-    // Updated to include weekday (e.g., "Sat, Jun 03, 2025")
     const dateStr = format(dateObj, "eee, MMM dd, yyyy");
     if (viewMode === "bids") {
-      return `${dateStr}\nBids: ${value.count}\nAvg Time to Bid: ${
-        value.avgTimeToBid?.toFixed(1) || 0
-      } seconds`;
+      return `${dateStr}\nBids: ${
+        value.count
+      }\nAvg Time to Bid: ${formatCustomTime(value.avgTimeToBid || 0)}`;
     } else {
-      return `${dateStr}\nBids: ${value.bidCount}\nAvg Time to Bid: ${
-        value.count?.toFixed(1) || 0
-      } seconds\nMin: ${value.minTime?.toFixed(1) || 0}s, Max: ${
-        value.maxTime?.toFixed(1) || 0
-      }s`;
+      return `${dateStr}\nBids: ${
+        value.bidCount
+      }\nAvg Time to Bid: ${formatCustomTime(
+        value.count || 0
+      )}\nMin: ${formatCustomTime(value.minTime || 0)}, Max: ${formatCustomTime(
+        value.maxTime || 0
+      )}`;
     }
   };
 

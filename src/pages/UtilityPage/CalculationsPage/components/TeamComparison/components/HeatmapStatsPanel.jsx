@@ -6,6 +6,7 @@ import {
   Grid,
   Divider,
 } from "@mui/material";
+import { formatCustomTime } from "../utils/timeFormatters";
 
 const HeatmapStatsPanel = ({ data, employee, viewMode, dateRange }) => {
   // Calculate statistics from the data
@@ -34,7 +35,7 @@ const HeatmapStatsPanel = ({ data, employee, viewMode, dateRange }) => {
         avgBidsPerDay: avgBidsPerDay.toFixed(1),
         maxBidsInDay,
         activeDays,
-        avgTimeToBid: avgTimeToBid.toFixed(1),
+        avgTimeToBid, // return as number for formatting later
       };
     } else {
       // Time to bid mode
@@ -61,9 +62,9 @@ const HeatmapStatsPanel = ({ data, employee, viewMode, dateRange }) => {
       );
 
       return {
-        avgTime: avgTime.toFixed(1),
-        minTime: minTime.toFixed(1),
-        maxTime: maxTime.toFixed(1),
+        avgTime, // raw number for formatter
+        minTime,
+        maxTime,
         totalBids,
         activeDays: timeData.length,
       };
@@ -136,8 +137,8 @@ const HeatmapStatsPanel = ({ data, employee, viewMode, dateRange }) => {
             <Grid item xs={12}>
               <Divider sx={{ my: 1 }} />
               <Typography variant="body2">
-                <strong>Average Time to Bid:</strong> {stats.avgTimeToBid}{" "}
-                seconds
+                <strong>Average Time to Bid:</strong>{" "}
+                {formatCustomTime(stats.avgTimeToBid)}
               </Typography>
             </Grid>
           </Grid>
@@ -146,7 +147,7 @@ const HeatmapStatsPanel = ({ data, employee, viewMode, dateRange }) => {
             <Grid item xs={6} sm={3}>
               <Box textAlign="center">
                 <Typography variant="h4" color="primary">
-                  {stats.avgTime}s
+                  {formatCustomTime(stats.avgTime)}
                 </Typography>
                 <Typography variant="caption">Avg Time to Bid</Typography>
               </Box>
@@ -154,7 +155,7 @@ const HeatmapStatsPanel = ({ data, employee, viewMode, dateRange }) => {
             <Grid item xs={6} sm={3}>
               <Box textAlign="center">
                 <Typography variant="h4" color="success.main">
-                  {stats.minTime}s
+                  {formatCustomTime(stats.minTime)}
                 </Typography>
                 <Typography variant="caption">Fastest Response</Typography>
               </Box>
@@ -162,7 +163,7 @@ const HeatmapStatsPanel = ({ data, employee, viewMode, dateRange }) => {
             <Grid item xs={6} sm={3}>
               <Box textAlign="center">
                 <Typography variant="h4" color="error.main">
-                  {stats.maxTime}s
+                  {formatCustomTime(stats.maxTime)}
                 </Typography>
                 <Typography variant="caption">Slowest Response</Typography>
               </Box>
