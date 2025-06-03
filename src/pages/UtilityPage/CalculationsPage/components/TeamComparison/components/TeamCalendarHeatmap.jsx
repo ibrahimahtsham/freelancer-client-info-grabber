@@ -25,7 +25,6 @@ import {
 import { processHeatmapData } from "../utils/heatmapDataProcessor";
 import HeatmapStatsPanel from "./HeatmapStatsPanel";
 
-// Custom CSS for the heatmap colors with proper sizing
 const heatmapStyles = `
   .react-calendar-heatmap text {
     font-size: 6px;
@@ -55,56 +54,41 @@ const heatmapStyles = `
   .react-calendar-heatmap .time-scale-7 { fill: #9c27b0; }
   .react-calendar-heatmap .time-scale-8 { fill: #673ab7; }
   
-  /* Calendar container styling - larger container, smaller squares */
+  /* Updated Calendar container styling */
   .team-heatmap-container {
-    height: 180px;
-    overflow: visible;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    padding: 10px;
     border-radius: 4px;
-  }
-  .team-heatmap-container .react-calendar-heatmap {
-    width: 100%;
-    max-width: 900px;
+    border: 1px solid var(--mui-palette-divider);
+    background: var(--mui-palette-background-paper);
+    max-width: 600px;
     margin: 0 auto;
   }
-  .team-heatmap-container .react-calendar-heatmap svg {
+  .team-heatmap-container .react-calendar-heatmap {
     width: 100% !important;
-    height: 140px !important;
+    height: 100px !important;
   }
   .team-heatmap-container .react-calendar-heatmap rect {
     stroke-width: 1px;
     rx: 1;
     ry: 1;
-  }
-  /* Make the actual squares smaller */
-  .team-heatmap-container .react-calendar-heatmap rect {
-    width: 8px !important;
-    height: 8px !important;
-  }
-  /* Adjust spacing between squares */
-  .team-heatmap-container .react-calendar-heatmap g g {
-    transform: scale(0.6);
-    transform-origin: 0 0;
+    width: 6px !important;
+    height: 6px !important;
+    /* Optional: adding some spacing between squares */
+    margin: 1px;
   }
 `;
 
 const TeamCalendarHeatmap = ({ rows, employees }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("bids"); // 'bids' or 'time'
-  const [selectedEmployee, setSelectedEmployee] = useState(0); // 0 for first, 1 for second
+  const [selectedEmployee, setSelectedEmployee] = useState(0);
 
-  // Get employees
   const firstEmployee = employees[0];
   const secondEmployee = employees[1];
 
-  // Calculate date range for current month
   const startDate = startOfMonth(currentDate);
   const endDate = endOfMonth(currentDate);
 
-  // Process heatmap data
   const heatmapData = useMemo(() => {
     if (!rows?.length || !employees?.length >= 2)
       return {
@@ -115,38 +99,27 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
     return processHeatmapData(rows, employees, startDate, endDate);
   }, [rows, employees, startDate, endDate]);
 
-  // Navigate months
   const navigateMonth = (increment) => {
     setCurrentDate((prev) =>
       increment ? addMonths(prev, 1) : subMonths(prev, 1)
     );
   };
 
-  // Get color class for heatmap values
   const getColorClass = (value, mode) => {
     if (!value || !value.count) return "color-empty";
-
     const prefix = mode === "bids" ? "bid-scale-" : "time-scale-";
-
-    // Better scaling for intensity
     let intensity;
     if (mode === "bids") {
-      // For bids, scale based on count (0-20+ bids)
       intensity = Math.min(Math.max(1, Math.ceil(value.count / 3)), 8);
     } else {
-      // For time, scale based on seconds (0-300+ seconds)
       intensity = Math.min(Math.max(1, Math.ceil(value.count / 60)), 8);
     }
-
     return `${prefix}${intensity}`;
   };
 
-  // Get tooltip content
   const getTooltipContent = (value) => {
     if (!value || !value.date) return null;
-
     const dateStr = format(new Date(value.date), "MMM dd, yyyy");
-
     if (viewMode === "bids") {
       return `${dateStr}\nBids: ${value.count}\nAvg Time to Bid: ${
         value.avgTimeToBid?.toFixed(1) || 0
@@ -172,69 +145,27 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
       : heatmapData.employee2.time;
 
   return (
-    <Box sx={{ mt: 4 }}>
+    <Box sx={{ mt: 4, px: 2 }}>
       <style>{heatmapStyles}</style>
 
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h5" gutterBottom sx={{ textAlign: "center", mb: 3 }}>
         Team Calendar Heatmap Analysis
       </Typography>
 
-      {/* Controls */}
+      {/* Controls Section */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Grid container spacing={3} alignItems="center">
-            {/* Employee Selection */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Typography variant="subtitle2" gutterBottom>
-                Employee
-              </Typography>
-              <ToggleButtonGroup
-                value={selectedEmployee}
-                exclusive
-                onChange={(e, value) =>
-                  value !== null && setSelectedEmployee(value)
-                }
-                size="small"
-                fullWidth
-              >
-                <ToggleButton value={0}>
-                  {firstEmployee?.name || "Employee 1"}
-                </ToggleButton>
-                <ToggleButton value={1}>
-                  {secondEmployee?.name || "Employee 2"}
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Grid>
-
-            {/* View Mode Selection */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Typography variant="subtitle2" gutterBottom>
-                View Mode
-              </Typography>
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(e, value) => value !== null && setViewMode(value)}
-                size="small"
-                fullWidth
-              >
-                <ToggleButton value="bids">Bids Made</ToggleButton>
-                <ToggleButton value="time">Time to Bid</ToggleButton>
-              </ToggleButtonGroup>
-            </Grid>
-
-            {/* Month Navigation */}
-            <Grid item xs={12} sm={12} md={6}>
+          <Grid container spacing={2}>
+            {/* Top row: Month Navigation & View Mode */}
+            <Grid item xs={12} md={6}>
               <Box
                 sx={{
                   display: "flex",
-                  justifyContent: "space-between",
                   alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: 1,
                 }}
               >
-                <Typography variant="subtitle2">
-                  {format(currentDate, "MMMM yyyy")}
-                </Typography>
                 <ButtonGroup variant="outlined" size="small">
                   <Button onClick={() => navigateMonth(false)}>◀ Prev</Button>
                   <Button onClick={() => setCurrentDate(new Date())}>
@@ -242,36 +173,80 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
                   </Button>
                   <Button onClick={() => navigateMonth(true)}>Next ▶</Button>
                 </ButtonGroup>
+                <Typography variant="subtitle1">
+                  {format(currentDate, "MMMM yyyy")}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: { xs: "flex-start", md: "flex-end" },
+                  gap: 1,
+                }}
+              >
+                <Typography variant="subtitle2">View Mode:</Typography>
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={(e, value) => value !== null && setViewMode(value)}
+                  size="small"
+                >
+                  <ToggleButton value="bids">Bids</ToggleButton>
+                  <ToggleButton value="time">Time</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+            {/* Bottom row: Employee Selection */}
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 2,
+                }}
+              >
+                <ToggleButtonGroup
+                  value={selectedEmployee}
+                  exclusive
+                  onChange={(e, value) =>
+                    value !== null && setSelectedEmployee(value)
+                  }
+                  size="small"
+                >
+                  <ToggleButton value={0}>
+                    {firstEmployee?.name || "Employee 1"}
+                  </ToggleButton>
+                  <ToggleButton value={1}>
+                    {secondEmployee?.name || "Employee 2"}
+                  </ToggleButton>
+                </ToggleButtonGroup>
               </Box>
             </Grid>
           </Grid>
         </CardContent>
       </Card>
 
-      {/* Heatmap */}
+      {/* Heatmap Section */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             {currentEmployee?.name} -{" "}
-            {viewMode === "bids" ? "Daily Bid Count" : "Average Time to Bid"}
+            {viewMode === "bids" ? "Daily Bid Count" : "Avg Time to Bid"}
           </Typography>
-
           <Typography variant="body2" color="text.secondary" gutterBottom>
             Shift: {currentEmployee?.startHour}
             {currentEmployee?.startAmPm?.toLowerCase()} -{" "}
             {currentEmployee?.endHour}
             {currentEmployee?.endAmPm?.toLowerCase()}
           </Typography>
-
-          <Box
-            className="team-heatmap-container"
-            sx={{
-              // Remove hardcoded background, let it adapt to theme
-              border: 1,
-              borderColor: "divider",
-              bgcolor: "background.paper",
-            }}
-          >
+          <Box className="team-heatmap-container" sx={{ mt: 2 }}>
             <CalendarHeatmap
               startDate={startDate}
               endDate={endDate}
@@ -296,9 +271,10 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
               alignItems: "center",
               justifyContent: "center",
               mt: 2,
+              gap: 1,
             }}
           >
-            <Typography variant="caption" sx={{ mr: 2 }}>
+            <Typography variant="caption">
               {viewMode === "bids" ? "Fewer bids" : "Faster response"}
             </Typography>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((level) => {
@@ -324,7 +300,6 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
                       "#9c27b0",
                       "#673ab7",
                     ];
-
               return (
                 <Box
                   key={level}
@@ -332,14 +307,13 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
                     width: 12,
                     height: 12,
                     backgroundColor: colors[level - 1],
-                    mr: 0.5,
                     border: 1,
                     borderColor: "divider",
                   }}
                 />
               );
             })}
-            <Typography variant="caption" sx={{ ml: 2 }}>
+            <Typography variant="caption">
               {viewMode === "bids" ? "More bids" : "Slower response"}
             </Typography>
           </Box>
