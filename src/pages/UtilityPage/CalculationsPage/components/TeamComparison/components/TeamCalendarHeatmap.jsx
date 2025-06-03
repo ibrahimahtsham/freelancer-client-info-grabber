@@ -35,14 +35,14 @@ const heatmapStyles = `
   }
   
   /* Bid count scale (red to green gradient) */
-  .react-calendar-heatmap .bid-scale-1 { fill: #ffebee; }
-  .react-calendar-heatmap .bid-scale-2 { fill: #ffcdd2; }
-  .react-calendar-heatmap .bid-scale-3 { fill: #ef5350; }
-  .react-calendar-heatmap .bid-scale-4 { fill: #f44336; }
-  .react-calendar-heatmap .bid-scale-5 { fill: #ff9800; }
-  .react-calendar-heatmap .bid-scale-6 { fill: #ffeb3b; }
-  .react-calendar-heatmap .bid-scale-7 { fill: #8bc34a; }
-  .react-calendar-heatmap .bid-scale-8 { fill: #4caf50; }
+  .react-calendar-heatmap .bid-scale-1 { fill: #ff0000; }
+  .react-calendar-heatmap .bid-scale-2 { fill: #ff4000; }
+  .react-calendar-heatmap .bid-scale-3 { fill: #ff8000; }
+  .react-calendar-heatmap .bid-scale-4 { fill: #ffbf00; }
+  .react-calendar-heatmap .bid-scale-5 { fill: #c0ff00; }
+  .react-calendar-heatmap .bid-scale-6 { fill: #80ff00; }
+  .react-calendar-heatmap .bid-scale-7 { fill: #40ff00; }
+  .react-calendar-heatmap .bid-scale-8 { fill: #00ff00; }
   
   /* Time to bid scale (blue to purple gradient) */
   .react-calendar-heatmap .time-scale-1 { fill: #e3f2fd; }
@@ -119,7 +119,9 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
 
   const getTooltipContent = (value) => {
     if (!value || !value.date) return null;
-    const dateStr = format(new Date(value.date), "MMM dd, yyyy");
+    const dateObj = new Date(value.date);
+    // Updated to include weekday (e.g., "Sat, Jun 03, 2025")
+    const dateStr = format(dateObj, "eee, MMM dd, yyyy");
     if (viewMode === "bids") {
       return `${dateStr}\nBids: ${value.count}\nAvg Time to Bid: ${
         value.avgTimeToBid?.toFixed(1) || 0
@@ -281,14 +283,14 @@ const TeamCalendarHeatmap = ({ rows, employees }) => {
               const colors =
                 viewMode === "bids"
                   ? [
-                      "#ffebee",
-                      "#ffcdd2",
-                      "#ef5350",
-                      "#f44336",
-                      "#ff9800",
-                      "#ffeb3b",
-                      "#8bc34a",
-                      "#4caf50",
+                      "#ff0000",
+                      "#ff4000",
+                      "#ff8000",
+                      "#ffbf00",
+                      "#c0ff00",
+                      "#80ff00",
+                      "#40ff00",
+                      "#00ff00",
                     ]
                   : [
                       "#e3f2fd",
