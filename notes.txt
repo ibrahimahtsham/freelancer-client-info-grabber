@@ -2,31 +2,23 @@ Immediate:-
 
     make it so that the progress tracker has breakup of main line into its categories
     fix the page getting slower overtime
+    fix the auto scrolling in logs
 
 
 Stats that need to be shown:-
 
     which locations had most awarded (fix this so it sorts by awarded)
-    somehow show what shift had most bids made, heatmap form is nice
-    stats for bid timings, which hours the bids were made the most, a distribution
     highest paying clients
-
-
-
-
 
 
 Do later:-
 
     fix ui for add new employee screen
     fix rate limited not showing time remaining, see if there is any lirary that will let me read api headers
-    auto select past whole month as range to
     salary needs to take in acount the date of payment + if someone helped with chat
     auto scrollability in API Usage Statistics
     data table should have popups for each cell since some data can just go in overflow
     checkout some weird logic that is being applied in data table
-    reporganize columns in the data table that makes sense
-    add a welcome [username] on navbar
 
 
 
@@ -35,9 +27,5 @@ Do later:-
 QOL:
 
     optimize tabs switching
-    dataset name functionality fix
-    update progress bar with stages, record time for each stage
-    integrate bid timings calculations too
-    make it so datasets instantly are acessible without refreshing page after saving, also they should have proper names rn the dates are not accurately represented of the filter that was applied to get the dataset
     make it so after putting api token it welcomes you as your username and shows it on the navbar
     current data in dataset be updated in real time
