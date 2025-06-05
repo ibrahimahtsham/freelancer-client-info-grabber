@@ -9,6 +9,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import CodeIcon from "@mui/icons-material/Code";
+import DataObjectIcon from "@mui/icons-material/DataObject";
 import ColumnSelector from "../../ColumnSelector";
 
 const TableToolbar = ({
@@ -21,6 +22,7 @@ const TableToolbar = ({
   availableColumns,
   onColumnChange,
   onDownloadCSV,
+  onDownloadJSON, // Add this prop
   selectedRow,
   onLogRowData,
 }) => {
@@ -57,6 +59,11 @@ const TableToolbar = ({
           <Tooltip title="Download CSV">
             <IconButton onClick={onDownloadCSV}>
               <FileDownloadIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Download JSON">
+            <IconButton onClick={onDownloadJSON}>
+              <DataObjectIcon />
             </IconButton>
           </Tooltip>
         </Box>

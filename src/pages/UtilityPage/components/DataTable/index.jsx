@@ -18,7 +18,7 @@ import DataTableRow from "./components/DataTableRow";
 
 // Import utils and hooks
 import { ALL_COLUMNS, DEFAULT_VISIBLE_COLUMNS } from "./utils/columnDefs";
-import { downloadCSV } from "./utils/exportUtils";
+import { downloadCSV, downloadJSON } from "./utils/exportUtils";
 import useTableData from "./hooks/useTableData";
 
 const DataTable = ({ data = [], title, loading }) => {
@@ -66,6 +66,11 @@ const DataTable = ({ data = [], title, loading }) => {
     downloadCSV(sortedData, visibleColumns, title);
   };
 
+  // Handle JSON download
+  const handleDownloadJSON = () => {
+    downloadJSON(sortedData, {}, title);
+  };
+
   // Get columns that are currently visible
   const columns = ALL_COLUMNS.filter((col) => visibleColumns.includes(col.id));
 
@@ -82,6 +87,7 @@ const DataTable = ({ data = [], title, loading }) => {
         availableColumns={ALL_COLUMNS}
         onColumnChange={handleColumnChange}
         onDownloadCSV={handleDownloadCSV}
+        onDownloadJSON={handleDownloadJSON}
         selectedRow={selectedRow}
         onLogRowData={logRowData}
       />
