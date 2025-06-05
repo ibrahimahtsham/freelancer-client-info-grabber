@@ -29,3 +29,5 @@ QOL:
     optimize tabs switching
     make it so after putting api token it welcomes you as your username and shows it on the navbar
     current data in dataset be updated in real time
+
+    uhh work pls
